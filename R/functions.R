@@ -1,66 +1,78 @@
-#' Elective to non-elective admissions ratio.
+
+
+
+#' The number of elective and non elective admissions by 2021 LSOA code and 
+#' month.
 #'
-#' @param geography The geography column to group the data by.
-#' @param connection The ODBC connection.
-#' @param age An integer for the age cutoff.
+#' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
 #'
-#' @returns A dataframe with the elective to non-elective admissions ratio by
-#' month and geography.
-get_elective_non_elective_ratio <- function(geography,
-                                            age = age_cutoff,
-                                            start = start_date,
-                                            connection = con) {
-  ccg_to_icb_join <- join_to_map_ccg_to_icb(geography)
-  
+#' @returns A dataframe with the number of elective and non elective admissions 
+#' by 2021 LSOA code and month.
+get_elective_non_elective_admissions_lsoa <- function(age, start, connection) {
   query <- "
     SELECT
       convert(varchar(7), Discharge_Date, 120) AS date,
-      geography,
+      Der_Postcode_LSOA_2021_Code,
       SUM(CASE WHEN Admission_Method IN ('11', '12', '13') THEN 1 ELSE 0 END) AS elective,
       SUM(CASE WHEN Admission_Method LIKE '2%' THEN 1 ELSE 0 END) AS non_elective
 
     FROM Reporting_MESH_APC.APCE_Core_Monthly_Snapshot AS apce
-      
-    ccg_to_icb_join
 
     WHERE Last_Episode_In_Spell_Indicator = '1'
       AND Discharge_Date >= 'start_date'
       AND Age_at_End_of_Episode_SUS >= age_cutoff
+      AND LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E'
 
-    GROUP BY convert(varchar(7), Discharge_Date, 120), geography
+    GROUP BY 
+      convert(varchar(7), Discharge_Date, 120), 
+      Der_Postcode_LSOA_2021_Code
   " |>
-    stringr::str_replace_all(c(
-      "geography" = geography,
-      "age_cutoff" = age,
-      "start_date" = start,
-      "ccg_to_icb_join" = ccg_to_icb_join
-    ))
+    stringr::str_replace_all(c("age_cutoff" = age, "start_date" = start))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
-    janitor::clean_names() |>
-    dplyr::mutate(
-      value = janitor::round_half_up(elective / non_elective, 2),
-      indicator = "elective_non_elective_ratio"
-    ) |>
-    dplyr::select(indicator, 
-                  snakecase::to_snake_case(geography), 
-                  date, 
-                  numerator = elective,
-                  denominator = non_elective,
-                  value)
-
+    janitor::clean_names()
+  
   return(wrangled)
 }
 
-join_to_map_ccg_to_icb <- function(geography){
+#' Elective to non-elective admissions ratio by month and geography.
+#'
+#' @param data The number of elective and non elective admissions by 2021 LSOA 
+#' code and month.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe with the elective to non-elective admissions ratio by
+#' month and geography.
+get_elective_non_elective_ratio <- function(data, geography) {
+  geography_column <- get_geography_column(geography)
   
-  join <- if(stringr::str_detect(geography, "icb")){
-    "LEFT JOIN [Internal_Reference].[CCGToICB_1] AS ref
-      ON apce.der_postcode_ccg_code = ref.org_code"
+  wrangled <- data |>
+    dplyr::summarise(
+      elective = sum(elective, na.rm = TRUE),
+      non_elective = sum(non_elective, na.rm = TRUE),
+      .by = c(date, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(ratio = elective / non_elective) |>
+    dplyr::rename(!!rlang::sym(geography) := !!rlang::sym(geography_column))
+  
+  return(wrangled)
+}
+
+#' Get the table column name related to the geography.
+#'
+#' @param geography  The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A string.
+get_geography_column <- function(geography) {
+  if (geography == "icb") {
+    "icb24cdh"
+  } else if (geography == "la") {
+    "lad24cd"
+  } else if (geography == "pcn") {
+    "?"
   } else {
-    ""
+    "ERROR - please choose a geography: icb, la, pcn"
   }
-  
-  return(join)
 }
