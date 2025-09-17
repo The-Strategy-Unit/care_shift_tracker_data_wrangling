@@ -31,6 +31,9 @@ con <- DBI::dbConnect(
 
 # Replace the target list below with your own:
 list(
+  tar_target(age_cutoff, 65),
+  tar_target(start_date, "2008-04-01"),
+  
   # Lookups --------------------------------------------------------------------
   tar_target(icb_lookup, 2),
   tar_target(la_lookup, 2),
@@ -39,10 +42,10 @@ list(
   # Elective to non elective admissions ratio ----------------------------------
   tar_target(
     elective_non_elective_ratio_icb,
-    get_elective_non_elective_ratio("Der_Postcode_CCG_Code")
+    get_elective_non_elective_ratio("Der_Postcode_CCG_Code", age_cutoff, start_date)
   ),
   tar_target(
     elective_non_elective_ratio_la,
-    get_elective_non_elective_ratio("Der_Postcode_Local_Auth")
+    get_elective_non_elective_ratio("Der_Postcode_Dist_Unitary_Auth", age_cutoff, start_date)
   )
 )
