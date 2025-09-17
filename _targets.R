@@ -35,7 +35,13 @@ list(
   tar_target(start_date, "2008-04-01"),
   
   # Lookups --------------------------------------------------------------------
-  tar_target(icb_lookup, 2),
+  tar_target(icb_lookup, 
+             DBI::dbGetQuery(
+               con, 
+               "SELECT * FROM [Internal_Reference].[CCGToICB_1]") |>
+               janitor::clean_names() |>
+               dplyr::select(icb_code, icb_name) |>
+               unique()),
   tar_target(la_lookup, 2),
   tar_target(pcn_lookup, 2),
   
