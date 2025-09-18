@@ -90,7 +90,7 @@ get_geography_column <- function(geography) {
   } else if (geography == "la") {
     "lad24cd"
   } else if (geography == "pcn") {
-    "?"
+    "pcn_code"
   } else {
     "ERROR - please choose a geography: icb, la, pcn"
   }
