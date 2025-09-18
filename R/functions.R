@@ -1,20 +1,26 @@
 
 
-
-#' The number of elective and non elective admissions by 2021 LSOA code and 
+#' The number of elective and non elective admissions by 2021 LSOA code and
 #' month.
 #'
 #' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
 #' @param connection The ODBC connection.
+#' @param sub_geography Either `"lsoa"` or `"gp"`.
 #'
-#' @returns A dataframe with the number of elective and non elective admissions 
+#' @returns A dataframe with the number of elective and non elective admissions
 #' by 2021 LSOA code and month.
-get_elective_non_elective_admissions_lsoa <- function(age, start, connection) {
+get_elective_non_elective_admissions_sub_geography <- function(sub_geography, age, start, connection) {
+  sub_geography_column <- if (sub_geography == "lsoa") {
+    "Der_Postcode_LSOA_2021_Code"
+  } else if (sub_geography == "gp") {
+    "GP_Practice_SUS"
+  }
+  
   query <- "
     SELECT
       convert(varchar(7), Discharge_Date, 120) AS date,
-      Der_Postcode_LSOA_2021_Code,
+      sub_geography_column,
       SUM(CASE WHEN Admission_Method IN ('11', '12', '13') THEN 1 ELSE 0 END) AS elective,
       SUM(CASE WHEN Admission_Method LIKE '2%' THEN 1 ELSE 0 END) AS non_elective
 
@@ -25,11 +31,17 @@ get_elective_non_elective_admissions_lsoa <- function(age, start, connection) {
       AND Age_at_End_of_Episode_SUS >= age_cutoff
       AND LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E'
 
-    GROUP BY 
-      convert(varchar(7), Discharge_Date, 120), 
-      Der_Postcode_LSOA_2021_Code
+    GROUP BY
+      convert(varchar(7), Discharge_Date, 120),
+      sub_geography_column
   " |>
-    stringr::str_replace_all(c("age_cutoff" = age, "start_date" = start))
+    stringr::str_replace_all(
+      c(
+        "age_cutoff" = age,
+        "start_date" = start,
+        "sub_geography_column" = sub_geography_column
+      )
+    )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
@@ -39,7 +51,7 @@ get_elective_non_elective_admissions_lsoa <- function(age, start, connection) {
 
 #' Elective to non-elective admissions ratio by month and geography.
 #'
-#' @param data The number of elective and non elective admissions by 2021 LSOA 
+#' @param data The number of elective and non elective admissions by 2021 LSOA
 #' code and month.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #'
@@ -54,14 +66,15 @@ get_elective_non_elective_ratio <- function(data, geography) {
       non_elective = sum(non_elective, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
-    dplyr::mutate(ratio = elective / non_elective,
-                  indicator = "elec_non_elec_ratio") |>
-    dplyr::select(indiator, 
-                  !!rlang::sym(geography) := !!rlang::sym(geography_column),
-                  date,
-                  elective,
-                  non_elective,
-                  ratio)
+    dplyr::mutate(ratio = elective / non_elective, indicator = "elec_non_elec_ratio") |>
+    dplyr::select(
+      indicator,
+      geography := !!rlang::sym(geography_column),
+      date,
+      elective,
+      non_elective,
+      ratio
+    )
   
   return(wrangled)
 }

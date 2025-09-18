@@ -45,24 +45,30 @@ list(
   tar_target(la_lookup, 2),
   tar_target(pcn_lookup, 2),
   
-   tar_target(
+  tar_target(
     lsoa_to_higher_geographies,
-    read.csv("data/LSOA_(2021)_to_SICBL_to_ICB_to_Cancer_Alliances_to_LAD_(April_2024)_Lookup_in_EN.csv") |>
+    read.csv(
+      "data/LSOA_(2021)_to_SICBL_to_ICB_to_Cancer_Alliances_to_LAD_(April_2024)_Lookup_in_EN.csv"
+    ) |>
       janitor::clean_names()
   ),
   
   # Elective to non elective admissions ratio ----------------------------------
   tar_target(
-    elective_non_elective_by_lsoa,
-    get_elective_non_elective_admissions_lsoa(age_cutoff, start_date, con) |>
-      dplyr::left_join(lsoa_to_higher_geographies, 
-                       by = c("der_postcode_lsoa_2021_code" = "lsoa21cd"))
-    ),
+    elective_non_elective_lsoa,
+    get_elective_non_elective_admissions_sub_geography("lsoa",
+                                                       age_cutoff, 
+                                                       start_date, 
+                                                       con) |>
+      dplyr::left_join(
+        lsoa_to_higher_geographies,
+        by = c("der_postcode_lsoa_2021_code" = "lsoa21cd")
+      ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       elective_non_elective_ratio,
-      get_elective_non_elective_ratio(elective_non_elective_by_lsoa, geography)
+      get_elective_non_elective_ratio(elective_non_elective_lsoa, geography)
     )
   )
 )
