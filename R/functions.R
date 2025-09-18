@@ -54,8 +54,14 @@ get_elective_non_elective_ratio <- function(data, geography) {
       non_elective = sum(non_elective, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
-    dplyr::mutate(ratio = elective / non_elective) |>
-    dplyr::rename(!!rlang::sym(geography) := !!rlang::sym(geography_column))
+    dplyr::mutate(ratio = elective / non_elective,
+                  indicator = "elec_non_elec_ratio") |>
+    dplyr::select(indiator, 
+                  !!rlang::sym(geography) := !!rlang::sym(geography_column),
+                  date,
+                  elective,
+                  non_elective,
+                  ratio)
   
   return(wrangled)
 }
