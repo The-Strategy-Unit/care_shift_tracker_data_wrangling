@@ -10,14 +10,12 @@ library(targets)
 # Set target options:
 tar_option_set(
   packages = c("tibble") # Packages that your targets need for their tasks.
-  
 )
 
 # Run the R scripts in the R/ folder with your custom functions:
 tar_source()
-# tar_source("other_functions.R") # Source other scripts as needed.
 
-
+# ODBC Connection --------------------------------------------------------------
 server <- "udalsyndataprod.sql.azuresynapse.net"
 database <- "UDAL_Warehouse"
 
@@ -35,6 +33,24 @@ list(
   tar_target(start_date, "2008-04-01"),
   
   # Lookups --------------------------------------------------------------------
+  ## Sub-geographies (LSOA, GP) to higher geographies (ICB, LA, PCN) -----------
+  tar_target(
+    lsoa_to_higher_geographies,
+    read.csv(
+      "data/LSOA_(2021)_to_SICBL_to_ICB_to_Cancer_Alliances_to_LAD_(April_2024)_Lookup_in_EN.csv"
+    ) |>
+      janitor::clean_names()
+  ),
+  tar_target(
+    gp_to_pcn,
+    read.csv("data/epcncorepartnerdetails (Include headers).csv") |>
+      janitor::clean_names() |>
+      dplyr::filter(!is.na(practice_to_pcn_relationship_end_date)) |>
+      dplyr::select(partner_organisation_code, pcn_code) |>
+      unique()
+  ),
+  
+  ## Geography codes to names --------------------------------------------------
   tar_target(
     icb_lookup,
     DBI::dbGetQuery(con, "SELECT * FROM [Internal_Reference].[CCGToICB_1]") |>
@@ -43,17 +59,13 @@ list(
       unique()
   ),
   tar_target(la_lookup, 2),
-  tar_target(pcn_lookup, 2),
-  
-  tar_target(
-    lsoa_to_higher_geographies,
-    read.csv(
-      "data/LSOA_(2021)_to_SICBL_to_ICB_to_Cancer_Alliances_to_LAD_(April_2024)_Lookup_in_EN.csv"
-    ) |>
-      janitor::clean_names()
-  ),
+  # tar_target(pcn_lookup, 
+  #            gp_to_pcn |>
+  #              dplyr::select(pcn_code, pcn_name) |>
+  #              unique()),
   
   # Elective to non elective admissions ratio ----------------------------------
+  # ICB and LA
   tar_target(
     elective_non_elective_lsoa,
     get_elective_non_elective_admissions_sub_geography("lsoa",
@@ -63,12 +75,27 @@ list(
       dplyr::left_join(
         lsoa_to_higher_geographies,
         by = c("der_postcode_lsoa_2021_code" = "lsoa21cd")
-      ),
+      )
+    ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       elective_non_elective_ratio,
       get_elective_non_elective_ratio(elective_non_elective_lsoa, geography)
     )
+  ),
+  # PCN
+  tar_target(
+    elective_non_elective_gp,
+    get_elective_non_elective_admissions_sub_geography("gp",
+                                                       age_cutoff, 
+                                                       start_date, 
+                                                       con) |>
+      dplyr::left_join(gp_to_pcn,
+                       by = c("gp_practice_sus" = "partner_organisation_code"))
+    ),
+  tar_target(
+    elective_non_elective_ratio_pcn,
+    get_elective_non_elective_ratio(elective_non_elective_gp, "pcn")
   )
 )
