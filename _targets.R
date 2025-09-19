@@ -31,6 +31,9 @@ con <- DBI::dbConnect(
 list(
   tar_target(age_cutoff, 65),
   tar_target(start_date, "2008-04-01"),
+  tar_target(next_month, 
+             Sys.Date() |> 
+               lubridate::ceiling_date("month")),
   
   # Lookups --------------------------------------------------------------------
   ## Sub-geographies (LSOA, GP) to higher geographies (ICB, LA, PCN) -----------
@@ -45,9 +48,16 @@ list(
     gp_to_pcn,
     read.csv("data/epcncorepartnerdetails (Include headers).csv") |>
       janitor::clean_names() |>
-      dplyr::filter(!is.na(practice_to_pcn_relationship_end_date)) |>
-      dplyr::select(partner_organisation_code, pcn_code) |>
-      unique()
+      # Exclude GPs in Scotland and Wales:
+      dplyr::filter(
+        !stringr::str_starts(partner_organisation_code, "W"),
+        !stringr::str_starts(partner_organisation_code, "S")) |>
+      # To get the latest GP to PCN mapping:
+      dplyr::mutate(month_end = practice_to_pcn_relationship_end_date |>
+                      stringr::str_replace_na(as.character(next_month)) |>
+                      lubridate::ymd()) |>
+      dplyr::filter(month_end == max(month_end),
+                    .by = partner_organisation_code)
   ),
   
   ## Geography codes to names --------------------------------------------------
@@ -59,10 +69,10 @@ list(
       unique()
   ),
   tar_target(la_lookup, 2),
-  # tar_target(pcn_lookup, 
-  #            gp_to_pcn |>
-  #              dplyr::select(pcn_code, pcn_name) |>
-  #              unique()),
+  tar_target(pcn_lookup,
+             gp_to_pcn |>
+               dplyr::select(pcn_code, pcn_name) |>
+               unique()),
   
   # Elective to non elective admissions ratio ----------------------------------
   # ICB and LA
