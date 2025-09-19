@@ -1,6 +1,6 @@
 # Data Sources
 
-This is an overview of all the data downloaded to this folder.
+This is an overview of all the data downloaded to this folder. For SU colleagues, a copy of this folder can be found in the Z drive.
 
 `LSOA_(2021)_to_SICBL_to_ICB_to_Cancer_Alliances_to_LAD_(April_2024)_Lookup_in_EN.csv`
 
