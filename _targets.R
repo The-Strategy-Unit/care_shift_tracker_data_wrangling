@@ -39,10 +39,9 @@ list(
   ## Sub-geographies (LSOA, GP) to higher geographies (ICB, LA, PCN) -----------
   tar_target(
     lsoa_to_higher_geographies,
-    read.csv(
-      "data/LSOA_(2021)_to_SICBL_to_ICB_to_Cancer_Alliances_to_LAD_(April_2024)_Lookup_in_EN.csv"
-    ) |>
-      janitor::clean_names()
+    sf::st_read("https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA21_SICBL24_ICB24_CAL24_LAD24_EN_LU/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson") |>
+      janitor::clean_names() |>
+      dplyr::select(-geometry)
   ),
   tar_target(
     gp_to_pcn,
