@@ -63,16 +63,22 @@ list(
   ## Geography codes to names --------------------------------------------------
   tar_target(
     icb_lookup,
-    DBI::dbGetQuery(con, "SELECT * FROM [Internal_Reference].[CCGToICB_1]") |>
-      janitor::clean_names() |>
-      dplyr::select(icb_code, icb_name) |>
+    lsoa_to_higher_geographies |>
+      dplyr::select(icb = icb24cdh, icb_name = icb24nm) |>
       unique()
   ),
-  tar_target(la_lookup, 2),
-  tar_target(pcn_lookup,
-             gp_to_pcn |>
-               dplyr::select(pcn_code, pcn_name) |>
-               unique()),
+  tar_target(
+    la_lookup, 
+    lsoa_to_higher_geographies |>
+      dplyr::select(la = lad24cd, la_name = lad24nm) |>
+      unique()
+    ),
+  tar_target(
+    pcn_lookup,
+    gp_to_pcn |>
+      dplyr::select(pcn = pcn_code, pcn_name) |>
+      unique()
+    ),
   
   # Elective to non elective admissions ratio ----------------------------------
   # ICB and LA
