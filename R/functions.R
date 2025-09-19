@@ -10,7 +10,11 @@
 #'
 #' @returns A dataframe with the number of elective and non elective admissions
 #' by 2021 LSOA code and month.
-get_elective_non_elective_admissions_sub_geography <- function(sub_geography, age, start, connection) {
+get_elective_non_elective_admissions_sub_geography <- function(
+    sub_geography, 
+    age, 
+    start, 
+    connection) {
   sub_geography_column <- if (sub_geography == "lsoa") {
     "Der_Postcode_LSOA_2021_Code"
   } else if (sub_geography == "gp") {
@@ -66,13 +70,15 @@ get_elective_non_elective_ratio <- function(data, geography) {
       non_elective = sum(non_elective, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
-    dplyr::mutate(ratio = elective / non_elective, indicator = "elec_non_elec_ratio") |>
+    dplyr::mutate(ratio = elective / non_elective, 
+                  indicator = "elec_non_elec_ratio") |>
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
     dplyr::select(
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
-      elective,
-      non_elective,
+      numerator = elective,
+      denominator = non_elective,
       ratio
     )
   
