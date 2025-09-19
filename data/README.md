@@ -1,7 +1,4 @@
----
-title: "Data sources"
-output: html_document
----
+# Data Sources
 
 This is an overview of all the data downloaded to this folder.
 
