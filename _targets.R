@@ -138,5 +138,20 @@ list(
                                         con, 
                                         frailty_risk_scores)
     )
+  ),
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      frailty_indicators,
+      get_frailty_indicators(frailty_beddays_lsoa, 
+                             geography, 
+                             lsoa_to_higher_geographies)
+    )
+  ),
+  tar_target(
+    frailty_indicators_pcn,
+    get_frailty_indicators(frailty_beddays_gp, 
+                           "pcn", 
+                           gp_to_pcn)
   )
 )
