@@ -89,11 +89,8 @@ list(
     get_elective_non_elective_admissions_sub_geography("lsoa", 
                                                        age_cutoff, 
                                                        start_date, 
-                                                       con) |>
-      dplyr::left_join(
-        lsoa_to_higher_geographies,
-        by = c("der_postcode_lsoa_2021_code" = "lsoa21cd")
-      )
+                                                       con)  |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
@@ -109,10 +106,7 @@ list(
                                                        age_cutoff, 
                                                        start_date, 
                                                        con) |>
-      dplyr::left_join(
-        gp_to_pcn,
-        by = c("gp_practice_sus" = "partner_organisation_code")
-      )
+      join_to_geography_lookup("pcn", gp_to_pcn) 
   ),
   tar_target(
     elective_non_elective_ratio_pcn,

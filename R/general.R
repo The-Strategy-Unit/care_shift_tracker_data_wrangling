@@ -47,7 +47,7 @@ join_to_geography_lookup <- function(data, geography, lookup){
   } else {
     data |>
       dplyr::left_join(lookup |>
-                         dplyr::select(-geometry), 
+                         dplyr::select(-dplyr::any_of("geometry")), 
                        by = c("der_postcode_lsoa_2021_code" = "lsoa21cd"))
   }
   
