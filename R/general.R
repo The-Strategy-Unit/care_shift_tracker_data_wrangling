@@ -42,11 +42,13 @@ get_subgeography_column <- function(sub_geography) {
 join_to_geography_lookup <- function(data, geography, lookup){
   wrangled <- if(geography == "pcn") {
     data |>
-      dplyr::left_join(lookup, by = c("gp_practice_sus" = "partner_organisation_code"))
+      dplyr::left_join(lookup, 
+                       by = c("gp_practice_sus" = "partner_organisation_code"))
   } else {
     data |>
       dplyr::left_join(lookup |>
-                         dplyr::select(-geometry), by = c("der_postcode_lsoa_2021_code" = "lsoa21cd"))
+                         dplyr::select(-geometry), 
+                       by = c("der_postcode_lsoa_2021_code" = "lsoa21cd"))
   }
   
   return(wrangled)
