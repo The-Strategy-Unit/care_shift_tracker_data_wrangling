@@ -1,5 +1,3 @@
-
-
 #' The number of elective and non elective admissions by 2021 LSOA code and
 #' month.
 #'
@@ -15,11 +13,7 @@ get_elective_non_elective_admissions_sub_geography <- function(
     age, 
     start, 
     connection) {
-  sub_geography_column <- if (sub_geography == "lsoa") {
-    "Der_Postcode_LSOA_2021_Code"
-  } else if (sub_geography == "gp") {
-    "GP_Practice_SUS"
-  }
+  sub_geography_column <- get_subgeography_column(sub_geography)
   
   query <- "
     SELECT
@@ -83,21 +77,4 @@ get_elective_non_elective_ratio <- function(data, geography) {
     )
   
   return(wrangled)
-}
-
-#' Get the table column name related to the geography.
-#'
-#' @param geography  The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#'
-#' @returns A string.
-get_geography_column <- function(geography) {
-  if (geography == "icb") {
-    "icb24cdh"
-  } else if (geography == "la") {
-    "lad24cd"
-  } else if (geography == "pcn") {
-    "pcn_code"
-  } else {
-    "ERROR - please choose a geography: icb, la, pcn"
-  }
 }
