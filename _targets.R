@@ -112,5 +112,12 @@ list(
   tar_target(
     elective_non_elective_ratio_pcn,
     get_elective_non_elective_ratio(elective_non_elective_gp, "pcn")
-  )
+  ),
+  
+  # Frailty
+  tarchetypes::tar_file(frailty_risk_scores_filename,
+                        "data/frailty_risk_scores.csv"),
+  tar_target(frailty_risk_scores,
+             read.csv(frailty_risk_scores_filename) |>
+               janitor::clean_names())
 )
