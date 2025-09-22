@@ -2,7 +2,7 @@
 # 
 #' Get the table column name related to the geography.
 #'
-#' @param geography  The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #'
 #' @returns A string.
 get_geography_column <- function(geography) {
@@ -30,4 +30,24 @@ get_subgeography_column <- function(sub_geography) {
   } 
   
   return(column)
+}
+
+#' Join a dataframe at sub-geography level to geography lookup.
+#'
+#' @param data A dataframe as sub-geography level
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param lookup The lookup between sub-geography and geography.
+#'
+#' @returns A dataframe containing `data` joined to the `lookup`.
+join_to_geography_lookup <- function(data, geography, lookup){
+  wrangled <- if(geography == "pcn") {
+    data |>
+      dplyr::left_join(lookup, by = c("gp_practice_sus" = "partner_organisation_code"))
+  } else {
+    data |>
+      dplyr::left_join(lookup |>
+                         dplyr::select(-geometry), by = c("der_postcode_lsoa_2021_code" = "lsoa21cd"))
+  }
+  
+  return(wrangled)
 }
