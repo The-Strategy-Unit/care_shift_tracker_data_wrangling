@@ -51,8 +51,8 @@ get_elective_non_elective_admissions_sub_geography <- function(
 
 #' Elective to non-elective admissions ratio by month and geography.
 #'
-#' @param data The number of elective and non elective admissions by 2021 LSOA
-#' code and month.
+#' @param data The number of elective and non elective admissions by LA, ICB or
+#' PCN and month.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #'
 #' @returns A dataframe with the elective to non-elective admissions ratio by
