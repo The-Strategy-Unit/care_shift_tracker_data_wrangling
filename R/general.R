@@ -1,7 +1,5 @@
-
-
-
-
+# General functions.
+# 
 #' Get the table column name related to the geography.
 #'
 #' @param geography  The geography of interest: `"icb"`, `"la"` or `"pcn"`.
@@ -19,6 +17,11 @@ get_geography_column <- function(geography) {
   }
 }
 
+#' Get the table column name related to the sub-geography.
+#'
+#' @param sub_geography The geography of interest: `"lsoa"`or `"gp"`.
+#'
+#' @returns A string.
 get_subgeography_column <- function(sub_geography) {
   column <- if (sub_geography == "lsoa") {
     "Der_Postcode_LSOA_2021_Code"

@@ -1,5 +1,7 @@
-#' The number of elective and non elective admissions by 2021 LSOA code and
-#' month.
+# Functions for the elective to non elective ratio indicator: 
+# `elec_non_elec_ratio`.
+
+#' The number of elective and non elective admissions by LSOA/GP and month.
 #'
 #' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
@@ -7,7 +9,7 @@
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #'
 #' @returns A dataframe with the number of elective and non elective admissions
-#' by 2021 LSOA code and month.
+#' by LSOA/GP code and month.
 get_elective_non_elective_admissions_sub_geography <- function(
     sub_geography, 
     age, 
