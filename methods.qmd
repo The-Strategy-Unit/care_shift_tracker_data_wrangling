@@ -7,8 +7,7 @@
 
 - Mapped LSOA11 codes to LSOA21 then mapped this to ICB24 / LA24
 - Even though some LSOA11 mapped to multiple LSOA21, they still only mapped to one ICB
-- But 4 LSOA11 codes mapped to multiple LA (see chunk below)
-- So method was to divide the LSOA11 population by the number of LA it mapped to before calculating the LA population size
+- But 4 LSOA11 codes mapped to multiple LA:
 
 ```{r}
 targets::tar_read(lsoa_population) |> 
@@ -22,6 +21,9 @@ targets::tar_read(lsoa_population) |>
   tidyr::separate(la, sep = ",", into = c("a", "b", "c")) |>
   dplyr::filter(a != b | a != c | b != c)
 ```
+
+- So method was to divide the LSOA11 population by the number of LA it mapped to before calculating the LA population size
+- For recent years where LSOA population estimates were not yet available, the latest available year's data was used
 
 # Identifying admissions of older people with frailty
 
