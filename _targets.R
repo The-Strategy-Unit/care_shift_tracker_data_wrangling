@@ -59,22 +59,25 @@ list(
           stringr::str_replace_na(as.character(next_month)) |>
           lubridate::ymd()
       ) |>
-      dplyr::filter(month_end == max(month_end), .by = partner_organisation_code)
+      dplyr::filter(month_end == max(month_end), 
+                    .by = partner_organisation_code)
   ),
   tar_target(
     lsoa11_to_lsoa_21,
     DBI::dbGetQuery(
-      con, 
+      con,
       "
-      SELECT 
+      SELECT
         lsoa11cd,
         lsoa21cd,
         chgind
-    
+
       FROM [Internal_Reference].[DRD_LSOA11_LSOA21_UTLA_1]
-      ") |>
+      "
+    ) |>
       janitor::clean_names() |>
-      unique()),
+      unique()
+  ),
   
   ## Geography codes to names --------------------------------------------------
   tar_target(
@@ -103,15 +106,16 @@ list(
   ),
   tar_target(
     population_lsoa_mapped_to_higher_geographies,
-    population_lsoa |> 
+    population_lsoa |>
       dplyr::rename(lsoa11cd = area_code) |>
       dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
       dplyr::left_join(lsoa_to_higher_geographies |>
-                         dplyr::select(-geometry),
-                       by = "lsoa21cd") |>
-      dplyr::mutate(number = dplyr::n(), 
-                    .by = c(lsoa11cd, effective_snapshot_date),
-                    population_size_amended = population_size / number)
+                         dplyr::select(-geometry), by = "lsoa21cd") |>
+      dplyr::mutate(
+        number = dplyr::n(),
+        .by = c(lsoa11cd, effective_snapshot_date),
+        population_size_amended = population_size / number
+      )
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
@@ -157,7 +161,7 @@ list(
                                                        age_cutoff, 
                                                        start_date, 
                                                        con) |>
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   tar_target(
     elective_non_elective_ratio_pcn,
@@ -189,55 +193,85 @@ list(
     tar_target(
       frailty_beddays,
       get_frailty_beddays_geography(frailty_beddays_lsoa, 
-                             geography, 
-                             lsoa_to_higher_geographies)
+                                    geography, 
+                                    lsoa_to_higher_geographies)
     )
   ),
   tar_target(
     frailty_beddays_pcn,
-    get_frailty_beddays_geography(frailty_beddays_gp, 
-                           "pcn", 
-                           gp_to_pcn)
+    get_frailty_beddays_geography(frailty_beddays_gp, "pcn", gp_to_pcn)
   ),
   tar_target(
     frailty_indicators_icb,
-    get_frailty_indicators(frailty_beddays_icb,
-                           population_icb,
-                           "icb",
-                           latest_population_year)
+    get_frailty_indicators(
+      frailty_beddays_icb,
+      population_icb,
+      "icb",
+      latest_population_year
+    )
   ),
   tar_target(
     frailty_indicators_la,
-    get_frailty_indicators(frailty_beddays_la,
-                           population_la,
-                           "la",
-                           latest_population_year)
+    get_frailty_indicators(
+      frailty_beddays_la,
+      population_la,
+      "la",
+      latest_population_year
+    )
   ),
   tar_target(
     frailty_indicators_pcn,
-    get_frailty_indicators(frailty_beddays_pcn,
-                           population_pcn,
-                           "pcn",
-                           latest_population_year)
+    get_frailty_indicators(
+      frailty_beddays_pcn,
+      population_pcn,
+      "pcn",
+      latest_population_year
+    )
   ),
   
   # All indicators -------------------------------------------------------------
-  tar_target(indicators_icb,
-             rbind(elective_non_elective_ratio_icb,
-                   frailty_indicators_icb) |>
-               dplyr::left_join(icb_lookup |>
-                                  dplyr::select(-dplyr::any_of("geometry")), "icb") |>
-               dplyr::select(indicator, icb, icb_name, date, numerator, denominator, value)),
-  tar_target(indicators_la,
-             rbind(elective_non_elective_ratio_la,
-                   frailty_indicators_la) |>
-               dplyr::left_join(la_lookup |>
-                                  dplyr::select(-dplyr::any_of("geometry")), "la") |>
-               dplyr::select(indicator, la, la_name, date, numerator, denominator, value)),
-  tar_target(indicators_pcn,
-             rbind(elective_non_elective_ratio_pcn,
-                   frailty_indicators_pcn) |>
-               dplyr::left_join(pcn_lookup, "pcn") |>
-               dplyr::select(indicator, pcn, pcn_name, date, numerator, denominator, value))
-  
+  tar_target(
+    indicators_icb,
+    rbind(elective_non_elective_ratio_icb, 
+          frailty_indicators_icb) |>
+    dplyr::left_join(icb_lookup |>
+                       dplyr::select(-dplyr::any_of("geometry")), 
+                     "icb") |>
+    dplyr::select(indicator, 
+                  icb, 
+                  icb_name, 
+                  date, 
+                  numerator, 
+                  denominator, 
+                  value)
+  ),
+  tar_target(
+    indicators_la,
+    rbind(elective_non_elective_ratio_la, 
+          frailty_indicators_la) |>
+    dplyr::left_join(la_lookup |>
+                       dplyr::select(-dplyr::any_of("geometry")), 
+                     "la") |>
+    dplyr::select(indicator, 
+                  la, 
+                  la_name, 
+                  date, 
+                  numerator, 
+                  denominator, 
+                  value)
+  ),
+  tar_target(
+    indicators_pcn,
+    rbind(
+      elective_non_elective_ratio_pcn, 
+      frailty_indicators_pcn) |>
+    dplyr::left_join(pcn_lookup, "pcn") |>
+    dplyr::select(indicator, 
+                  pcn, 
+                  pcn_name, 
+                  date, 
+                  numerator, 
+                  denominator, 
+                  value)
+  )
 )
