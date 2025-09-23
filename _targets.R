@@ -61,6 +61,47 @@ list(
       ) |>
       dplyr::filter(month_end == max(month_end), .by = partner_organisation_code)
   ),
+  tar_target(
+    lsoa11_to_lsoa_21,
+    DBI::dbGetQuery(
+      con, 
+      "
+      SELECT 
+        lsoa11cd,
+        lsoa21cd,
+        chgind
+    
+      FROM [Internal_Reference].[DRD_LSOA11_LSOA21_UTLA_1]
+      ") |>
+      janitor::clean_names() |>
+      unique()),
+  
+  # Population data ------------------------------------------------------------
+  tar_target(
+    population_lsoa,
+    get_population_lsoa(age_cutoff, start_date, con)
+  ),
+  tar_target(
+    population_lsoa_mapped_to_higher_geographies,
+    population_lsoa |> 
+      dplyr::rename(lsoa11cd = area_code) |>
+      dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
+      dplyr::left_join(lsoa_to_higher_geographies |>
+                         dplyr::select(-geometry),
+                       by = "lsoa21cd") |>
+      dplyr::mutate(number = dplyr::n(), 
+                    .by = c(lsoa11cd, effective_snapshot_date),
+                    population_size_amended = population_size / number)
+  ),
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      population,
+      get_higher_geography_population_from_lsoa(
+        population_lsoa_mapped_to_higher_geographies, 
+        geography)
+    )
+  ),
   
   ## Geography codes to names --------------------------------------------------
   tar_target(
