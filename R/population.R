@@ -39,7 +39,31 @@ get_higher_geography_population_from_lsoa <- function(data, geography) {
   return(wrangled)
 }
 
+get_population_pcn <- function(age, start, connection){
+  
+  query <- "
+    SELECT
+        Org_Code AS pcn,
+        convert(varchar(7), Effective_Snapshot_Date, 120) AS date,
+        SUM(Number_Of_Patients) AS population_size
 
+      FROM [UKHF_Demography].[No_Of_Patients_Regd_At_GP_Prac_Regions_Single_Age1_1]
+
+      WHERE Age >= 'age_cutoff'
+        AND Org_Type = 'PCN'
+        AND Effective_Snapshot_Date >= 'start_date'
+
+      GROUP BY
+        Org_Code,
+        convert(varchar(7), Effective_Snapshot_Date, 120)" |>
+    stringr::str_replace_all(c("age_cutoff" = as.character(age),
+                               "start_date" = start))
+  
+  data <- DBI::dbGetQuery(connection, query) |>
+    janitor::clean_names()
+  
+  return(data)
+}
 
 
 
