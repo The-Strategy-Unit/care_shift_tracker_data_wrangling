@@ -76,6 +76,26 @@ list(
       janitor::clean_names() |>
       unique()),
   
+  ## Geography codes to names --------------------------------------------------
+  tar_target(
+    icb_lookup,
+    lsoa_to_higher_geographies |>
+      dplyr::select(icb = icb24cdh, icb_name = icb24nm) |>
+      unique()
+  ),
+  tar_target(
+    la_lookup,
+    lsoa_to_higher_geographies |>
+      dplyr::select(la = lad24cd, la_name = lad24nm) |>
+      unique()
+  ),
+  tar_target(
+    pcn_lookup,
+    gp_to_pcn |>
+      dplyr::select(pcn = pcn_code, pcn_name) |>
+      unique()
+  ),
+  
   # Population data ------------------------------------------------------------
   tar_target(
     population_lsoa,
@@ -108,25 +128,9 @@ list(
       dplyr::summarise(population_year = max(as.numeric(population_year))) |>
       dplyr::pull(population_year)
   ),
-  
-  ## Geography codes to names --------------------------------------------------
-  tar_target(
-    icb_lookup,
-    lsoa_to_higher_geographies |>
-      dplyr::select(icb = icb24cdh, icb_name = icb24nm) |>
-      unique()
-  ),
-  tar_target(
-    la_lookup,
-    lsoa_to_higher_geographies |>
-      dplyr::select(la = lad24cd, la_name = lad24nm) |>
-      unique()
-  ),
-  tar_target(
-    pcn_lookup,
-    gp_to_pcn |>
-      dplyr::select(pcn = pcn_code, pcn_name) |>
-      unique()
+  targets::tar_target(
+    population_pcn,
+    get_population_pcn(age_cutoff, start_date, con)
   ),
   
   # Elective to non elective admissions ratio ----------------------------------
@@ -207,6 +211,13 @@ list(
     get_frailty_indicators(frailty_beddays_la,
                            population_la,
                            "la",
+                           latest_population_year)
+  ),
+  tar_target(
+    frailty_indicators_pcn,
+    get_frailty_indicators(frailty_beddays_pcn,
+                           population_pcn,
+                           "pcn",
                            latest_population_year)
   )
   
