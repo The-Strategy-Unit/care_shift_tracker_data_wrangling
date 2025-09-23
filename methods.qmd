@@ -1,0 +1,30 @@
+# Resident vs registered
+
+- Used patient's LSOA to map up to ICB and LA
+- Used patient's registered GP to map up to PCN
+
+# Population data
+
+- Mapped LSOA11 codes to LSOA21 then mapped this to ICB24 / LA24
+- Even though some LSOA11 mapped to multiple LSOA21, they still only mapped to one ICB
+- But 4 LSOA11 codes mapped to multiple LA (see chunk below)
+- So method was to divide the LSOA11 population by the number of LA it mapped to before calculating the LA population size
+
+```{r}
+targets::tar_read(lsoa_population) |> 
+  dplyr::rename(lsoa11cd = area_code) |>
+  dplyr::left_join(targets::tar_read(lsoa11_to_lsoa_21), by = "lsoa11cd") |>
+  dplyr::left_join(targets::tar_read(lsoa_to_higher_geographies) |>
+                     dplyr::select(-geometry),
+                   by = "lsoa21cd") |>
+  dplyr::summarise(la = paste(lad24cd, collapse = ","),
+                   .by = lsoa11cd) |>
+  tidyr::separate(la, sep = ",", into = c("a", "b", "c")) |>
+  dplyr::filter(a != b | a != c | b != c)
+```
+
+# Identifying admissions of older people with frailty
+
+- Identified emergency admissions of patients aged 75+ (to match CPMA definition) and the discharge month
+- Then got the patients' prior admissions from within 2 years and their primary diagnosis
+- Then calculated weighted sum using `frailty_risk_scores.csv` and classed scores >15 as high and >5 as intermediate
