@@ -102,6 +102,12 @@ list(
         geography)
     )
   ),
+  targets::tar_target(
+    latest_population_year,
+    population_icb |>
+      dplyr::summarise(population_year = max(as.numeric(population_year))) |>
+      dplyr::pull(population_year)
+  ),
   
   ## Geography codes to names --------------------------------------------------
   tar_target(
@@ -177,16 +183,31 @@ list(
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
-      frailty_indicators,
-      get_frailty_indicators(frailty_beddays_lsoa, 
+      frailty_beddays,
+      get_frailty_beddays_geography(frailty_beddays_lsoa, 
                              geography, 
                              lsoa_to_higher_geographies)
     )
   ),
   tar_target(
-    frailty_indicators_pcn,
-    get_frailty_indicators(frailty_beddays_gp, 
+    frailty_beddays_pcn,
+    get_frailty_beddays_geography(frailty_beddays_gp, 
                            "pcn", 
                            gp_to_pcn)
+  ),
+  tar_target(
+    frailty_indicators_icb,
+    get_frailty_indicators(frailty_beddays_icb,
+                           population_icb,
+                           "icb",
+                           latest_population_year)
+  ),
+  tar_target(
+    frailty_indicators_la,
+    get_frailty_indicators(frailty_beddays_la,
+                           population_la,
+                           "la",
+                           latest_population_year)
   )
+  
 )

@@ -125,7 +125,7 @@ get_frailty_beddays_sub_geography <- function(sub_geography,
   return(wrangled)
 }
 
-get_frailty_indicators <- function(data, geography, lookup) {
+get_frailty_beddays_geography <- function(data, geography, lookup) {
   geography_column <- get_geography_column(geography)
   
   wrangled <- data |>
@@ -140,6 +140,31 @@ get_frailty_indicators <- function(data, geography, lookup) {
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
       beddays
+    )
+  
+  return(wrangled)
+}
+
+get_frailty_indicators <- function(data, population, geography, latest_population_year) {
+  wrangled <- data |>
+    dplyr::mutate(
+      year = stringr::str_sub(date, start = 1, end = 4),
+      population_year = ifelse(year > latest_population_year, 
+                               latest_population_year, 
+                               year)
+    ) |>
+    dplyr::left_join(population, by = c(geography, "population_year")) |>
+    dplyr::mutate(
+      beddays_per_100000_pop = (beddays * 100000 / population_size) |>
+        janitor::round_half_up()
+    ) |>
+    dplyr::select(
+      indicator,
+      date,
+      !!rlang::sym(geography),
+      beddays,
+      population_size,
+      beddays_per_100000_pop
     )
   
   return(wrangled)
