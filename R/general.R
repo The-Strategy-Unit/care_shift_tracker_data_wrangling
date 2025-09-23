@@ -1,5 +1,5 @@
 # General functions.
-# 
+#
 #' Get the table column name related to the geography.
 #'
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
@@ -27,45 +27,61 @@ get_subgeography_column <- function(sub_geography) {
     "Der_Postcode_LSOA_2021_Code"
   } else if (sub_geography == "gp") {
     "GP_Practice_SUS"
-  } 
+  }
   
   return(column)
 }
 
 #' Join a dataframe at sub-geography level to geography lookup.
 #'
-#' @param data A dataframe as sub-geography level
+#' @param data A dataframe at sub-geography level
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #' @param lookup The lookup between sub-geography and geography.
 #'
 #' @returns A dataframe containing `data` joined to the `lookup`.
-join_to_geography_lookup <- function(data, geography, lookup){
-  wrangled <- if(geography == "pcn") {
+join_to_geography_lookup <- function(data, geography, lookup) {
+  wrangled <- if (geography == "pcn") {
     data |>
-      dplyr::left_join(lookup, 
+      dplyr::left_join(lookup,
                        by = c("gp_practice_sus" = "partner_organisation_code"))
   } else {
     data |>
-      dplyr::left_join(lookup |>
-                         dplyr::select(-dplyr::any_of("geometry")), 
-                       by = c("der_postcode_lsoa_2021_code" = "lsoa21cd"))
+      dplyr::left_join(
+        lookup |>
+          dplyr::select(-dplyr::any_of("geometry")),
+        by = c("der_postcode_lsoa_2021_code" = "lsoa21cd")
+      )
   }
   
   return(wrangled)
 }
 
 
-join_to_population_data <- function(data, population, geography, latest_population_year){
-  wrangled <- if(geography == "pcn") {
+#' Join a dataframe at geography level to its population data.
+#'
+#' @param data A dataframe at geography level.
+#' @param population The population data by month and geography.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param latest_population_year The latest year that population data is
+#' available for.
+#'
+#' @returns A dataframe containing `data` joined to the `population` data.
+join_to_population_data <- function(data,
+                                    population,
+                                    geography,
+                                    latest_population_year) {
+  wrangled <- if (geography == "pcn") {
     data  |>
       dplyr::left_join(population, by = c(geography, "date"))
   } else {
     data |>
       dplyr::mutate(
         year = stringr::str_sub(date, start = 1, end = 4),
-        population_year = ifelse(year > latest_population_year, 
-                                 latest_population_year, 
-                                 year)
+        population_year = ifelse(
+          year > latest_population_year,
+          latest_population_year,
+          year
+        )
       ) |>
       dplyr::left_join(population, by = c(geography, "population_year"))
   }

@@ -1,6 +1,39 @@
+# Functions to wrangle population data.
 
-get_population_lsoa <- function(age, start, connection){
+#' Get ICB / LA populations from LSOA populations.
+#'
+#' @param data A dataframe of LSOA populations.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe of ICB / LA populations by year.
+get_higher_geography_population_from_lsoa <- function(data, geography) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      population_size = sum(population_size_amended),
+      .by = c(effective_snapshot_date, {{geography_column}})
+    ) |>
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::mutate(population_year = as.character(
+      lubridate::year(effective_snapshot_date))) |>
+    dplyr::select(
+      population_year,
+      !!rlang::sym(geography) := !!rlang::sym(geography_column),
+      population_size
+    )
+  
+  return(wrangled)
+}
 
+#' Get LSOA populations.
+#'
+#' @param age The minimum age cutoff.
+#' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
+#'
+#' @returns A dataframe of LSOA populations by year.
+get_population_lsoa <- function(age, start, connection) {
   query <- "SELECT
         Area_code,
         Effective_Snapshot_Date,
@@ -15,32 +48,23 @@ get_population_lsoa <- function(age, start, connection){
       GROUP BY
         Area_code,
         Effective_Snapshot_Date" |>
-    stringr::str_replace_all(c("age_cutoff" = as.character(age),
+    stringr::str_replace_all(c("age_cutoff" = as.character(age), 
                                "start_date" = start))
-
+  
   data <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
-
+  
   return(data)
 }
 
-get_higher_geography_population_from_lsoa <- function(data, geography) {
-  geography_column <- get_geography_column(geography)
-  
-  wrangled <- data |>
-    dplyr::summarise(population_size = sum(population_size_amended),
-                     .by = c(effective_snapshot_date, {{geography_column}}))|>
-    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
-    dplyr::mutate(population_year = as.character(lubridate::year(effective_snapshot_date))) |>
-    dplyr::select(population_year, 
-                  !!rlang::sym(geography) := !!rlang::sym(geography_column), 
-                  population_size)
-  
-  return(wrangled)
-}
-
-get_population_pcn <- function(age, start, connection){
-  
+#' Get PCN populations.
+#'
+#' @param age The minimum age cutoff.
+#' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
+#'
+#' @returns A dataframe of PCN populations by year.
+get_population_pcn <- function(age, start, connection) {
   query <- "
     SELECT
         Org_Code AS pcn,
@@ -56,7 +80,7 @@ get_population_pcn <- function(age, start, connection){
       GROUP BY
         Org_Code,
         convert(varchar(7), Effective_Snapshot_Date, 120)" |>
-    stringr::str_replace_all(c("age_cutoff" = as.character(age),
+    stringr::str_replace_all(c("age_cutoff" = as.character(age), 
                                "start_date" = start))
   
   data <- DBI::dbGetQuery(connection, query) |>
@@ -64,6 +88,3 @@ get_population_pcn <- function(age, start, connection){
   
   return(data)
 }
-
-
-

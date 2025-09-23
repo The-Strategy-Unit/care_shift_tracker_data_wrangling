@@ -1,4 +1,4 @@
-# Functions for the elective to non elective ratio indicator: 
+# Functions for the elective to non elective ratio indicator:
 # `elec_non_elec_ratio`.
 
 #' The number of elective and non elective admissions by LSOA/GP and month.
@@ -10,11 +10,10 @@
 #'
 #' @returns A dataframe with the number of elective and non elective admissions
 #' by LSOA/GP code and month.
-get_elective_non_elective_admissions_sub_geography <- function(
-    sub_geography, 
-    age, 
-    start, 
-    connection) {
+get_elective_non_elective_admissions_sub_geography <- function(sub_geography, 
+                                                               age, 
+                                                               start, 
+                                                               connection) {
   sub_geography_column <- get_subgeography_column(sub_geography)
   
   query <- "
