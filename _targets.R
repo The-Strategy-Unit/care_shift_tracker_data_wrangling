@@ -219,6 +219,25 @@ list(
                            population_pcn,
                            "pcn",
                            latest_population_year)
-  )
+  ),
+  
+  # All indicators -------------------------------------------------------------
+  tar_target(indicators_icb,
+             rbind(elective_non_elective_ratio_icb,
+                   frailty_indicators_icb) |>
+               dplyr::left_join(icb_lookup |>
+                                  dplyr::select(-dplyr::any_of("geometry")), "icb") |>
+               dplyr::select(indicator, icb, icb_name, date, numerator, denominator, value)),
+  tar_target(indicators_la,
+             rbind(elective_non_elective_ratio_la,
+                   frailty_indicators_la) |>
+               dplyr::left_join(la_lookup |>
+                                  dplyr::select(-dplyr::any_of("geometry")), "la") |>
+               dplyr::select(indicator, la, la_name, date, numerator, denominator, value)),
+  tar_target(indicators_pcn,
+             rbind(elective_non_elective_ratio_pcn,
+                   frailty_indicators_pcn) |>
+               dplyr::left_join(pcn_lookup, "pcn") |>
+               dplyr::select(indicator, pcn, pcn_name, date, numerator, denominator, value))
   
 )
