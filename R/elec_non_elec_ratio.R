@@ -75,7 +75,7 @@ get_elective_non_elective_ratio <- function(data, geography) {
       date,
       numerator = elective,
       denominator = non_elective,
-      ratio
+      value = ratio
     )
   
   return(wrangled)
