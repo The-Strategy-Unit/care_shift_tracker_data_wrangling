@@ -1,7 +1,7 @@
+# Functions for the elective to non elective ratio indicator:
+# `elec_non_elec_ratio`.
 
-
-#' The number of elective and non elective admissions by 2021 LSOA code and
-#' month.
+#' The number of elective and non elective admissions by LSOA/GP and month.
 #'
 #' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
@@ -9,17 +9,12 @@
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #'
 #' @returns A dataframe with the number of elective and non elective admissions
-#' by 2021 LSOA code and month.
-get_elective_non_elective_admissions_sub_geography <- function(
-    sub_geography, 
-    age, 
-    start, 
-    connection) {
-  sub_geography_column <- if (sub_geography == "lsoa") {
-    "Der_Postcode_LSOA_2021_Code"
-  } else if (sub_geography == "gp") {
-    "GP_Practice_SUS"
-  }
+#' by LSOA/GP code and month.
+get_elective_non_elective_admissions_sub_geography <- function(sub_geography, 
+                                                               age, 
+                                                               start, 
+                                                               connection) {
+  sub_geography_column <- get_subgeography_column(sub_geography)
   
   query <- "
     SELECT
@@ -55,8 +50,8 @@ get_elective_non_elective_admissions_sub_geography <- function(
 
 #' Elective to non-elective admissions ratio by month and geography.
 #'
-#' @param data The number of elective and non elective admissions by 2021 LSOA
-#' code and month.
+#' @param data The number of elective and non elective admissions by LA, ICB or
+#' PCN and month.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #'
 #' @returns A dataframe with the elective to non-elective admissions ratio by
@@ -79,25 +74,8 @@ get_elective_non_elective_ratio <- function(data, geography) {
       date,
       numerator = elective,
       denominator = non_elective,
-      ratio
+      value = ratio
     )
   
   return(wrangled)
-}
-
-#' Get the table column name related to the geography.
-#'
-#' @param geography  The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#'
-#' @returns A string.
-get_geography_column <- function(geography) {
-  if (geography == "icb") {
-    "icb24cdh"
-  } else if (geography == "la") {
-    "lad24cd"
-  } else if (geography == "pcn") {
-    "pcn_code"
-  } else {
-    "ERROR - please choose a geography: icb, la, pcn"
-  }
 }
