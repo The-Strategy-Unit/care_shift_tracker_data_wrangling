@@ -153,23 +153,7 @@ get_frailty_indicators <- function(data, population, geography, latest_populatio
   return(wrangled)
 }
 
-join_to_population_data <- function(data, population, geography, latest_population_year){
-  wrangled <- if(geography == "pcn") {
-    data  |>
-      dplyr::left_join(population, by = c(geography, "date"))
-  } else {
-    data |>
-      dplyr::mutate(
-        year = stringr::str_sub(date, start = 1, end = 4),
-        population_year = ifelse(year > latest_population_year, 
-                                 latest_population_year, 
-                                 year)
-      ) |>
-      dplyr::left_join(population, by = c(geography, "population_year"))
-  }
-  
-  return(wrangled)
-}
+
 
 get_beddays_per_100000_pop <- function(data, geography) {
   wrangled <- data |>
@@ -181,9 +165,9 @@ get_beddays_per_100000_pop <- function(data, geography) {
       indicator,
       date,
       !!rlang::sym(geography),
-      beddays,
-      population_size,
-      beddays_per_100000_pop
+      numerator = beddays,
+      denominator = population_size,
+      value = beddays_per_100000_pop
     )
   return(wrangled)
 }

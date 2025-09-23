@@ -53,3 +53,22 @@ join_to_geography_lookup <- function(data, geography, lookup){
   
   return(wrangled)
 }
+
+
+join_to_population_data <- function(data, population, geography, latest_population_year){
+  wrangled <- if(geography == "pcn") {
+    data  |>
+      dplyr::left_join(population, by = c(geography, "date"))
+  } else {
+    data |>
+      dplyr::mutate(
+        year = stringr::str_sub(date, start = 1, end = 4),
+        population_year = ifelse(year > latest_population_year, 
+                                 latest_population_year, 
+                                 year)
+      ) |>
+      dplyr::left_join(population, by = c(geography, "population_year"))
+  }
+  
+  return(wrangled)
+}
