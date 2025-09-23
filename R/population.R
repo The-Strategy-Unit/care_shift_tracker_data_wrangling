@@ -30,7 +30,11 @@ get_higher_geography_population_from_lsoa <- function(data, geography) {
   wrangled <- data |>
     dplyr::summarise(population_size = sum(population_size_amended),
                      .by = c(effective_snapshot_date, {{geography_column}}))|>
-    dplyr::filter(!is.na(!!rlang::sym(geography_column)))
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::mutate(population_year = as.character(lubridate::year(effective_snapshot_date))) |>
+    dplyr::select(population_year, 
+                  !!rlang::sym(geography) := !!rlang::sym(geography_column), 
+                  population_size)
   
   return(wrangled)
 }
