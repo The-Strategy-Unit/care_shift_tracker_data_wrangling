@@ -147,17 +147,36 @@ get_frailty_beddays_geography <- function(data, geography, lookup) {
 
 get_frailty_indicators <- function(data, population, geography, latest_population_year) {
   wrangled <- data |>
+    join_to_population_data(population, geography, latest_population_year) |>
+    get_beddays_per_100000_pop(geography)
+  
+  return(wrangled)
+}
+
+join_to_population_data <- function(data, population, geography, latest_population_year){
+  wrangled <- if(geography == "pcn") {
+    data  |>
+      dplyr::left_join(population, by = c(geography, "date"))
+  } else {
+    data |>
+      dplyr::mutate(
+        year = stringr::str_sub(date, start = 1, end = 4),
+        population_year = ifelse(year > latest_population_year, 
+                                 latest_population_year, 
+                                 year)
+      ) |>
+      dplyr::left_join(population, by = c(geography, "population_year"))
+  }
+  
+  return(wrangled)
+}
+
+get_beddays_per_100000_pop <- function(data, geography) {
+  wrangled <- data |>
     dplyr::mutate(
-      year = stringr::str_sub(date, start = 1, end = 4),
-      population_year = ifelse(year > latest_population_year, 
-                               latest_population_year, 
-                               year)
-    ) |>
-    dplyr::left_join(population, by = c(geography, "population_year")) |>
-    dplyr::mutate(
-      beddays_per_100000_pop = (beddays * 100000 / population_size) |>
-        janitor::round_half_up()
-    ) |>
+    beddays_per_100000_pop = (beddays * 100000 / population_size) |>
+      janitor::round_half_up()
+  ) |>
     dplyr::select(
       indicator,
       date,
@@ -166,6 +185,5 @@ get_frailty_indicators <- function(data, population, geography, latest_populatio
       population_size,
       beddays_per_100000_pop
     )
-  
   return(wrangled)
 }
