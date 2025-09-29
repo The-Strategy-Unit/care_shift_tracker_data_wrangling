@@ -16,7 +16,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput(
-        inputId  = "Level",
+        inputId  = "Area Level",
         label    = "Select organisation level",
         choices  = names(org_lookup),
         selected = names(org_lookup)[1]
