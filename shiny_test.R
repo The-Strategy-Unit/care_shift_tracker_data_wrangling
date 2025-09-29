@@ -11,7 +11,7 @@ org_lookup <- list(
 
 ui <- fluidPage(
   
-  titlePanel("Organisation-Level Dashboard"),
+  titlePanel("Care-shift Tracker"),
   
   sidebarLayout(
     sidebarPanel(
@@ -48,11 +48,27 @@ ui <- fluidPage(
           uiOutput("comparison_plots")
         ),
         
+        
+        tabPanel(
+          title = "Explorer",
+          h4("Explore Relationships Between Indicators"),
+          fluidRow(
+            column(6,
+                   selectInput("explorer_x", "Select X-axis Indicator", choices = NULL)
+            ),
+            column(6,
+                   selectInput("explorer_y", "Select Y-axis Indicator", choices = NULL)
+            )
+          ),
+          plotOutput("explorer_plot", height = "400px")
+        ),
+        
         tabPanel(
           title = "Metadata",
           h4("Indicator Definitions"),
           dataTableOutput("metadata_table")
         )
+        
       )
     )
   )
@@ -157,6 +173,44 @@ server <- function(input, output, session) {
       stringsAsFactors = FALSE
     )
   })
+  
+  # Sample indicator list (replace with your actual list)
+  all_indicators <- paste0("Ind", 1:12)
+  
+  # Populate dropdowns when app loads
+  observe({
+    updateSelectInput(session, "explorer_x", choices = all_indicators, selected = all_indicators[1])
+    updateSelectInput(session, "explorer_y", choices = all_indicators, selected = all_indicators[2])
+  })
+  
+  # Render scatterplot
+  output$explorer_plot <- renderPlot({
+    req(input$explorer_x, input$explorer_y)
+    
+    # Dummy data — replace with actual indicator values
+    df <- data.frame(
+      x = rnorm(100, mean = 50, sd = 10),
+      y = rnorm(100, mean = 50, sd = 10)
+    )
+    
+    # Linear model
+    fit <- lm(y ~ x, data = df)
+    r2 <- summary(fit)$r.squared
+    corr <- cor(df$x, df$y)
+    
+    ggplot(df, aes(x = x, y = y)) +
+      geom_point(alpha = 0.7, color = "darkblue") +
+      geom_smooth(method = "lm", se = FALSE, color = "red") +
+      theme_minimal() +
+      labs(
+        x = input$explorer_x,
+        y = input$explorer_y,
+        title = paste("Scatterplot of", input$explorer_x, "vs", input$explorer_y),
+        subtitle = paste0("Correlation: ", round(corr, 2), 
+                          " | R²: ", round(r2, 2))
+      )
+  })
+  
 }
 
 shinyApp(ui, server)
