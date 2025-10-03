@@ -30,6 +30,9 @@ con <- DBI::dbConnect(
 # Replace the target list below with your own:
 list(
   tar_target(age_cutoff, 65),
+  tar_target(
+    age_bands,
+    "('65-69', '70-74', '75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
   tar_target(start_date, "2008-04-01"),
   tar_target(next_month, Sys.Date() |>
                lubridate::ceiling_date("month")),
@@ -100,6 +103,7 @@ list(
   ),
   
   # Population data ------------------------------------------------------------
+  # LSOA to LA and ICB
   tar_target(
     population_lsoa,
     get_population_lsoa(age_cutoff, start_date, con)
@@ -121,7 +125,7 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       population,
-      get_higher_geography_population_from_lsoa(
+      get_population_higher_geography_from_lsoa(
         population_lsoa_mapped_to_higher_geographies, 
         geography)
     )
@@ -132,9 +136,21 @@ list(
       dplyr::summarise(population_year = max(as.numeric(population_year))) |>
       dplyr::pull(population_year)
   ),
+  
+  # GP to PCN
+  targets::tar_target(
+    population_gp_pre_2017_04_01,
+    get_population_gp_pre_2017_04_01(age_bands, start_date, con) 
+  ),
+  targets::tar_target(
+    population_gp_post_2017_04_01,
+    get_population_gp_post_2017_04_01(age_bands, start_date, con) 
+  ),
   targets::tar_target(
     population_pcn,
-    get_population_pcn(age_cutoff, start_date, con)
+    get_population_pcn(population_gp_pre_2017_04_01, 
+                       population_gp_post_2017_04_01,
+                       gp_to_pcn)
   ),
   
   # Elective to non elective admissions ratio ----------------------------------
