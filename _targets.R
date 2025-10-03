@@ -157,31 +157,35 @@ list(
   # ICB and LA
   tar_target(
     elective_non_elective_lsoa,
-    get_elective_non_elective_admissions_sub_geography("lsoa", 
+    get_elective_non_elective_sub_geography("lsoa", 
                                                        age_cutoff, 
                                                        start_date, 
                                                        con)  |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
-    list(geography = c("icb", "la")),
+    list(geography = rep(c("icb", "la"), 2),
+         activity_type = rep(c("admissions", "beddays"), each = 2)),
     tar_target(
       elective_non_elective_ratio,
-      get_elective_non_elective_ratio(elective_non_elective_lsoa, geography)
+      get_elective_non_elective_ratio(elective_non_elective_lsoa, geography, activity_type)
     )
   ),
   # PCN
   tar_target(
     elective_non_elective_gp,
-    get_elective_non_elective_admissions_sub_geography("gp", 
+    get_elective_non_elective_sub_geography("gp", 
                                                        age_cutoff, 
                                                        start_date, 
                                                        con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
-  tar_target(
-    elective_non_elective_ratio_pcn,
-    get_elective_non_elective_ratio(elective_non_elective_gp, "pcn")
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      elective_non_elective_ratio_pcn,
+      get_elective_non_elective_ratio(elective_non_elective_gp, "pcn", activity_type)
+    )
   ),
   
   # Frailty
@@ -248,8 +252,10 @@ list(
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
-    rbind(elective_non_elective_ratio_icb, 
-          frailty_indicators_icb) |>
+    rbind(
+      elective_non_elective_ratio_icb_admissions, 
+      elective_non_elective_ratio_icb_beddays,  
+      frailty_indicators_icb) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -263,8 +269,10 @@ list(
   ),
   tar_target(
     indicators_la,
-    rbind(elective_non_elective_ratio_la, 
-          frailty_indicators_la) |>
+    rbind(
+      elective_non_elective_ratio_la_admissions, 
+      elective_non_elective_ratio_la_beddays,  
+      frailty_indicators_la) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -279,7 +287,8 @@ list(
   tar_target(
     indicators_pcn,
     rbind(
-      elective_non_elective_ratio_pcn, 
+      elective_non_elective_ratio_pcn_admissions, 
+      elective_non_elective_ratio_pcn_beddays, 
       frailty_indicators_pcn) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
