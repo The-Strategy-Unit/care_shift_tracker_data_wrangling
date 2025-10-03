@@ -168,23 +168,27 @@ list(
          activity_type = rep(c("admissions", "beddays"), each = 2)),
     tar_target(
       elective_non_elective_ratio,
-      get_elective_non_elective_ratio(elective_non_elective_lsoa, geography, activity_type)
+      get_elective_non_elective_ratio(elective_non_elective_lsoa, 
+                                      geography, 
+                                      activity_type)
     )
   ),
   # PCN
   tar_target(
     elective_non_elective_gp,
     get_elective_non_elective_sub_geography("gp", 
-                                                       age_cutoff, 
-                                                       start_date, 
-                                                       con) |>
+                                            age_cutoff, 
+                                            start_date, 
+                                            con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       elective_non_elective_ratio_pcn,
-      get_elective_non_elective_ratio(elective_non_elective_gp, "pcn", activity_type)
+      get_elective_non_elective_ratio(elective_non_elective_gp, 
+                                      "pcn", 
+                                      activity_type)
     )
   ),
   
