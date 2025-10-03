@@ -5,6 +5,8 @@
 
 # Population data
 
+## LSOA to ICB and LA
+
 - Mapped LSOA11 codes to LSOA21 then mapped this to ICB24 / LA24
 - Even though some LSOA11 mapped to multiple LSOA21, they still only mapped to one ICB
 - But 4 LSOA11 codes mapped to multiple LA:
@@ -24,6 +26,11 @@ targets::tar_read(lsoa_population) |>
 
 - So method was to divide the LSOA11 population by the number of LA it mapped to before calculating the LA population size
 - For recent years where LSOA population estimates were not yet available, the latest available year's data was used
+
+## GP to PCN
+
+- PCN populations were calculated by aggregating GP populations up.
+- For GP populations there were two data sources. The older one (from 2013-04-01 to 2017-01-01) had the data quarterly. This was transformed to monthly by using the data for the first month in a quarter for all months in that quarter. From 2017-04-01, the second data source at monthly level was used instead.
 
 # Identifying admissions of older people with frailty
 
