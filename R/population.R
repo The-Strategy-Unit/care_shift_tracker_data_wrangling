@@ -26,9 +26,14 @@ get_higher_geography_population_from_lsoa <- function(data, geography) {
   return(wrangled)
 }
 
-
-
-get_population_gp_post_2017_04_01 <- function(age, start, connection) {
+#' Get GP populations after 2017-04-01.
+#'
+#' @param age_band A string containing the 5 year age bands to filter for.
+#' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
+#'
+#' @returns A dataframe of GP populations by month.
+get_population_gp_post_2017_04_01 <- function(age_band, start, connection) {
   query <- "
     SELECT
         Org_Code AS gp,
@@ -45,8 +50,7 @@ get_population_gp_post_2017_04_01 <- function(age, start, connection) {
         Org_Code,
         convert(varchar(7), Effective_Snapshot_Date, 120)
   " |>
-    stringr::str_replace_all(c("age_bands" = age,
-                               "age_modified_bands" = stringr::str_replace_all(age, "-", "_"), 
+    stringr::str_replace_all(c("age_modified_bands" = stringr::str_replace_all(age_band, "-", "_"), 
                                "start_date" = start))
   
   data <- DBI::dbGetQuery(connection, query) |>
@@ -55,8 +59,16 @@ get_population_gp_post_2017_04_01 <- function(age, start, connection) {
   return(data)
 }
 
-
-get_population_gp_pre_2017_04_01 <- function(age, start, connection) {
+#' Get GP populations before 2017-04-01.
+#' Note: this transforms quarterly to monthly data by assuming all months in a 
+#' quarter have the same data as the first month in the quarter.
+#'
+#' @param age_band A string containing the 5 year age bands to filter for.
+#' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
+#'
+#' @returns A dataframe of GP populations by month.
+get_population_gp_pre_2017_04_01 <- function(age_band, start, connection) {
   query <- "
       SELECT
         GP_Practice_Code AS gp,
@@ -73,7 +85,7 @@ get_population_gp_pre_2017_04_01 <- function(age, start, connection) {
         convert(varchar(7), Effective_Snapshot_Date, 120)
   
   " |>
-    stringr::str_replace_all(c("age_bands" = age,
+    stringr::str_replace_all(c("age_bands" = age_band,
                                "start_date" = start))
   
   data <- DBI::dbGetQuery(connection, query) |>
@@ -123,6 +135,15 @@ get_population_lsoa <- function(age, start, connection) {
   return(data)
 }
 
+#' Get PCN populations from the GP populations.
+#' Note: there are two distinct GP population datasets (pre and post 
+#' 2017-04-01). It does not matter which order they are provided in.
+#'
+#' @param population_gp1 The first dataframe of gp populations.
+#' @param population_gp2 The second dataframe of gp populations.
+#' @param lookup The gp to pcn lookup.
+#'
+#' @returns A dataframe of PCN populations by month.
 get_population_pcn <- function(population_gp1, population_gp2, lookup){
   population_gp <- population_gp1 |>
     rbind(population_gp2)
