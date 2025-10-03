@@ -26,6 +26,72 @@ get_higher_geography_population_from_lsoa <- function(data, geography) {
   return(wrangled)
 }
 
+
+
+get_population_gp_post_2017_04_01 <- function(age, start, connection) {
+  query <- "
+    SELECT
+        Org_Code AS gp,
+        convert(varchar(7), Effective_Snapshot_Date, 120) AS date,
+        SUM(Number_Of_Patients) AS population_size
+
+      FROM [UKHF_Demography].[No_Of_Patients_Regd_At_GP_Prac_Regions_5Yr_AgeBand1_1]
+
+      WHERE Age_Band IN age_modified_bands
+        AND Org_Type = 'GP'
+        AND Effective_Snapshot_Date >= 'start_date'
+
+      GROUP BY
+        Org_Code,
+        convert(varchar(7), Effective_Snapshot_Date, 120)
+  " |>
+    stringr::str_replace_all(c("age_bands" = age,
+                               "age_modified_bands" = stringr::str_replace_all(age, "-", "_"), 
+                               "start_date" = start))
+  
+  data <- DBI::dbGetQuery(connection, query) |>
+    janitor::clean_names()
+  
+  return(data)
+}
+
+
+get_population_gp_pre_2017_04_01 <- function(age, start, connection) {
+  query <- "
+      SELECT
+        GP_Practice_Code AS gp,
+        convert(varchar(7), Effective_Snapshot_Date, 120) AS date,
+        SUM(Size) AS population_size
+
+      FROM [UKHF_Demography].[No_Of_Patients_Regd_At_GP_Practice1_1]
+
+      WHERE Age_Band IN age_bands
+        AND Effective_Snapshot_Date >= 'start_date'
+
+      GROUP BY
+        GP_Practice_Code,
+        convert(varchar(7), Effective_Snapshot_Date, 120)
+  
+  " |>
+    stringr::str_replace_all(c("age_bands" = age,
+                               "start_date" = start))
+  
+  data <- DBI::dbGetQuery(connection, query) |>
+    janitor::clean_names() |>
+    dplyr::mutate(date = lubridate::ym(date)) 
+  
+  # We want monthly data, but this is quarterly. So we use the data from the 
+  # first month in a quarter as the data for each month in that quarter:
+  data <- data |>
+    rbind(data |>
+            dplyr::mutate(date = date + months(1)),
+          data |>
+            dplyr::mutate(date = date + months(2))) |>
+    dplyr::mutate(date = stringr::str_sub(date, start = 1, end = 7))
+  
+  return(data)
+}
+
 #' Get LSOA populations.
 #'
 #' @param age The minimum age cutoff.
@@ -57,34 +123,17 @@ get_population_lsoa <- function(age, start, connection) {
   return(data)
 }
 
-#' Get PCN populations.
-#'
-#' @param age The minimum age cutoff.
-#' @param start The minimum date for the query.
-#' @param connection The ODBC connection.
-#'
-#' @returns A dataframe of PCN populations by year.
-get_population_pcn <- function(age, start, connection) {
-  query <- "
-    SELECT
-        Org_Code AS pcn,
-        convert(varchar(7), Effective_Snapshot_Date, 120) AS date,
-        SUM(Number_Of_Patients) AS population_size
-
-      FROM [UKHF_Demography].[No_Of_Patients_Regd_At_GP_Prac_Regions_Single_Age1_1]
-
-      WHERE Age >= 'age_cutoff'
-        AND Org_Type = 'PCN'
-        AND Effective_Snapshot_Date >= 'start_date'
-
-      GROUP BY
-        Org_Code,
-        convert(varchar(7), Effective_Snapshot_Date, 120)" |>
-    stringr::str_replace_all(c("age_cutoff" = as.character(age), 
-                               "start_date" = start))
+get_population_pcn <- function(population_gp1, population_gp2, lookup){
+  population_gp <- population_gp1 |>
+    rbind(population_gp2)
   
-  data <- DBI::dbGetQuery(connection, query) |>
-    janitor::clean_names()
+  data <-  population_gp |>
+    dplyr::left_join(lookup, by = c("gp" = "partner_organisation_code")) |>
+    dplyr::summarise(population_size = sum(population_size),
+                     .by = c(date, pcn_code)) |>
+    dplyr::filter(!is.na(pcn_code)) |>
+    dplyr::rename(pcn = pcn_code)
   
   return(data)
+  
 }
