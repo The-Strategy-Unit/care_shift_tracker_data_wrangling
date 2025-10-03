@@ -125,7 +125,7 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       population,
-      get_higher_geography_population_from_lsoa(
+      get_population_higher_geography_from_lsoa(
         population_lsoa_mapped_to_higher_geographies, 
         geography)
     )
