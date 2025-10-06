@@ -60,7 +60,10 @@ list(
       dplyr::mutate(
         month_end = practice_to_pcn_relationship_end_date |>
           stringr::str_replace_na(as.character(next_month)) |>
-          lubridate::ymd()
+          lubridate::ymd(),
+        pcn_name = pcn_name |>
+          stringr::str_to_title() |>
+          stringr::str_replace_all("Pcn", "PCN")
       ) |>
       dplyr::filter(month_end == max(month_end), 
                     .by = partner_organisation_code)
