@@ -253,6 +253,27 @@ list(
     )
   ),
   
+  # Emergency readmission within 28 days
+  # ICB and LA
+  tar_target(
+    readmission_within_28_days_lsoa,
+    get_readmission_within_28_days_sub_geography("lsoa", 
+                                            age_cutoff, 
+                                            start_date, 
+                                            con)  |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tarchetypes::tar_map(
+    list(geography = rep(c("icb", "la"), 2),
+         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    tar_target(
+      readmission_within_28_days,
+      get_readmission_within_28_days_geography(readmission_within_28_days_lsoa, 
+                                      geography, 
+                                      activity_type)
+    )
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
