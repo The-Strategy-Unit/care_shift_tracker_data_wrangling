@@ -109,9 +109,15 @@ GROUP BY
 get_frequent_attenders_adult_ambulance_geography <- function(data, geography) {
   geography_column <- get_geography_column(geography)
   
+  column_to_sum <- if("frequent_attenders_amended" %in% names(data)){
+    "frequent_attenders_amended"
+  } else {
+    "frequent_attenders"
+  }
+  
   wrangled <- data |>
     dplyr::summarise(
-      value = sum(frequent_attenders_amended),
+      value = sum(!!rlang::sym(column_to_sum)),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
     dplyr::mutate(indicator = glue::glue("frequent_attenders_adult_ambulance")) |>
