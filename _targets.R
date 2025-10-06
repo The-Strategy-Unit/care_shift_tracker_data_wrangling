@@ -153,7 +153,8 @@ list(
                        gp_to_pcn)
   ),
   
-  # Elective to non elective admissions ratio ----------------------------------
+  # Indicators -----------------------------------------------------------------
+  ## Elective to non elective admissions ratio ---------------------------------
   # ICB and LA
   tar_target(
     elective_non_elective_lsoa,
@@ -192,7 +193,7 @@ list(
     )
   ),
   
-  # Frailty
+  ## Older people with frailty admissions --------------------------------------
   tarchetypes::tar_file(
     frailty_risk_scores_filename,
     "data/frailty_risk_scores.csv"
@@ -253,13 +254,54 @@ list(
     )
   ),
   
+  ## Emergency readmission within 28 days --------------------------------------
+  # ICB and LA
+  tar_target(
+    readmission_within_28_days_lsoa,
+    get_readmission_within_28_days_sub_geography("lsoa", 
+                                                 age_cutoff, 
+                                                 start_date, 
+                                                 con)  |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tarchetypes::tar_map(
+    list(geography = rep(c("icb", "la"), 2),
+         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    tar_target(
+      readmission_within_28_days,
+      get_readmission_within_28_days_geography(readmission_within_28_days_lsoa, 
+                                      geography, 
+                                      activity_type)
+    )
+  ),
+  # PCN
+  tar_target(
+    readmission_within_28_days_gp,
+    get_readmission_within_28_days_sub_geography("gp", 
+                                                 age_cutoff, 
+                                                 start_date, 
+                                                 con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      readmission_within_28_days_pcn,
+      get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
+                                               "pcn", 
+                                               activity_type)
+    )
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
-    rbind(
+    dplyr::bind_rows(
       elective_non_elective_ratio_icb_admissions, 
       elective_non_elective_ratio_icb_beddays,  
-      frailty_indicators_icb) |>
+      frailty_indicators_icb,
+      readmission_within_28_days_icb_admissions,
+      readmission_within_28_days_icb_beddays) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -273,10 +315,12 @@ list(
   ),
   tar_target(
     indicators_la,
-    rbind(
+    dplyr::bind_rows(
       elective_non_elective_ratio_la_admissions, 
       elective_non_elective_ratio_la_beddays,  
-      frailty_indicators_la) |>
+      frailty_indicators_la,
+      readmission_within_28_days_la_admissions,
+      readmission_within_28_days_la_beddays) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -290,10 +334,12 @@ list(
   ),
   tar_target(
     indicators_pcn,
-    rbind(
+    dplyr::bind_rows(
       elective_non_elective_ratio_pcn_admissions, 
       elective_non_elective_ratio_pcn_beddays, 
-      frailty_indicators_pcn) |>
+      frailty_indicators_pcn,
+      readmission_within_28_days_pcn_admissions,
+      readmission_within_28_days_pcn_beddays) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
                   pcn, 

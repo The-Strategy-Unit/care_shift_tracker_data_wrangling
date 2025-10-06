@@ -1,4 +1,4 @@
-# Functions for the elective to non elective ratio indicator:
+# Functions for the older people with frailty admissions indicators:
 # `frail_elderly_high` and `frail_elderly_intermediate`.
 
 #' Calculate the number of beddays by 100,000 population.

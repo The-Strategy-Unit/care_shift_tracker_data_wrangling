@@ -1,0 +1,110 @@
+# Functions for emergency readmissions within 28 days indicators:
+# `readmission_within_28_days_admissions` and 
+# `readmission_within_28_days_beddays`.
+
+#' Emergency readmissions within 28 days admissions/beddays by LSOA/GP code and 
+#' month.
+#'
+#' @param age The minimum age cutoff.
+#' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
+#' @param sub_geography Either `"lsoa"` or `"gp"`.
+#'
+#' @returns A dataframe with the number of emergency readmissions within 28 days 
+#' admissions/beddays by LSOA/GP code and month.
+get_readmission_within_28_days_sub_geography <- function(sub_geography, 
+                                                         age, 
+                                                         start, 
+                                                         connection) {
+  sub_geography_column <- get_subgeography_column(sub_geography)
+  
+  query <- "
+    SELECT
+    	date,
+    	sub_geography_column,
+    	COUNT(DISTINCT apcs_ident) As admissions,
+    	SUM(spelldur) as beddays
+    
+    FROM (
+    	SELECT
+    		a.APCS_Ident,
+    		sub_geography_column,
+    		convert(varchar(7), Discharge_Date, 120) AS date,
+    		DATEDIFF(day, a.Admission_Date, a.Discharge_Date) AS Spelldur
+    
+    	FROM [Reporting_MESH_APC].[APCS_Core_Monthly_Snapshot]  a
+    
+    	WHERE 
+    		Discharge_Date >= 'start_date' AND
+    		Age_at_End_of_Spell_SUS >= age_cutoff AND
+    		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
+    		LEFT(a.Admission_Method, 1) = '2' AND
+    		a.Der_Pseudo_NHS_number IS NOT NULL AND
+    		(a.Spell_Core_HRG_SUS!= 'PB03Z' OR Spell_Core_HRG_SUS IS NULL) AND NOT
+    		(Der_Admit_Treatment_Function_Code = '424') AND
+    		EXISTS (
+    			SELECT 1
+    
+    			FROM [Reporting_MESH_APC].[APCS_Core_Monthly_Snapshot]  b
+    
+    			WHERE
+      
+    			 a.Der_Pseudo_NHS_Number = b.Der_Pseudo_NHS_Number AND
+      
+    			 DATEDIFF(DD, b.Discharge_Date, a.Admission_Date) BETWEEN 0 AND 28 AND
+      
+    			  (b.Admission_Date < a.Admission_Date OR
+    			  b.Discharge_Date < a.Discharge_Date) AND  
+    			  a.APCS_Ident != b.APCS_Ident 
+    		 )
+    	 ) AS Sub
+    
+    GROUP BY 
+    	date,
+    	sub_geography_column
+  " |>
+    stringr::str_replace_all(
+      c(
+        "age_cutoff" = age,
+        "start_date" = start,
+        "sub_geography_column" = sub_geography_column
+      )
+    )
+  
+  wrangled <- DBI::dbGetQuery(connection, query) |>
+    janitor::clean_names()
+  
+  return(wrangled)
+}
+
+#' Emergency readmissions within 28 days admissions/beddays by geography and 
+#' month.
+#'
+#' @param data The number of emergency readmissions within 28 days 
+#' admissions/beddays by LSOA/GP code and month.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param activity_type Either `"admissions"` or `"beddays"`.
+#'
+#' @returns A dataframe with the emergency readmissions within 28 days 
+#' admissions/beddays by month and geography.
+get_readmission_within_28_days_geography <- function(data, geography, activity_type) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      value = sum(!!rlang::sym(activity_type)),
+      .by = c(date, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(indicator = glue::glue("readmission_within_28_days_{activity_type}")) |>
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::select(
+      indicator,
+      !!rlang::sym(geography) := !!rlang::sym(geography_column),
+      date,
+      # numerator = NA,
+      #denominator = NA,
+      value
+    )
+  
+  return(wrangled)
+}
