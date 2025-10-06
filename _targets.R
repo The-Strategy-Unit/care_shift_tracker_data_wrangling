@@ -375,7 +375,11 @@ list(
       elective_non_elective_ratio_icb_beddays,  
       frailty_indicators_icb,
       readmission_within_28_days_icb_admissions,
-      readmission_within_28_days_icb_beddays) |>
+      readmission_within_28_days_icb_beddays,
+      ambulatory_care_conditions_acute_icb_admissions,
+      ambulatory_care_conditions_acute_icb_beddays,
+      ambulatory_care_conditions_chronic_icb_admissions,
+      ambulatory_care_conditions_chronic_icb_beddays) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -394,7 +398,11 @@ list(
       elective_non_elective_ratio_la_beddays,  
       frailty_indicators_la,
       readmission_within_28_days_la_admissions,
-      readmission_within_28_days_la_beddays) |>
+      readmission_within_28_days_la_beddays,
+      ambulatory_care_conditions_acute_la_admissions,
+      ambulatory_care_conditions_acute_la_beddays,
+      ambulatory_care_conditions_chronic_la_admissions,
+      ambulatory_care_conditions_chronic_la_beddays) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -413,7 +421,11 @@ list(
       elective_non_elective_ratio_pcn_beddays, 
       frailty_indicators_pcn,
       readmission_within_28_days_pcn_admissions,
-      readmission_within_28_days_pcn_beddays) |>
+      readmission_within_28_days_pcn_beddays,
+      ambulatory_care_conditions_acute_pcn_admissions,
+      ambulatory_care_conditions_acute_pcn_beddays,
+      ambulatory_care_conditions_chronic_pcn_admissions,
+      ambulatory_care_conditions_chronic_pcn_beddays) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
                   pcn, 
