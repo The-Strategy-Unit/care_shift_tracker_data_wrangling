@@ -273,6 +273,24 @@ list(
                                       activity_type)
     )
   ),
+  # PCN
+  tar_target(
+    readmission_within_28_days_gp,
+    get_readmission_within_28_days_sub_geography("gp", 
+                                            age_cutoff, 
+                                            start_date, 
+                                            con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      readmission_within_28_days_pcn,
+      get_readmission_within_28_days(readmission_within_28_days_gp, 
+                                      "pcn", 
+                                      activity_type)
+    )
+  ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
