@@ -60,7 +60,10 @@ list(
       dplyr::mutate(
         month_end = practice_to_pcn_relationship_end_date |>
           stringr::str_replace_na(as.character(next_month)) |>
-          lubridate::ymd()
+          lubridate::ymd(),
+        pcn_name = pcn_name |>
+          stringr::str_to_title() |>
+          stringr::str_replace_all("Pcn", "PCN")
       ) |>
       dplyr::filter(month_end == max(month_end), 
                     .by = partner_organisation_code)
@@ -261,7 +264,7 @@ list(
     get_readmission_within_28_days_sub_geography("lsoa", 
                                                  age_cutoff, 
                                                  start_date, 
-                                                 con)  |>
+                                                 con) |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
@@ -303,7 +306,7 @@ list(
                                                    age_cutoff, 
                                                    start_date, 
                                                    condition,
-                                                   con)  |>
+                                                   con) |>
         join_to_geography_lookup("icb", lsoa_to_higher_geographies)
     )
   ),
@@ -340,7 +343,7 @@ list(
                                                    age_cutoff, 
                                                    start_date, 
                                                    condition,
-                                                   con)  |>
+                                                   con) |>
         join_to_geography_lookup("pcn", gp_to_pcn)
     )
   ),
@@ -367,6 +370,49 @@ list(
     )
   ),
   
+  ## A&E frequent attenders (adult, ambulance conveyed) ------------------------
+  tar_target(
+    frequent_attenders_adult_ambulance_lsoa,
+    get_frequent_attenders_adult_ambulance_sub_geography("lsoa", 
+                                                         age_cutoff, 
+                                                         start_date, 
+                                                         con) |>
+      # first map 11 to 21 codes and amend numbers according to splits in lsoa:
+      dplyr::left_join(lsoa11_to_lsoa_21, 
+                       by = c("der_postcode_lsoa_2011_code" = "lsoa11cd")) |>
+      dplyr::mutate(
+        number = dplyr::n(),
+        .by = c(der_postcode_lsoa_2011_code, date),
+        frequent_attenders_amended = frequent_attenders / number
+      ) |>
+      dplyr::rename(der_postcode_lsoa_2021_code = lsoa21cd) |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+    ),
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      frequent_attenders_adult_ambulance,
+      get_frequent_attenders_adult_ambulance_geography(
+        frequent_attenders_adult_ambulance_lsoa, 
+        geography) 
+    )
+  ),
+  tar_target(
+    frequent_attenders_adult_ambulance_gp,
+    get_frequent_attenders_adult_ambulance_sub_geography("gp", 
+                                                         age_cutoff, 
+                                                         start_date, 
+                                                         con) |>
+      dplyr::rename(gp_practice_sus = gp_practice_code) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  tar_target(
+    frequent_attenders_adult_ambulance_pcn,
+    get_frequent_attenders_adult_ambulance_geography(
+      frequent_attenders_adult_ambulance_gp, 
+      "pcn") 
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -379,7 +425,9 @@ list(
       ambulatory_care_conditions_acute_icb_admissions,
       ambulatory_care_conditions_acute_icb_beddays,
       ambulatory_care_conditions_chronic_icb_admissions,
-      ambulatory_care_conditions_chronic_icb_beddays) |>
+      ambulatory_care_conditions_chronic_icb_beddays,
+      frequent_attenders_adult_ambulance_icb
+      ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -402,7 +450,9 @@ list(
       ambulatory_care_conditions_acute_la_admissions,
       ambulatory_care_conditions_acute_la_beddays,
       ambulatory_care_conditions_chronic_la_admissions,
-      ambulatory_care_conditions_chronic_la_beddays) |>
+      ambulatory_care_conditions_chronic_la_beddays,
+      frequent_attenders_adult_ambulance_la
+      ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -425,7 +475,9 @@ list(
       ambulatory_care_conditions_acute_pcn_admissions,
       ambulatory_care_conditions_acute_pcn_beddays,
       ambulatory_care_conditions_chronic_pcn_admissions,
-      ambulatory_care_conditions_chronic_pcn_beddays) |>
+      ambulatory_care_conditions_chronic_pcn_beddays,
+      frequent_attenders_adult_ambulance_pcn
+      ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
                   pcn, 

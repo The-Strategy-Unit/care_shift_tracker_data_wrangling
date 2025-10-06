@@ -37,3 +37,8 @@ targets::tar_read(lsoa_population) |>
 - Identified emergency admissions of patients aged 75+ (to match CPMA definition) and the discharge month
 - Then got the patients' prior admissions from within 2 years and their primary diagnosis
 - Then calculated weighted sum using `frailty_risk_scores.csv` and classed scores >15 as high and >5 as intermediate
+
+# AE frequent attenders
+
+- Someone who has attended AE 3 times or more - according to CPMA defs?
+- Source data was at 2011 lsoa level, so had to map to 2021 lsoa codes. For the few lsoa11 that split into multiple lsoa21, number of frequent attenders was split equally between the lsoa21 codes.
