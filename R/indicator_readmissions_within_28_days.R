@@ -101,8 +101,6 @@ get_readmission_within_28_days_geography <- function(data, geography, activity_t
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
-      # numerator = NA,
-      #denominator = NA,
       value
     )
   
