@@ -153,7 +153,8 @@ list(
                        gp_to_pcn)
   ),
   
-  # Elective to non elective admissions ratio ----------------------------------
+  # Indicators -----------------------------------------------------------------
+  ## Elective to non elective admissions ratio ---------------------------------
   # ICB and LA
   tar_target(
     elective_non_elective_lsoa,
@@ -192,7 +193,7 @@ list(
     )
   ),
   
-  # Frailty
+  ## Older people with frailty admissions --------------------------------------
   tarchetypes::tar_file(
     frailty_risk_scores_filename,
     "data/frailty_risk_scores.csv"
@@ -253,14 +254,14 @@ list(
     )
   ),
   
-  # Emergency readmission within 28 days
+  ## Emergency readmission within 28 days --------------------------------------
   # ICB and LA
   tar_target(
     readmission_within_28_days_lsoa,
     get_readmission_within_28_days_sub_geography("lsoa", 
-                                            age_cutoff, 
-                                            start_date, 
-                                            con)  |>
+                                                 age_cutoff, 
+                                                 start_date, 
+                                                 con)  |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
@@ -277,9 +278,9 @@ list(
   tar_target(
     readmission_within_28_days_gp,
     get_readmission_within_28_days_sub_geography("gp", 
-                                            age_cutoff, 
-                                            start_date, 
-                                            con) |>
+                                                 age_cutoff, 
+                                                 start_date, 
+                                                 con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   tarchetypes::tar_map(
@@ -287,8 +288,8 @@ list(
     tar_target(
       readmission_within_28_days_pcn,
       get_readmission_within_28_days(readmission_within_28_days_gp, 
-                                      "pcn", 
-                                      activity_type)
+                                     "pcn", 
+                                     activity_type)
     )
   ),
   
