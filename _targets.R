@@ -261,7 +261,7 @@ list(
     get_readmission_within_28_days_sub_geography("lsoa", 
                                                  age_cutoff, 
                                                  start_date, 
-                                                 con)  |>
+                                                 con) |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
@@ -303,7 +303,7 @@ list(
                                                    age_cutoff, 
                                                    start_date, 
                                                    condition,
-                                                   con)  |>
+                                                   con) |>
         join_to_geography_lookup("icb", lsoa_to_higher_geographies)
     )
   ),
@@ -340,7 +340,7 @@ list(
                                                    age_cutoff, 
                                                    start_date, 
                                                    condition,
-                                                   con)  |>
+                                                   con) |>
         join_to_geography_lookup("pcn", gp_to_pcn)
     )
   ),
