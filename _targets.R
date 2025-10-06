@@ -287,19 +287,21 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       readmission_within_28_days_pcn,
-      get_readmission_within_28_days(readmission_within_28_days_gp, 
-                                     "pcn", 
-                                     activity_type)
+      get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
+                                               "pcn", 
+                                               activity_type)
     )
   ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
-    rbind(
+    dplyr::bind_rows(
       elective_non_elective_ratio_icb_admissions, 
       elective_non_elective_ratio_icb_beddays,  
-      frailty_indicators_icb) |>
+      frailty_indicators_icb,
+      readmission_within_28_days_icb_admissions,
+      readmission_within_28_days_icb_beddays) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -313,10 +315,12 @@ list(
   ),
   tar_target(
     indicators_la,
-    rbind(
+    dplyr::bind_rows(
       elective_non_elective_ratio_la_admissions, 
       elective_non_elective_ratio_la_beddays,  
-      frailty_indicators_la) |>
+      frailty_indicators_la,
+      readmission_within_28_days_la_admissions,
+      readmission_within_28_days_la_beddays) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -330,10 +334,12 @@ list(
   ),
   tar_target(
     indicators_pcn,
-    rbind(
+    dplyr::bind_rows(
       elective_non_elective_ratio_pcn_admissions, 
       elective_non_elective_ratio_pcn_beddays, 
-      frailty_indicators_pcn) |>
+      frailty_indicators_pcn,
+      readmission_within_28_days_pcn_admissions,
+      readmission_within_28_days_pcn_beddays) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
                   pcn, 
