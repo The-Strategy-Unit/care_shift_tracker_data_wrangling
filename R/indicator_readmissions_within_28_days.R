@@ -1,3 +1,17 @@
+# Functions for emergency readmissions within 28 days indicators:
+# `readmission_within_28_days_admissions` and 
+# `readmission_within_28_days_beddays`.
+
+#' Emergency readmissions within 28 days admissions/beddays by LSOA/GP code and 
+#' month.
+#'
+#' @param age The minimum age cutoff.
+#' @param start The minimum date for the query.
+#' @param connection The ODBC connection.
+#' @param sub_geography Either `"lsoa"` or `"gp"`.
+#'
+#' @returns A dataframe with the number of emergency readmissions within 28 days 
+#' admissions/beddays by LSOA/GP code and month.
 get_readmission_within_28_days_sub_geography <- function(sub_geography, 
                                                          age, 
                                                          start, 
@@ -63,6 +77,16 @@ get_readmission_within_28_days_sub_geography <- function(sub_geography,
   return(wrangled)
 }
 
+#' Emergency readmissions within 28 days admissions/beddays by geography and 
+#' month.
+#'
+#' @param data The number of emergency readmissions within 28 days 
+#' admissions/beddays by LSOA/GP code and month.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param activity_type Either `"admissions"` or `"beddays"`.
+#'
+#' @returns A dataframe with the emergency readmissions within 28 days 
+#' admissions/beddays by month and geography.
 get_readmission_within_28_days_geography <- function(data, geography, activity_type) {
   geography_column <- get_geography_column(geography)
   

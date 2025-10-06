@@ -1,5 +1,5 @@
 # Functions for the elective to non elective ratio indicator:
-# `elec_non_elec_ratio`.
+# `elec_non_elec_ratio_admissions` and `elec_non_elec_ratio_beddays`.
 
 #' The number of elective and non elective admissions/beddays by LSOA/GP and 
 #' month.
