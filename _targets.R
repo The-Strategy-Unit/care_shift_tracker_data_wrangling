@@ -388,7 +388,7 @@ list(
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
-      frequent_attenders_adult_ambulance_,
+      frequent_attenders_adult_ambulance,
       get_frequent_attenders_adult_ambulance_geography(
         frequent_attenders_adult_ambulance_lsoa, 
         geography) 
@@ -400,7 +400,14 @@ list(
                                                          age_cutoff, 
                                                          start_date, 
                                                          con) |>
+      dplyr::rename(gp_practice_sus = gp_practice_code) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  tar_target(
+    frequent_attenders_adult_ambulance_pcn,
+    get_frequent_attenders_adult_ambulance_geography(
+      frequent_attenders_adult_ambulance_gp, 
+      "pcn") 
   ),
   
   # All indicators -------------------------------------------------------------
@@ -415,7 +422,9 @@ list(
       ambulatory_care_conditions_acute_icb_admissions,
       ambulatory_care_conditions_acute_icb_beddays,
       ambulatory_care_conditions_chronic_icb_admissions,
-      ambulatory_care_conditions_chronic_icb_beddays) |>
+      ambulatory_care_conditions_chronic_icb_beddays,
+      frequent_attenders_adult_ambulance_icb
+      ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -438,7 +447,9 @@ list(
       ambulatory_care_conditions_acute_la_admissions,
       ambulatory_care_conditions_acute_la_beddays,
       ambulatory_care_conditions_chronic_la_admissions,
-      ambulatory_care_conditions_chronic_la_beddays) |>
+      ambulatory_care_conditions_chronic_la_beddays,
+      frequent_attenders_adult_ambulance_la
+      ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -461,7 +472,9 @@ list(
       ambulatory_care_conditions_acute_pcn_admissions,
       ambulatory_care_conditions_acute_pcn_beddays,
       ambulatory_care_conditions_chronic_pcn_admissions,
-      ambulatory_care_conditions_chronic_pcn_beddays) |>
+      ambulatory_care_conditions_chronic_pcn_beddays,
+      frequent_attenders_adult_ambulance_pcn
+      ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
                   pcn, 
