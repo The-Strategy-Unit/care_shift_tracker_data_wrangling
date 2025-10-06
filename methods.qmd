@@ -40,5 +40,5 @@ targets::tar_read(lsoa_population) |>
 
 # AE frequent attenders
 
-- Someone who has attended AE more than 3 times - according to CPMA defs?
+- Someone who has attended AE 3 times or more - according to CPMA defs?
 - Source data was at 2011 lsoa level, so had to map to 2021 lsoa codes. For the few lsoa11 that split into multiple lsoa21, number of frequent attenders was split equally between the lsoa21 codes.
