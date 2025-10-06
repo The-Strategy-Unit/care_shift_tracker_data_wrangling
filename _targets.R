@@ -161,7 +161,7 @@ list(
     get_elective_non_elective_sub_geography("lsoa", 
                                                        age_cutoff, 
                                                        start_date, 
-                                                       con)  |>
+                                                       con) |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
@@ -293,6 +293,80 @@ list(
     )
   ),
   
+  ## Ambulatory Care Conditions ------------------------------------------------
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(condition = c("acute", "chronic")),
+    tar_target(
+      ambulatory_care_conditions_lsoa,
+      get_ambulatory_care_conditions_sub_geography("lsoa", 
+                                                   age_cutoff, 
+                                                   start_date, 
+                                                   condition,
+                                                   con)  |>
+        join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+    )
+  ),
+  tarchetypes::tar_map(
+    list(geography = rep(c("icb", "la"), 2),
+         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    tar_target(
+      ambulatory_care_conditions_acute,
+      get_ambulatory_care_conditions_geography(
+        ambulatory_care_conditions_lsoa_acute, 
+        geography, 
+        activity_type,
+        "acute")
+    )
+  ),
+  tarchetypes::tar_map(
+    list(geography = rep(c("icb", "la"), 2),
+         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    tar_target(
+      ambulatory_care_conditions_chronic,
+      get_ambulatory_care_conditions_geography(
+        ambulatory_care_conditions_lsoa_chronic, 
+        geography, 
+        activity_type,
+        "chronic")
+    )
+  ),
+  # PCN
+  tarchetypes::tar_map(
+    list(condition = c("acute", "chronic")),
+    tar_target(
+      ambulatory_care_conditions_gp,
+      get_ambulatory_care_conditions_sub_geography("gp", 
+                                                   age_cutoff, 
+                                                   start_date, 
+                                                   condition,
+                                                   con)  |>
+        join_to_geography_lookup("pcn", gp_to_pcn)
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      ambulatory_care_conditions_acute_pcn,
+      get_ambulatory_care_conditions_geography(
+        ambulatory_care_conditions_gp_acute,
+        "pcn",
+        activity_type,
+        "acute")
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      ambulatory_care_conditions_chronic_pcn,
+      get_ambulatory_care_conditions_geography(
+        ambulatory_care_conditions_gp_chronic,
+        "pcn",
+        activity_type,
+        "chronic")
+    )
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -301,7 +375,11 @@ list(
       elective_non_elective_ratio_icb_beddays,  
       frailty_indicators_icb,
       readmission_within_28_days_icb_admissions,
-      readmission_within_28_days_icb_beddays) |>
+      readmission_within_28_days_icb_beddays,
+      ambulatory_care_conditions_acute_icb_admissions,
+      ambulatory_care_conditions_acute_icb_beddays,
+      ambulatory_care_conditions_chronic_icb_admissions,
+      ambulatory_care_conditions_chronic_icb_beddays) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "icb") |>
@@ -320,7 +398,11 @@ list(
       elective_non_elective_ratio_la_beddays,  
       frailty_indicators_la,
       readmission_within_28_days_la_admissions,
-      readmission_within_28_days_la_beddays) |>
+      readmission_within_28_days_la_beddays,
+      ambulatory_care_conditions_acute_la_admissions,
+      ambulatory_care_conditions_acute_la_beddays,
+      ambulatory_care_conditions_chronic_la_admissions,
+      ambulatory_care_conditions_chronic_la_beddays) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
                      "la") |>
@@ -339,7 +421,11 @@ list(
       elective_non_elective_ratio_pcn_beddays, 
       frailty_indicators_pcn,
       readmission_within_28_days_pcn_admissions,
-      readmission_within_28_days_pcn_beddays) |>
+      readmission_within_28_days_pcn_beddays,
+      ambulatory_care_conditions_acute_pcn_admissions,
+      ambulatory_care_conditions_acute_pcn_beddays,
+      ambulatory_care_conditions_chronic_pcn_admissions,
+      ambulatory_care_conditions_chronic_pcn_beddays) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
                   pcn, 
