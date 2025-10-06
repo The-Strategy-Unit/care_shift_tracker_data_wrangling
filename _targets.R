@@ -373,7 +373,7 @@ list(
     get_frequent_attenders_adult_ambulance_sub_geography("lsoa", 
                                                          age_cutoff, 
                                                          start_date, 
-                                                         con)|>
+                                                         con) |>
       # first map 11 to 21 codes and amend numbers according to splits in lsoa:
       dplyr::left_join(lsoa11_to_lsoa_21, 
                        by = c("der_postcode_lsoa_2011_code" = "lsoa11cd")) |>
@@ -394,7 +394,14 @@ list(
         geography) 
     )
   ),
-  
+  tar_target(
+    frequent_attenders_adult_ambulance_gp,
+    get_frequent_attenders_adult_ambulance_sub_geography("gp", 
+                                                         age_cutoff, 
+                                                         start_date, 
+                                                         con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
