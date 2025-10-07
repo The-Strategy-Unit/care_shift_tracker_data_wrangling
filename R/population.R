@@ -19,6 +19,7 @@ get_population_gp_post_2017_04_01 <- function(age_band, start, connection) {
       WHERE Age_Band IN age_modified_bands
         AND Org_Type = 'GP'
         AND Effective_Snapshot_Date >= 'start_date'
+        AND Sex != 'ALL'
 
       GROUP BY
         Org_Code,
