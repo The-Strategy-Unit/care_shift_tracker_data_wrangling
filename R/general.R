@@ -115,7 +115,9 @@ get_indicators_per_pop <- function(data,
     join_to_population_data(population, geography, latest_population_year) |>
     dplyr::filter(!is.na(population_size),
                   population_size > 0) |>
-    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> # why negative one? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # There were <5 patients with a discharge date before their admission date
+    # in one indicator at GP level. So the line below is to exclude these rows:
+    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
     PHEindicatormethods::phe_rate(x = !!rlang::sym(activity_type),
                                   n = population_size,
                                   multiplier = 100000) |>
