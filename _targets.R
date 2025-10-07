@@ -483,7 +483,9 @@ list(
                   date, 
                   numerator, 
                   denominator, 
-                  value)
+                  value,
+                  lowercl,
+                  uppercl)
   ),
   tar_target(
     indicators_la,
@@ -508,7 +510,9 @@ list(
                   date, 
                   numerator, 
                   denominator, 
-                  value)
+                  value,
+                  lowercl,
+                  uppercl)
   ),
   tar_target(
     indicators_pcn,
@@ -531,6 +535,8 @@ list(
                   date, 
                   numerator, 
                   denominator, 
-                  value)
+                  value,
+                  lowercl,
+                  uppercl)
   )
 )
