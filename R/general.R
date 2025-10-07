@@ -105,16 +105,23 @@ get_indicators_per_pop <- function(data,
                                    geography,
                                    latest_population_year,
                                    activity_type) {
+  activity_type_rename <- if(activity_type == "attenders"){
+    ""
+  } else {
+    glue::glue("_{activity_type}")
+  }
+  
   wrangled <- data |>
     join_to_population_data(population, geography, latest_population_year) |>
-    dplyr::filter(!is.na(population_size)) |>
+    dplyr::filter(!is.na(population_size),
+                  population_size > 0) |>
     dplyr::filter(!!rlang::sym(activity_type) >= 0) |> # why negative one? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     PHEindicatormethods::phe_rate(x = !!rlang::sym(activity_type),
                                   n = population_size,
                                   multiplier = 100000) |>
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
                                 ~janitor::round_half_up(.)),
-                  indicator = glue::glue("{indicator}_per_pop_{activity_type}")) |>
+                  indicator = glue::glue("{indicator}_per_pop{activity_type_rename}")) |>
     dplyr::select(
       indicator,
       date,

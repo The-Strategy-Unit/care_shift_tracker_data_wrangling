@@ -571,12 +571,42 @@ list(
         geography) 
     )
   ),
+  tar_target(
+    frequent_attenders_indicator_icb,
+    get_indicators_per_pop(
+      frequent_attenders_adult_ambulance_icb,
+      population_icb,
+      "icb",
+      latest_population_year,
+      "attenders"
+    )
+  ),
+  tar_target(
+    frequent_attenders_indicator_la,
+    get_indicators_per_pop(
+      frequent_attenders_adult_ambulance_la,
+      population_la,
+      "la",
+      latest_population_year,
+      "attenders"
+    )
+  ),
   # PCN
   tar_target(
     frequent_attenders_adult_ambulance_pcn,
     get_frequent_attenders_adult_ambulance_geography(
       frequent_attenders_adult_ambulance_gp, 
       "pcn") 
+  ),
+  tar_target(
+    frequent_attenders_indicator_pcn,
+    get_indicators_per_pop(
+      frequent_attenders_adult_ambulance_pcn,
+      population_pcn,
+      "pcn",
+      latest_population_year,
+      "attenders"
+    )
   ),
   
   # All indicators -------------------------------------------------------------
@@ -593,7 +623,7 @@ list(
       ambulatory_acute_indicator_icb_beddays,
       ambulatory_chronic_indicator_icb_admissions,
       ambulatory_chronic_indicator_icb_beddays,
-      frequent_attenders_adult_ambulance_icb
+      frequent_attenders_indicator_icb
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -621,7 +651,7 @@ list(
       ambulatory_acute_indicator_la_beddays,
       ambulatory_chronic_indicator_la_admissions,
       ambulatory_chronic_indicator_la_beddays,
-      frequent_attenders_adult_ambulance_la
+      frequent_attenders_indicator_la
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -649,7 +679,7 @@ list(
       ambulatory_acute_indicator_pcn_beddays,
       ambulatory_chronic_indicator_pcn_admissions,
       ambulatory_chronic_indicator_pcn_beddays,
-      frequent_attenders_adult_ambulance_pcn
+      frequent_attenders_indicator_pcn
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 

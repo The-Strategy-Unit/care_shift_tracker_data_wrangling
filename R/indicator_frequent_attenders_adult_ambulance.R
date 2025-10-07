@@ -117,7 +117,7 @@ get_frequent_attenders_adult_ambulance_geography <- function(data, geography) {
   
   wrangled <- data |>
     dplyr::summarise(
-      value = sum(!!rlang::sym(column_to_sum)),
+      attenders = sum(!!rlang::sym(column_to_sum)),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
     dplyr::mutate(indicator = glue::glue("frequent_attenders_adult_ambulance")) |>
@@ -126,7 +126,7 @@ get_frequent_attenders_adult_ambulance_geography <- function(data, geography) {
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
-      value
+      attenders
     )
   
   return(wrangled)
