@@ -255,8 +255,8 @@ list(
   tarchetypes::tar_map(
     list(sub_geography = c("gp", "lsoa")),
     tar_target(
-      frailty_beddays,
-      get_frailty_beddays_sub_geography(sub_geography, 
+      frailty,
+      get_frailty_sub_geography(sub_geography, 
                                         start_date, 
                                         con, 
                                         frailty_risk_scores)
@@ -265,41 +265,53 @@ list(
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
-      frailty_beddays,
-      get_frailty_beddays_geography(frailty_beddays_lsoa, 
+      frailty,
+      get_frailty_geography(frailty_lsoa, 
                                     geography, 
                                     lsoa_to_higher_geographies)
     )
   ),
   tar_target(
-    frailty_beddays_pcn,
-    get_frailty_beddays_geography(frailty_beddays_gp, "pcn", gp_to_pcn)
+    frailty_pcn,
+    get_frailty_geography(frailty_gp, "pcn", gp_to_pcn)
   ),
-  tar_target(
-    frailty_indicators_icb,
-    get_frailty_indicators(
-      frailty_beddays_icb,
-      population_75_plus_icb,
-      "icb",
-      latest_population_year
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      frailty_indicators_icb,
+      get_frailty_indicators(
+        frailty_icb,
+        population_75_plus_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
     )
   ),
-  tar_target(
-    frailty_indicators_la,
-    get_frailty_indicators(
-      frailty_beddays_la,
-      population_75_plus_la,
-      "la",
-      latest_population_year
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      frailty_indicators_la,
+      get_frailty_indicators(
+        frailty_la,
+        population_75_plus_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
     )
   ),
-  tar_target(
-    frailty_indicators_pcn,
-    get_frailty_indicators(
-      frailty_beddays_pcn,
-      population_75_plus_pcn,
-      "pcn",
-      latest_population_year
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      frailty_indicators_pcn,
+      get_frailty_indicators(
+        frailty_pcn,
+        population_75_plus_pcn,
+        "pcn",
+        latest_population_year,
+        activity_type
+      )
     )
   ),
   
@@ -465,7 +477,8 @@ list(
     dplyr::bind_rows(
       elective_non_elective_ratio_icb_admissions, 
       elective_non_elective_ratio_icb_beddays,  
-      frailty_indicators_icb,
+      frailty_indicators_icb_admissions,
+      frailty_indicators_icb_beddays,
       readmission_within_28_days_icb_admissions,
       readmission_within_28_days_icb_beddays,
       ambulatory_care_conditions_acute_icb_admissions,
@@ -491,8 +504,9 @@ list(
     indicators_la,
     dplyr::bind_rows(
       elective_non_elective_ratio_la_admissions, 
-      elective_non_elective_ratio_la_beddays,  
-      frailty_indicators_la,
+      elective_non_elective_ratio_la_beddays,   
+      frailty_indicators_la_admissions,
+      frailty_indicators_la_beddays,
       readmission_within_28_days_la_admissions,
       readmission_within_28_days_la_beddays,
       ambulatory_care_conditions_acute_la_admissions,
@@ -518,8 +532,9 @@ list(
     indicators_pcn,
     dplyr::bind_rows(
       elective_non_elective_ratio_pcn_admissions, 
-      elective_non_elective_ratio_pcn_beddays, 
-      frailty_indicators_pcn,
+      elective_non_elective_ratio_pcn_beddays,  
+      frailty_indicators_pcn_admissions,
+      frailty_indicators_pcn_beddays,
       readmission_within_28_days_pcn_admissions,
       readmission_within_28_days_pcn_beddays,
       ambulatory_care_conditions_acute_pcn_admissions,

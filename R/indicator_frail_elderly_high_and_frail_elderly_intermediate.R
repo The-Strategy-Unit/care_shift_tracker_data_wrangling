@@ -1,28 +1,30 @@
 # Functions for the older people with frailty admissions indicators:
 # `frail_elderly_high` and `frail_elderly_intermediate`.
 
-#' Calculate the number of beddays by 100,000 population.
+#' Calculate the number of admissions/beddays by 100,000 population.
 #'
 #' @param data A dataframe of the number of bed days for frailty admissions and
 #' their population by ICB/LA/PCN by month.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param activity_type Either `"admissions"` or `"beddays"`.
 #'
-#' @returns A dataframe with a column added for the number of beddays by 100,000
-#'  population.
-get_beddays_per_100000_pop <- function(data, geography) {
+#' @returns A dataframe with a column added for the number of admissions/beddays
+#' by 100,000 population.
+get_activity_per_100000_pop <- function(data, geography, activity_type) {
   wrangled <- data |>
     dplyr::filter(!is.na(population_size)) |>
-    dplyr::filter(beddays >= 0) |> # why negative one? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    PHEindicatormethods::phe_rate(x = beddays,
+    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> # why negative one? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    PHEindicatormethods::phe_rate(x = !!rlang::sym(activity_type),
                                   n = population_size,
                                   multiplier = 100000) |>
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
-                                ~janitor::round_half_up(.))) |>
+                                ~janitor::round_half_up(.)),
+                  indicator = glue::glue("{indicator}_per_pop_{activity_type}")) |>
     dplyr::select(
       indicator,
       date,
       !!rlang::sym(geography),
-      numerator = beddays,
+      numerator = !!rlang::sym(activity_type),
       denominator = population_size,
       value,
       lowercl,
@@ -32,17 +34,17 @@ get_beddays_per_100000_pop <- function(data, geography) {
   return(wrangled)
 }
 
-#' Used in `get_frailty_beddays_sub_geography()` to get the number of bed days
+#' Used in `get_frailty_sub_geography()` to get the number of admssions/beddays
 #' and diagnosis code at the patient level.
 #'
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #' @param start The minimum date for the query.
 #' @param connection The ODBC connection.
 #'
-#' @returns A patient and spell level dataframe with the number of bed days and
-#' diagnosis for each discharge linked to their previous discharges, by month of
-#' and subgeography.
-get_frailty_beddays_data <- function(sub_geography, start, connection) {
+#' @returns A patient and spell level dataframe with the number of 
+#' admissions/beddays and diagnosis for each discharge linked to their previous
+#' discharges, by month of and subgeography.
+get_frailty_data <- function(sub_geography, start, connection) {
   sub_geography_column <- get_subgeography_column(sub_geography)
   
   query <- "
@@ -100,20 +102,21 @@ get_frailty_beddays_data <- function(sub_geography, start, connection) {
   return(wrangled)
 }
 
-#' The number of bed days for frailty admissions ICB/LA/PCN and month.
+#' The number of admissions/beddays for frailty admissions ICB/LA/PCN and month.
 #'
 #' @param data The number of bed days for frailty admissions LSOA/GP and month.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#' @param lookup The subgeoraphy to the geography lookup.
+#' @param lookup The subgeography to the geography lookup.
 #'
-#' @returns A dataframe with the number of bed days for high and intermediate
-#' frailty emergency admissions by month and geography.
-get_frailty_beddays_geography <- function(data, geography, lookup) {
+#' @returns A dataframe with the number of admissions/beddays for high and 
+#' intermediate frailty emergency admissions by month and geography.
+get_frailty_geography <- function(data, geography, lookup) {
   geography_column <- get_geography_column(geography)
   
   wrangled <- data |>
     join_to_geography_lookup(geography, lookup) |>
     dplyr::summarise(
+      admissions = sum(admissions, na.rm = TRUE),
       beddays = sum(beddays, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column), indicator)
     ) |>
@@ -122,26 +125,27 @@ get_frailty_beddays_geography <- function(data, geography, lookup) {
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
+      admissions,
       beddays
     )
   
   return(wrangled)
 }
 
-#' The number of bed days for frailty admissions LSOA/GP and month.
+#' The number of admssions/beddays for frailty admissions LSOA/GP and month.
 #'
 #' @param scores The `frailty_risk_scores.csv`
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #' @param start The minimum date for the query.
 #' @param connection The ODBC connection.
 #'
-#' @returns A dataframe with the number of bed days for high and intermediate
-#' frailty emergency admissions by month and subgeography.
-get_frailty_beddays_sub_geography <- function(sub_geography, 
+#' @returns A dataframe with the number of admssions/beddays for high and 
+#' intermediate frailty emergency admissions by month and subgeography.
+get_frailty_sub_geography <- function(sub_geography, 
                                               start, 
                                               connection, 
                                               scores) {
-  data <- get_frailty_beddays_data(sub_geography, start, connection)
+  data <- get_frailty_data(sub_geography, start, connection)
   
   sub_geography_column <- get_subgeography_column(sub_geography) |>
     snakecase::to_snake_case()
@@ -169,7 +173,8 @@ get_frailty_beddays_sub_geography <- function(sub_geography,
         "frail_elderly_high"
       )
     ) |>
-    dplyr::summarise(beddays = sum(spelldur),
+    dplyr::summarise(admissions = dplyr::n(),
+                     beddays = sum(spelldur),
                      .by = c(date, 
                              indicator, 
                              !!rlang::sym(sub_geography_column)))
@@ -179,21 +184,23 @@ get_frailty_beddays_sub_geography <- function(sub_geography,
 
 #' Get the frailty indicators.
 #'
-#' @param data The number of bed days for frailty admissions by ICB/LA/PCN and
+#' @param data The number of admissions/beddays for frailty admissions by ICB/LA/PCN and
 #' month.
 #' @param population The population data by month and geography.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #' @param latest_population_year The latest year that population data is
 #' available for.
+#' @param activity_type Either `"admissions"` or `"beddays"`.
 #'
 #' @returns A dataframe of the frailty indicators.
 get_frailty_indicators <- function(data,
                                    population,
                                    geography,
-                                   latest_population_year) {
+                                   latest_population_year,
+                                   activity_type) {
   wrangled <- data |>
     join_to_population_data(population, geography, latest_population_year) |>
-    get_beddays_per_100000_pop(geography)
+    get_activity_per_100000_pop(geography, activity_type)
   
   return(wrangled)
 }
