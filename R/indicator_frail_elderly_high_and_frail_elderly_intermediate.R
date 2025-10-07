@@ -1,39 +1,6 @@
 # Functions for the older people with frailty admissions indicators:
 # `frail_elderly_high` and `frail_elderly_intermediate`.
 
-#' Calculate the number of admissions/beddays by 100,000 population.
-#'
-#' @param data A dataframe of the number of bed days for frailty admissions and
-#' their population by ICB/LA/PCN by month.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#' @param activity_type Either `"admissions"` or `"beddays"`.
-#'
-#' @returns A dataframe with a column added for the number of admissions/beddays
-#' by 100,000 population.
-get_activity_per_100000_pop <- function(data, geography, activity_type) {
-  wrangled <- data |>
-    dplyr::filter(!is.na(population_size)) |>
-    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> # why negative one? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    PHEindicatormethods::phe_rate(x = !!rlang::sym(activity_type),
-                                  n = population_size,
-                                  multiplier = 100000) |>
-    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
-                                ~janitor::round_half_up(.)),
-                  indicator = glue::glue("{indicator}_per_pop_{activity_type}")) |>
-    dplyr::select(
-      indicator,
-      date,
-      !!rlang::sym(geography),
-      numerator = !!rlang::sym(activity_type),
-      denominator = population_size,
-      value,
-      lowercl,
-      uppercl
-    )
-  
-  return(wrangled)
-}
-
 #' Used in `get_frailty_sub_geography()` to get the number of admssions/beddays
 #' and diagnosis code at the patient level.
 #'
@@ -182,25 +149,3 @@ get_frailty_sub_geography <- function(sub_geography,
   return(wrangled)
 }
 
-#' Get the frailty indicators.
-#'
-#' @param data The number of admissions/beddays for frailty admissions by ICB/LA/PCN and
-#' month.
-#' @param population The population data by month and geography.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#' @param latest_population_year The latest year that population data is
-#' available for.
-#' @param activity_type Either `"admissions"` or `"beddays"`.
-#'
-#' @returns A dataframe of the frailty indicators.
-get_frailty_indicators <- function(data,
-                                   population,
-                                   geography,
-                                   latest_population_year,
-                                   activity_type) {
-  wrangled <- data |>
-    join_to_population_data(population, geography, latest_population_year) |>
-    get_activity_per_100000_pop(geography, activity_type)
-  
-  return(wrangled)
-}
