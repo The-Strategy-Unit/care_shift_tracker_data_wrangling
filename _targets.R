@@ -279,7 +279,7 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       frailty_indicators_icb,
-      get_frailty_indicators(
+      get_indicators_per_pop(
         frailty_icb,
         population_75_plus_icb,
         "icb",
@@ -292,7 +292,7 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       frailty_indicators_la,
-      get_frailty_indicators(
+      get_indicators_per_pop(
         frailty_la,
         population_75_plus_la,
         "la",
@@ -305,7 +305,7 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       frailty_indicators_pcn,
-      get_frailty_indicators(
+      get_indicators_per_pop(
         frailty_pcn,
         population_75_plus_pcn,
         "pcn",
