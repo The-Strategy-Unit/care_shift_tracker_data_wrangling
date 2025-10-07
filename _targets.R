@@ -33,6 +33,9 @@ list(
   tar_target(
     age_bands,
     "('65-69', '70-74', '75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
+  tar_target(
+    age_bands_75_plus,
+    "('75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
   tar_target(start_date, "2008-04-01"),
   tar_target(next_month, Sys.Date() |>
                lubridate::ceiling_date("month")),
@@ -155,6 +158,49 @@ list(
                        population_gp_post_2017_04_01,
                        gp_to_pcn)
   ),
+  ## Over 75 population --------------------------------------------------------
+  # LSOA to LA and ICB (75+)
+  tar_target(
+    population_75_plus_lsoa,
+    get_population_lsoa(75, start_date, con)
+  ),
+  tar_target(
+    population_75_plus_lsoa_mapped_to_higher_geographies,
+    population_75_plus_lsoa |>
+      dplyr::rename(lsoa11cd = area_code) |>
+      dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
+      dplyr::left_join(lsoa_to_higher_geographies |>
+                         dplyr::select(-geometry), by = "lsoa21cd") |>
+      dplyr::mutate(
+        number = dplyr::n(),
+        .by = c(lsoa11cd, effective_snapshot_date),
+        population_size_amended = population_size / number
+      )
+  ),
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      population_75_plus,
+      get_population_higher_geography_from_lsoa(
+        population_lsoa_mapped_to_higher_geographies, 
+        geography)
+    )
+  ),
+  # GP to PCN (75+)
+  targets::tar_target(
+    population_75_plus_gp_pre_2017_04_01,
+    get_population_gp_pre_2017_04_01(age_bands_75_plus, start_date, con) 
+  ),
+  targets::tar_target(
+    population_75_plus_gp_post_2017_04_01,
+    get_population_gp_post_2017_04_01(age_bands_75_plus, start_date, con) 
+  ),
+  targets::tar_target(
+    population_75_plus_pcn,
+    get_population_pcn(population_75_plus_gp_pre_2017_04_01, 
+                       population_75_plus_gp_post_2017_04_01,
+                       gp_to_pcn)
+  ),
   
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
@@ -233,7 +279,7 @@ list(
     frailty_indicators_icb,
     get_frailty_indicators(
       frailty_beddays_icb,
-      population_icb,
+      population_75_plus_icb,
       "icb",
       latest_population_year
     )
@@ -242,7 +288,7 @@ list(
     frailty_indicators_la,
     get_frailty_indicators(
       frailty_beddays_la,
-      population_la,
+      population_75_plus_la,
       "la",
       latest_population_year
     )
@@ -251,7 +297,7 @@ list(
     frailty_indicators_pcn,
     get_frailty_indicators(
       frailty_beddays_pcn,
-      population_pcn,
+      population_75_plus_pcn,
       "pcn",
       latest_population_year
     )
