@@ -11,6 +11,7 @@
 #'  population.
 get_beddays_per_100000_pop <- function(data, geography) {
   wrangled <- data |>
+    dplyr::filter(!is.na(population_size)) |>
     dplyr::mutate(
       beddays_per_100000_pop = (beddays * 100000 / population_size) |>
         janitor::round_half_up()
