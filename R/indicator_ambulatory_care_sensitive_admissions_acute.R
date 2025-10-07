@@ -149,26 +149,26 @@ get_ambulatory_care_conditions_sub_geography <- function(sub_geography,
 #' @param data The number of emergency readmissions within 28 days
 #' admissions/beddays by LSOA/GP code and month.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#' @param activity_type Either `"admissions"` or `"beddays"`.
 #' @param condition Either `"acute"` or `"chronic"`.
 #'
 #' @returns A dataframe of the number of admissions/beddays for ambulatory care 
 #' conditions (acute/chronic) by geography and month.
 get_ambulatory_care_conditions_geography <- function(data, 
-                                                     geography, 
-                                                     activity_type, 
+                                                     geography,  
                                                      condition) {
   geography_column <- get_geography_column(geography)
   
   wrangled <- data |>
-    dplyr::summarise(value = sum(!!rlang::sym(activity_type)),
+    dplyr::summarise(admissions = sum(admissions),
+                     beddays = sum(beddays),
                      .by = c(date, !!rlang::sym(geography_column))) |>
-    dplyr::mutate(indicator = glue::glue("ambulatory_care_conditions_{condition}_{activity_type}")) |>
+    dplyr::mutate(indicator = glue::glue("ambulatory_care_conditions_{condition}")) |>
     dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
     dplyr::select(indicator,
                   !!rlang::sym(geography) := !!rlang::sym(geography_column),
                   date,
-                  value)
+                  admissions,
+                  beddays)
   
   return(wrangled)
 }
