@@ -257,9 +257,9 @@ list(
     tar_target(
       frailty,
       get_frailty_sub_geography(sub_geography, 
-                                        start_date, 
-                                        con, 
-                                        frailty_risk_scores)
+                                start_date, 
+                                con, 
+                                frailty_risk_scores)
     )
   ),
   tarchetypes::tar_map(
@@ -267,8 +267,8 @@ list(
     tar_target(
       frailty,
       get_frailty_geography(frailty_lsoa, 
-                                    geography, 
-                                    lsoa_to_higher_geographies)
+                            geography, 
+                            lsoa_to_higher_geographies)
     )
   ),
   tar_target(
