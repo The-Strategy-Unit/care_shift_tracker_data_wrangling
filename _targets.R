@@ -326,13 +326,37 @@ list(
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2),
-         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    list(geography = rep(c("icb", "la"), 2)),
     tar_target(
       readmission_within_28_days,
       get_readmission_within_28_days_geography(readmission_within_28_days_lsoa, 
-                                      geography, 
-                                      activity_type)
+                                      geography)
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      readmission_indicator_icb,
+      get_indicators_per_pop(
+        readmission_within_28_days_icb,
+        population_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      readmission_indicator_la,
+      get_indicators_per_pop(
+        readmission_within_28_days_la,
+        population_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
     )
   ),
   # PCN
@@ -344,13 +368,22 @@ list(
                                                  con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
+  tar_target(
+    readmission_within_28_days_pcn,
+    get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
+                                             "pcn")
+  ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
-      readmission_within_28_days_pcn,
-      get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
-                                               "pcn", 
-                                               activity_type)
+      readmission_indicator_pcn,
+      get_indicators_per_pop(
+        readmission_within_28_days_pcn,
+        population_pcn,
+        "pcn",
+        latest_population_year,
+        activity_type
+      )
     )
   ),
   
@@ -479,8 +512,8 @@ list(
       elective_non_elective_ratio_icb_beddays,  
       frailty_indicators_icb_admissions,
       frailty_indicators_icb_beddays,
-      readmission_within_28_days_icb_admissions,
-      readmission_within_28_days_icb_beddays,
+      readmission_indicator_icb_admissions,
+      readmission_indicator_icb_beddays,
       ambulatory_care_conditions_acute_icb_admissions,
       ambulatory_care_conditions_acute_icb_beddays,
       ambulatory_care_conditions_chronic_icb_admissions,
@@ -507,8 +540,8 @@ list(
       elective_non_elective_ratio_la_beddays,   
       frailty_indicators_la_admissions,
       frailty_indicators_la_beddays,
-      readmission_within_28_days_la_admissions,
-      readmission_within_28_days_la_beddays,
+      readmission_indicator_la_admissions,
+      readmission_indicator_la_beddays,
       ambulatory_care_conditions_acute_la_admissions,
       ambulatory_care_conditions_acute_la_beddays,
       ambulatory_care_conditions_chronic_la_admissions,
@@ -535,8 +568,8 @@ list(
       elective_non_elective_ratio_pcn_beddays,  
       frailty_indicators_pcn_admissions,
       frailty_indicators_pcn_beddays,
-      readmission_within_28_days_pcn_admissions,
-      readmission_within_28_days_pcn_beddays,
+      readmission_indicator_pcn_admissions,
+      readmission_indicator_pcn_beddays,
       ambulatory_care_conditions_acute_pcn_admissions,
       ambulatory_care_conditions_acute_pcn_beddays,
       ambulatory_care_conditions_chronic_pcn_admissions,
