@@ -420,50 +420,116 @@ list(
   ),
   # ICB and LA
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2),
-         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    list(geography = c("icb", "la")),
     tar_target(
       ambulatory_care_conditions_acute,
       get_ambulatory_care_conditions_geography(
         ambulatory_care_conditions_lsoa_acute, 
         geography, 
-        activity_type,
         "acute")
     )
   ),
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2),
-         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    list(geography = c("icb", "la")),
     tar_target(
       ambulatory_care_conditions_chronic,
       get_ambulatory_care_conditions_geography(
         ambulatory_care_conditions_lsoa_chronic, 
         geography, 
-        activity_type,
         "chronic")
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      ambulatory_acute_indicator_icb,
+      get_indicators_per_pop(
+        ambulatory_care_conditions_acute_icb,
+        population_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      ambulatory_chronic_indicator_icb,
+      get_indicators_per_pop(
+        ambulatory_care_conditions_chronic_icb,
+        population_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      ambulatory_acute_indicator_la,
+      get_indicators_per_pop(
+        ambulatory_care_conditions_acute_la,
+        population_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      ambulatory_chronic_indicator_la,
+      get_indicators_per_pop(
+        ambulatory_care_conditions_chronic_la,
+        population_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
     )
   ),
   # PCN
+  tar_target(
+    ambulatory_care_conditions_acute_pcn,
+    get_ambulatory_care_conditions_geography(
+      ambulatory_care_conditions_gp_acute,
+      "pcn",
+      "acute")
+  ),
+  tar_target(
+    ambulatory_care_conditions_chronic_pcn,
+    get_ambulatory_care_conditions_geography(
+      ambulatory_care_conditions_gp_chronic,
+      "pcn",
+      "chronic")
+  ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
-      ambulatory_care_conditions_acute_pcn,
-      get_ambulatory_care_conditions_geography(
-        ambulatory_care_conditions_gp_acute,
+      ambulatory_acute_indicator_pcn,
+      get_indicators_per_pop(
+        ambulatory_care_conditions_acute_pcn,
+        population_pcn,
         "pcn",
-        activity_type,
-        "acute")
+        latest_population_year,
+        activity_type
+      )
     )
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
-      ambulatory_care_conditions_chronic_pcn,
-      get_ambulatory_care_conditions_geography(
-        ambulatory_care_conditions_gp_chronic,
+      ambulatory_chronic_indicator_pcn,
+      get_indicators_per_pop(
+        ambulatory_care_conditions_chronic_pcn,
+        population_pcn,
         "pcn",
-        activity_type,
-        "chronic")
+        latest_population_year,
+        activity_type
+      )
     )
   ),
   
@@ -523,10 +589,10 @@ list(
       frailty_indicators_icb_beddays,
       readmission_indicator_icb_admissions,
       readmission_indicator_icb_beddays,
-      ambulatory_care_conditions_acute_icb_admissions,
-      ambulatory_care_conditions_acute_icb_beddays,
-      ambulatory_care_conditions_chronic_icb_admissions,
-      ambulatory_care_conditions_chronic_icb_beddays,
+      ambulatory_acute_indicator_icb_admissions,
+      ambulatory_acute_indicator_icb_beddays,
+      ambulatory_chronic_indicator_icb_admissions,
+      ambulatory_chronic_indicator_icb_beddays,
       frequent_attenders_adult_ambulance_icb
       ) |>
     dplyr::left_join(icb_lookup |>
@@ -551,10 +617,10 @@ list(
       frailty_indicators_la_beddays,
       readmission_indicator_la_admissions,
       readmission_indicator_la_beddays,
-      ambulatory_care_conditions_acute_la_admissions,
-      ambulatory_care_conditions_acute_la_beddays,
-      ambulatory_care_conditions_chronic_la_admissions,
-      ambulatory_care_conditions_chronic_la_beddays,
+      ambulatory_acute_indicator_la_admissions,
+      ambulatory_acute_indicator_la_beddays,
+      ambulatory_chronic_indicator_la_admissions,
+      ambulatory_chronic_indicator_la_beddays,
       frequent_attenders_adult_ambulance_la
       ) |>
     dplyr::left_join(la_lookup |>
@@ -579,10 +645,10 @@ list(
       frailty_indicators_pcn_beddays,
       readmission_indicator_pcn_admissions,
       readmission_indicator_pcn_beddays,
-      ambulatory_care_conditions_acute_pcn_admissions,
-      ambulatory_care_conditions_acute_pcn_beddays,
-      ambulatory_care_conditions_chronic_pcn_admissions,
-      ambulatory_care_conditions_chronic_pcn_beddays,
+      ambulatory_acute_indicator_pcn_admissions,
+      ambulatory_acute_indicator_pcn_beddays,
+      ambulatory_chronic_indicator_pcn_admissions,
+      ambulatory_chronic_indicator_pcn_beddays,
       frequent_attenders_adult_ambulance_pcn
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
