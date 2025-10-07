@@ -204,15 +204,24 @@ list(
   
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
-  # ICB and LA
+  # LSOA and GP
   tar_target(
     elective_non_elective_lsoa,
     get_elective_non_elective_sub_geography("lsoa", 
-                                                       age_cutoff, 
-                                                       start_date, 
-                                                       con) |>
+                                            age_cutoff, 
+                                            start_date, 
+                                            con) |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ), 
+  tar_target(
+    elective_non_elective_gp,
+    get_elective_non_elective_sub_geography("gp", 
+                                            age_cutoff, 
+                                            start_date, 
+                                            con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
+  # ICB and LA
   tarchetypes::tar_map(
     list(geography = rep(c("icb", "la"), 2),
          activity_type = rep(c("admissions", "beddays"), each = 2)),
@@ -224,14 +233,6 @@ list(
     )
   ),
   # PCN
-  tar_target(
-    elective_non_elective_gp,
-    get_elective_non_elective_sub_geography("gp", 
-                                            age_cutoff, 
-                                            start_date, 
-                                            con) |>
-      join_to_geography_lookup("pcn", gp_to_pcn)
-  ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
@@ -252,6 +253,7 @@ list(
     read.csv(frailty_risk_scores_filename) |>
       janitor::clean_names()
   ),
+  # LSOA and GP
   tarchetypes::tar_map(
     list(sub_geography = c("gp", "lsoa")),
     tar_target(
@@ -262,6 +264,7 @@ list(
                                 frailty_risk_scores)
     )
   ),
+  # ICB and LA
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
@@ -270,10 +273,6 @@ list(
                             geography, 
                             lsoa_to_higher_geographies)
     )
-  ),
-  tar_target(
-    frailty_pcn,
-    get_frailty_geography(frailty_gp, "pcn", gp_to_pcn)
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -301,6 +300,11 @@ list(
       )
     )
   ),
+  # PCN
+  tar_target(
+    frailty_pcn,
+    get_frailty_geography(frailty_gp, "pcn", gp_to_pcn)
+  ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
@@ -316,7 +320,7 @@ list(
   ),
   
   ## Emergency readmission within 28 days --------------------------------------
-  # ICB and LA
+  # LSOA and GP
   tar_target(
     readmission_within_28_days_lsoa,
     get_readmission_within_28_days_sub_geography("lsoa", 
@@ -325,6 +329,15 @@ list(
                                                  con) |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
+  tar_target(
+    readmission_within_28_days_gp,
+    get_readmission_within_28_days_sub_geography("gp", 
+                                                 age_cutoff, 
+                                                 start_date, 
+                                                 con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  # ICB and LA
   tarchetypes::tar_map(
     list(geography = rep(c("icb", "la"), 2)),
     tar_target(
@@ -361,14 +374,6 @@ list(
   ),
   # PCN
   tar_target(
-    readmission_within_28_days_gp,
-    get_readmission_within_28_days_sub_geography("gp", 
-                                                 age_cutoff, 
-                                                 start_date, 
-                                                 con) |>
-      join_to_geography_lookup("pcn", gp_to_pcn)
-  ),
-  tar_target(
     readmission_within_28_days_pcn,
     get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
                                              "pcn")
@@ -388,7 +393,7 @@ list(
   ),
   
   ## Ambulatory Care Conditions ------------------------------------------------
-  # ICB and LA
+  # LSOA and GP
   tarchetypes::tar_map(
     list(condition = c("acute", "chronic")),
     tar_target(
@@ -401,6 +406,19 @@ list(
         join_to_geography_lookup("icb", lsoa_to_higher_geographies)
     )
   ),
+  tarchetypes::tar_map(
+    list(condition = c("acute", "chronic")),
+    tar_target(
+      ambulatory_care_conditions_gp,
+      get_ambulatory_care_conditions_sub_geography("gp", 
+                                                   age_cutoff, 
+                                                   start_date, 
+                                                   condition,
+                                                   con) |>
+        join_to_geography_lookup("pcn", gp_to_pcn)
+    )
+  ),
+  # ICB and LA
   tarchetypes::tar_map(
     list(geography = rep(c("icb", "la"), 2),
          activity_type = rep(c("admissions", "beddays"), each = 2)),
@@ -427,18 +445,6 @@ list(
   ),
   # PCN
   tarchetypes::tar_map(
-    list(condition = c("acute", "chronic")),
-    tar_target(
-      ambulatory_care_conditions_gp,
-      get_ambulatory_care_conditions_sub_geography("gp", 
-                                                   age_cutoff, 
-                                                   start_date, 
-                                                   condition,
-                                                   con) |>
-        join_to_geography_lookup("pcn", gp_to_pcn)
-    )
-  ),
-  tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       ambulatory_care_conditions_acute_pcn,
@@ -462,6 +468,7 @@ list(
   ),
   
   ## A&E frequent attenders (adult, ambulance conveyed) ------------------------
+  # LSOA and GP
   tar_target(
     frequent_attenders_adult_ambulance_lsoa,
     get_frequent_attenders_adult_ambulance_sub_geography("lsoa", 
@@ -479,15 +486,6 @@ list(
       dplyr::rename(der_postcode_lsoa_2021_code = lsoa21cd) |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
     ),
-  tarchetypes::tar_map(
-    list(geography = c("icb", "la")),
-    tar_target(
-      frequent_attenders_adult_ambulance,
-      get_frequent_attenders_adult_ambulance_geography(
-        frequent_attenders_adult_ambulance_lsoa, 
-        geography) 
-    )
-  ),
   tar_target(
     frequent_attenders_adult_ambulance_gp,
     get_frequent_attenders_adult_ambulance_sub_geography("gp", 
@@ -497,6 +495,17 @@ list(
       dplyr::rename(gp_practice_sus = gp_practice_code) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      frequent_attenders_adult_ambulance,
+      get_frequent_attenders_adult_ambulance_geography(
+        frequent_attenders_adult_ambulance_lsoa, 
+        geography) 
+    )
+  ),
+  # PCN
   tar_target(
     frequent_attenders_adult_ambulance_pcn,
     get_frequent_attenders_adult_ambulance_geography(
