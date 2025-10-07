@@ -12,18 +12,23 @@
 get_beddays_per_100000_pop <- function(data, geography) {
   wrangled <- data |>
     dplyr::filter(!is.na(population_size)) |>
-    dplyr::mutate(
-      beddays_per_100000_pop = (beddays * 100000 / population_size) |>
-        janitor::round_half_up()
-    ) |>
+    dplyr::filter(beddays >= 0) |> # why negative one? !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    PHEindicatormethods::phe_rate(x = beddays,
+                                  n = population_size,
+                                  multiplier = 100000) |>
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
+                                ~janitor::round_half_up(.))) |>
     dplyr::select(
       indicator,
       date,
       !!rlang::sym(geography),
       numerator = beddays,
       denominator = population_size,
-      value = beddays_per_100000_pop
+      value,
+      lowercl,
+      uppercl
     )
+  
   return(wrangled)
 }
 
