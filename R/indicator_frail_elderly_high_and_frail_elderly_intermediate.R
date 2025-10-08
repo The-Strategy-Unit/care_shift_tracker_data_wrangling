@@ -1,5 +1,8 @@
 # Functions for the older people with frailty admissions indicators:
-# `frail_elderly_high` and `frail_elderly_intermediate`.
+# `frail_elderly_high_per_pop_admissions`, 
+# `frail_elderly_high_per_pop_beddays`, 
+# `frail_elderly_intermediate_per_pop_admissions`and 
+# `frail_elderly_intermediate_per_pop_beddays`.
 
 #' Used in `get_frailty_sub_geography()` to get the number of admssions/beddays
 #' and diagnosis code at the patient level.

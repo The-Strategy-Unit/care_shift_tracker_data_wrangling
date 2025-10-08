@@ -1,6 +1,8 @@
 # Functions for ambulatory care condition indicators:
-# `ambulatory_care_conditions_admissions` and
-# `ambulatory_care_conditions_beddays`.
+# `ambulatory_care_conditions_acute_per_pop_admissions`,
+# `ambulatory_care_conditions_acute_per_pop_beddays`,
+# `ambulatory_care_conditions_chronic_per_pop_admissions` and
+# `ambulatory_care_conditions_chronic_per_pop_beddays`.
 
 #' Get the SQL WHERE clause for either acute or chronic ambulatory care 
 #' conditions.

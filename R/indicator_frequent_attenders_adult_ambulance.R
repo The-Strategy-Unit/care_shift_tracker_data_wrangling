@@ -1,6 +1,5 @@
-# Functions for A&E frequent attenders (adult. ambulance conveyed) indicators:
-# `frequent_attenders_adult_ambulance_admissions` and 
-# `frequent_attenders_adult_ambulance_beddays`.
+# Functions for the A&E frequent attenders (adult. ambulance conveyed) 
+# indicator: `frequent_attenders_adult_ambulance_per_pop`.
 
 #' Number of A&E frequent attenders by LSOA/GP code and month.
 #'

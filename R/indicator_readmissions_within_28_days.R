@@ -1,6 +1,6 @@
 # Functions for emergency readmissions within 28 days indicators:
-# `readmission_within_28_days_admissions` and 
-# `readmission_within_28_days_beddays`.
+# `readmission_within_28_days_per_pop_admissions` and 
+# `readmission_within_28_days_per_pop_beddays`.
 
 #' Emergency readmissions within 28 days admissions/beddays by LSOA/GP code and 
 #' month.
