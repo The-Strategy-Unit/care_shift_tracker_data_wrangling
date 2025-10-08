@@ -1,5 +1,29 @@
 # General functions.
-#
+
+#' Aggregate sub-geography level to geography level.
+#'
+#' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
+#' an indicator.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe with the data aggregated to geography level.
+aggregate_indicator_to_geography_level <- function(data,
+                                                   geography, 
+                                                   indicator_name) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      admissions = sum(admissions, na.rm = TRUE),
+      beddays = sum(beddays, na.rm = TRUE),
+      .by = c(date, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(indicator = indicator_name) |>
+    tidy_data_for_indicator_wrangling(geography)
+  
+  return(wrangled)
+}
+
 #' Get the table column name related to the geography.
 #'
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
@@ -15,6 +39,55 @@ get_geography_column <- function(geography) {
   } else {
     "ERROR - please choose a geography: icb, la, pcn"
   }
+}
+
+#' Weight the indicators by 100,000 population.
+#'
+#' @param data The number of admissions/beddays for an indicator by ICB/LA/PCN 
+#' and month.
+#' @param population The population data by month and geography.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param latest_population_year The latest year that population data is
+#' available for.
+#' @param activity_type Either `"admissions"` or `"beddays"`.
+#'
+#' @returns The dataframe with columns added for weighting by population.
+get_indicators_per_pop <- function(data,
+                                   population,
+                                   geography,
+                                   latest_population_year,
+                                   activity_type) {
+  activity_type_rename <- if(activity_type == "attenders"){
+    ""
+  } else {
+    glue::glue("_{activity_type}")
+  }
+  
+  wrangled <- data |>
+    join_to_population_data(population, geography, latest_population_year) |>
+    dplyr::filter(!is.na(population_size),
+                  population_size > 0) |>
+    # There were <5 patients with a discharge date before their admission date
+    # in one indicator at GP level. So the line below is to exclude these rows:
+    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
+    PHEindicatormethods::phe_rate(x = !!rlang::sym(activity_type),
+                                  n = population_size,
+                                  multiplier = 100000) |>
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
+                                ~janitor::round_half_up(.)),
+                  indicator = glue::glue("{indicator}_per_pop{activity_type_rename}")) |>
+    dplyr::select(
+      indicator,
+      date,
+      !!rlang::sym(geography),
+      numerator = !!rlang::sym(activity_type),
+      denominator = population_size,
+      value,
+      lowercl,
+      uppercl
+    )
+  
+  return(wrangled)
 }
 
 #' Get the table column name related to the sub-geography.
@@ -89,78 +162,8 @@ join_to_population_data <- function(data,
   return(wrangled)
 }
 
-#' Weight the indicators by 100,000 population.
-#'
-#' @param data The number of admissions/beddays for an indicator by ICB/LA/PCN 
-#' and month.
-#' @param population The population data by month and geography.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#' @param latest_population_year The latest year that population data is
-#' available for.
-#' @param activity_type Either `"admissions"` or `"beddays"`.
-#'
-#' @returns The dataframe with columns added for weighting by population.
-get_indicators_per_pop <- function(data,
-                                   population,
-                                   geography,
-                                   latest_population_year,
-                                   activity_type) {
-  activity_type_rename <- if(activity_type == "attenders"){
-    ""
-  } else {
-    glue::glue("_{activity_type}")
-  }
-  
-  wrangled <- data |>
-    join_to_population_data(population, geography, latest_population_year) |>
-    dplyr::filter(!is.na(population_size),
-                  population_size > 0) |>
-    # There were <5 patients with a discharge date before their admission date
-    # in one indicator at GP level. So the line below is to exclude these rows:
-    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
-    PHEindicatormethods::phe_rate(x = !!rlang::sym(activity_type),
-                                  n = population_size,
-                                  multiplier = 100000) |>
-    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
-                                ~janitor::round_half_up(.)),
-                  indicator = glue::glue("{indicator}_per_pop{activity_type_rename}")) |>
-    dplyr::select(
-      indicator,
-      date,
-      !!rlang::sym(geography),
-      numerator = !!rlang::sym(activity_type),
-      denominator = population_size,
-      value,
-      lowercl,
-      uppercl
-    )
-  
-  return(wrangled)
-}
 
-#' Aggregate sub-geography level to geography level.
-#'
-#' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
-#' an indicator.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#'
-#' @returns A dataframe with the data aggregated to geography level.
-aggregate_indicator_to_geography_level <- function(data,
-                                                   geography, 
-                                                   indicator_name) {
-  geography_column <- get_geography_column(geography)
-  
-  wrangled <- data |>
-    dplyr::summarise(
-      admissions = sum(admissions, na.rm = TRUE),
-      beddays = sum(beddays, na.rm = TRUE),
-      .by = c(date, !!rlang::sym(geography_column))
-    ) |>
-    dplyr::mutate(indicator = indicator_name) |>
-    tidy_data_for_indicator_wrangling(geography)
-  
-  return(wrangled)
-}
+
 
 #' Tidy data to use `get_indicators_per_pop()`.
 #'
