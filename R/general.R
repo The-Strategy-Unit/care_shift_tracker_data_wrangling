@@ -137,3 +137,28 @@ get_indicators_per_pop <- function(data,
   
   return(wrangled)
 }
+
+
+aggregate_indicator_to_geography_level <- function(data,
+                                                   geography, 
+                                                   indicator_name) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      admissions = sum(admissions),
+      beddays = sum(beddays),
+      .by = c(date, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(indicator = indicator_name) |>
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::select(
+      indicator,
+      !!rlang::sym(geography) := !!rlang::sym(geography_column),
+      date,
+      admissions,
+      beddays
+    )
+  
+  return(wrangled)
+}

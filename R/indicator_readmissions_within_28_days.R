@@ -77,33 +77,5 @@ get_readmission_within_28_days_sub_geography <- function(sub_geography,
   return(wrangled)
 }
 
-#' Emergency readmissions within 28 days admissions/beddays by geography and 
-#' month.
-#'
-#' @param data The number of emergency readmissions within 28 days 
-#' admissions/beddays by LSOA/GP code and month.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#'
-#' @returns A dataframe with the emergency readmissions within 28 days 
-#' admissions/beddays by month and geography.
-get_readmission_within_28_days_geography <- function(data, geography) {
-  geography_column <- get_geography_column(geography)
-  
-  wrangled <- data |>
-    dplyr::summarise(
-      admissions = sum(admissions),
-      beddays = sum(beddays),
-      .by = c(date, !!rlang::sym(geography_column))
-    ) |>
-    dplyr::mutate(indicator = "readmission_within_28_days") |>
-    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
-    dplyr::select(
-      indicator,
-      !!rlang::sym(geography) := !!rlang::sym(geography_column),
-      date,
-      admissions,
-      beddays
-    )
-  
-  return(wrangled)
-}
+
+
