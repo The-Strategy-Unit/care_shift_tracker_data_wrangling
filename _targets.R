@@ -339,11 +339,12 @@ list(
   ),
   # ICB and LA
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2)),
+    list(geography = c("icb", "la")),
     tar_target(
       readmission_within_28_days,
-      get_readmission_within_28_days_geography(readmission_within_28_days_lsoa, 
-                                      geography)
+      aggregate_indicator_to_geography_level(readmission_within_28_days_lsoa, 
+                                             geography,
+                                             "readmission_within_28_days")
     )
   ),
   tarchetypes::tar_map(
@@ -375,8 +376,9 @@ list(
   # PCN
   tar_target(
     readmission_within_28_days_pcn,
-    get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
-                                             "pcn")
+    aggregate_indicator_to_geography_level(readmission_within_28_days_gp, 
+                                           "pcn",
+                                           "readmission_within_28_days")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -423,20 +425,20 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       ambulatory_care_conditions_acute,
-      get_ambulatory_care_conditions_geography(
+      aggregate_indicator_to_geography_level(
         ambulatory_care_conditions_lsoa_acute, 
         geography, 
-        "acute")
+        "ambulatory_care_conditions_acute")
     )
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       ambulatory_care_conditions_chronic,
-      get_ambulatory_care_conditions_geography(
+      aggregate_indicator_to_geography_level(
         ambulatory_care_conditions_lsoa_chronic, 
         geography, 
-        "chronic")
+        "ambulatory_care_conditions_chronic")
     )
   ),
   tarchetypes::tar_map(
@@ -494,17 +496,17 @@ list(
   # PCN
   tar_target(
     ambulatory_care_conditions_acute_pcn,
-    get_ambulatory_care_conditions_geography(
+    aggregate_indicator_to_geography_level(
       ambulatory_care_conditions_gp_acute,
       "pcn",
-      "acute")
+      "ambulatory_care_conditions_acute")
   ),
   tar_target(
     ambulatory_care_conditions_chronic_pcn,
-    get_ambulatory_care_conditions_geography(
+    aggregate_indicator_to_geography_level(
       ambulatory_care_conditions_gp_chronic,
       "pcn",
-      "chronic")
+      "ambulatory_care_conditions_chronic")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -609,6 +611,81 @@ list(
     )
   ),
   
+  ## Mental Health Admissions via ED -------------------------------------------
+  # LSOA and GP
+  tar_target(
+    raid_ae_lsoa,
+    get_raid_ae_sub_geography("lsoa", 
+                              age_cutoff, 
+                              start_date, 
+                              con) |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tar_target(
+    raid_ae_gp,
+    get_raid_ae_sub_geography("gp", 
+                              age_cutoff, 
+                              start_date, 
+                              con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      raid_ae,
+      aggregate_indicator_to_geography_level(raid_ae_lsoa, 
+                                             geography,
+                                             "raid_ae")
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      raid_ae_indicator_icb,
+      get_indicators_per_pop(
+        raid_ae_icb,
+        population_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      raid_ae_indicator_la,
+      get_indicators_per_pop(
+        raid_ae_la,
+        population_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  # PCN
+  tar_target(
+    raid_ae_pcn,
+    aggregate_indicator_to_geography_level(raid_ae_gp, 
+                                           "pcn",
+                                           "raid_ae")
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      raid_ae_indicator_pcn,
+      get_indicators_per_pop(
+        raid_ae_pcn,
+        population_pcn,
+        "pcn",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -623,7 +700,9 @@ list(
       ambulatory_acute_indicator_icb_beddays,
       ambulatory_chronic_indicator_icb_admissions,
       ambulatory_chronic_indicator_icb_beddays,
-      frequent_attenders_indicator_icb
+      frequent_attenders_indicator_icb,
+      raid_ae_indicator_icb_admissions,
+      raid_ae_indicator_icb_beddays
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -651,7 +730,9 @@ list(
       ambulatory_acute_indicator_la_beddays,
       ambulatory_chronic_indicator_la_admissions,
       ambulatory_chronic_indicator_la_beddays,
-      frequent_attenders_indicator_la
+      frequent_attenders_indicator_la,
+      raid_ae_indicator_la_admissions,
+      raid_ae_indicator_la_beddays
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -679,7 +760,9 @@ list(
       ambulatory_acute_indicator_pcn_beddays,
       ambulatory_chronic_indicator_pcn_admissions,
       ambulatory_chronic_indicator_pcn_beddays,
-      frequent_attenders_indicator_pcn
+      frequent_attenders_indicator_pcn,
+      raid_ae_indicator_pcn_admissions,
+      raid_ae_indicator_pcn_beddays
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
