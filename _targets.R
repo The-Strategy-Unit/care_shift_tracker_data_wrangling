@@ -609,6 +609,79 @@ list(
     )
   ),
   
+  ## Mental Health Admissions via ED -------------------------------------------
+  # LSOA and GP
+  tar_target(
+    raid_ae_lsoa,
+    get_raid_ae_sub_geography("lsoa", 
+                              age_cutoff, 
+                              start_date, 
+                              con) |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tar_target(
+    raid_ae_gp,
+    get_raid_ae_sub_geography("gp", 
+                              age_cutoff, 
+                              start_date, 
+                              con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(geography = rep(c("icb", "la"), 2)),
+    tar_target(
+      raid_ae,
+      get_raid_ae_geography(raid_ae_lsoa, 
+                            geography)
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      raid_ae_indicator_icb,
+      get_indicators_per_pop(
+        raid_ae_icb,
+        population_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      raid_ae_indicator_la,
+      get_indicators_per_pop(
+        raid_ae_la,
+        population_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  # PCN
+  tar_target(
+    raid_ae_pcn,
+    get_raid_ae_geography(raid_ae_gp, 
+                          "pcn")
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      raid_ae_indicator_pcn,
+      get_indicators_per_pop(
+        raid_ae_pcn,
+        population_pcn,
+        "pcn",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -623,7 +696,9 @@ list(
       ambulatory_acute_indicator_icb_beddays,
       ambulatory_chronic_indicator_icb_admissions,
       ambulatory_chronic_indicator_icb_beddays,
-      frequent_attenders_indicator_icb
+      frequent_attenders_indicator_icb,
+      raid_ae_indicator_icb_admissions,
+      raid_ae_indicator_icb_beddays
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -651,7 +726,9 @@ list(
       ambulatory_acute_indicator_la_beddays,
       ambulatory_chronic_indicator_la_admissions,
       ambulatory_chronic_indicator_la_beddays,
-      frequent_attenders_indicator_la
+      frequent_attenders_indicator_la,
+      raid_ae_indicator_la_admissions,
+      raid_ae_indicator_la_beddays
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -679,7 +756,9 @@ list(
       ambulatory_acute_indicator_pcn_beddays,
       ambulatory_chronic_indicator_pcn_admissions,
       ambulatory_chronic_indicator_pcn_beddays,
-      frequent_attenders_indicator_pcn
+      frequent_attenders_indicator_pcn,
+      raid_ae_indicator_pcn_admissions,
+      raid_ae_indicator_pcn_beddays
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
