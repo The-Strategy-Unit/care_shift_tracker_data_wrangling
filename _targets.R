@@ -634,8 +634,9 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       raid_ae,
-      get_raid_ae_geography(raid_ae_lsoa, 
-                            geography)
+      aggregate_indicator_to_geography_level(raid_ae_lsoa, 
+                                             geography,
+                                             "raid_ae")
     )
   ),
   tarchetypes::tar_map(
@@ -667,8 +668,9 @@ list(
   # PCN
   tar_target(
     raid_ae_pcn,
-    get_raid_ae_geography(raid_ae_gp, 
-                          "pcn")
+    aggregate_indicator_to_geography_level(raid_ae_gp, 
+                                           "pcn",
+                                           "raid_ae")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),

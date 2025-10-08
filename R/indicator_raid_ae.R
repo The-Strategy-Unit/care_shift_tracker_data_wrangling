@@ -64,32 +64,4 @@ get_raid_ae_sub_geography <- function(sub_geography,
   return(wrangled)
 }
 
-#' Mental Health Admissions via ED admissions/beddays by geography and month.
-#'
-#' @param data The number of Mental Health Admissions via ED admissions/beddays 
-#' by LSOA/GP code and month.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#'
-#' @returns A dataframe with the Mental Health Admissions via ED 
-#' admissions/beddays by month and geography.
-get_raid_ae_geography <- function(data, geography) {
-  geography_column <- get_geography_column(geography)
-  
-  wrangled <- data |>
-    dplyr::summarise(
-      admissions = sum(admissions),
-      beddays = sum(beddays),
-      .by = c(date, !!rlang::sym(geography_column))
-    ) |>
-    dplyr::mutate(indicator = "raid_ae") |>
-    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
-    dplyr::select(
-      indicator,
-      !!rlang::sym(geography) := !!rlang::sym(geography_column),
-      date,
-      admissions,
-      beddays
-    )
-  
-  return(wrangled)
-}
+
