@@ -79,8 +79,8 @@ join_to_population_data <- function(data,
         year = stringr::str_sub(date, start = 1, end = 4),
         population_year = ifelse(
           year > latest_population_year,
-          latest_population_year,
-          year
+          as.character(latest_population_year),
+          as.character(year)
         )
       ) |>
       dplyr::left_join(population, by = c(geography, "population_year"))
