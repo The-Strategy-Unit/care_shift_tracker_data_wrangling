@@ -157,6 +157,21 @@ aggregate_indicator_to_geography_level <- function(data,
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
     dplyr::mutate(indicator = indicator_name) |>
+    tidy_data_for_indicator_wrangling(geography)
+  
+  return(wrangled)
+}
+
+#' Tidy data to use `get_indicators_per_pop()`.
+#'
+#' @param data A dataframe of data that will be used to create the indicator.
+#' @param geography The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe ready to feed into `get_indicators_per_pop()`.
+tidy_data_for_indicator_wrangling <- function(data, geography){
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
     dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
     dplyr::select(
       indicator,
