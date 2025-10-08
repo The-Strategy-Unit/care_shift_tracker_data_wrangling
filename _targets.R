@@ -339,11 +339,12 @@ list(
   ),
   # ICB and LA
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2)),
+    list(geography = c("icb", "la")),
     tar_target(
       readmission_within_28_days,
-      get_readmission_within_28_days_geography(readmission_within_28_days_lsoa, 
-                                               geography)
+      aggregate_indicator_to_geography_level(readmission_within_28_days_lsoa, 
+                                             geography,
+                                             "readmission_within_28_days")
     )
   ),
   tarchetypes::tar_map(
@@ -375,8 +376,9 @@ list(
   # PCN
   tar_target(
     readmission_within_28_days_pcn,
-    get_readmission_within_28_days_geography(readmission_within_28_days_gp, 
-                                             "pcn")
+    aggregate_indicator_to_geography_level(readmission_within_28_days_gp, 
+                                           "pcn",
+                                           "readmission_within_28_days")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -629,7 +631,7 @@ list(
   ),
   # ICB and LA
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2)),
+    list(geography = c("icb", "la")),
     tar_target(
       raid_ae,
       get_raid_ae_geography(raid_ae_lsoa, 
