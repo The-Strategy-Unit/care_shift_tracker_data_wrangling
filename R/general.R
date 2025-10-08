@@ -138,7 +138,13 @@ get_indicators_per_pop <- function(data,
   return(wrangled)
 }
 
-
+#' Aggregate sub-geography level to geography level.
+#'
+#' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
+#' an indicator.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe with the data aggregated to geography level.
 aggregate_indicator_to_geography_level <- function(data,
                                                    geography, 
                                                    indicator_name) {
@@ -146,8 +152,8 @@ aggregate_indicator_to_geography_level <- function(data,
   
   wrangled <- data |>
     dplyr::summarise(
-      admissions = sum(admissions),
-      beddays = sum(beddays),
+      admissions = sum(admissions, na.rm = TRUE),
+      beddays = sum(beddays, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
     dplyr::mutate(indicator = indicator_name) |>
