@@ -686,6 +686,79 @@ list(
     )
   ),
   
+  ## Emergency hospital admissions due to falls in people over 65 --------------
+  # LSOA and GP
+  tar_target(
+    falls_related_admissions_lsoa,
+    get_falls_related_admissions_sub_geography("lsoa", 
+                                               start_date, 
+                                               con) |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tar_target(
+    falls_related_admissions_gp,
+    get_falls_related_admissions_sub_geography("gp", 
+                                               start_date, 
+                                               con) |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      falls_related_admissions,
+      aggregate_indicator_to_geography_level(falls_related_admissions_lsoa, 
+                                             geography,
+                                             "falls_related_admissions")
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      falls_indicator_icb,
+      get_indicators_per_pop(
+        falls_related_admissions_icb,
+        population_icb,
+        "icb",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      falls_indicator_la,
+      get_indicators_per_pop(
+        falls_related_admissions_la,
+        population_la,
+        "la",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  # PCN
+  tar_target(
+    falls_related_admissions_pcn,
+    aggregate_indicator_to_geography_level(falls_related_admissions_gp, 
+                                           "pcn",
+                                           "falls_related_admissions")
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      falls_indicator_pcn,
+      get_indicators_per_pop(
+        falls_related_admissions_pcn,
+        population_pcn,
+        "pcn",
+        latest_population_year,
+        activity_type
+      )
+    )
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -702,7 +775,9 @@ list(
       ambulatory_chronic_indicator_icb_beddays,
       frequent_attenders_indicator_icb,
       raid_ae_indicator_icb_admissions,
-      raid_ae_indicator_icb_beddays
+      raid_ae_indicator_icb_beddays,
+      falls_indicator_icb_admissions,
+      falls_indicator_icb_beddays
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -732,7 +807,9 @@ list(
       ambulatory_chronic_indicator_la_beddays,
       frequent_attenders_indicator_la,
       raid_ae_indicator_la_admissions,
-      raid_ae_indicator_la_beddays
+      raid_ae_indicator_la_beddays,
+      falls_indicator_la_admissions,
+      falls_indicator_la_beddays
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -762,7 +839,9 @@ list(
       ambulatory_chronic_indicator_pcn_beddays,
       frequent_attenders_indicator_pcn,
       raid_ae_indicator_pcn_admissions,
-      raid_ae_indicator_pcn_beddays
+      raid_ae_indicator_pcn_beddays,
+      falls_indicator_pcn_admissions,
+      falls_indicator_pcn_beddays
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
