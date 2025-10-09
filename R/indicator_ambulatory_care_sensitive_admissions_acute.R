@@ -121,7 +121,7 @@ get_ambulatory_care_conditions_sub_geography <- function(sub_geography,
     	WHERE
         Last_Episode_In_Spell_Indicator = '1' AND
     		Discharge_Date >= 'start_date' AND
-    		Age_at_End_of_Episode_SUS >= age_cutoff AND
+    		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
     		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
     		LEFT(a.Admission_Method, 1) = '2' AND
     		where_clause
@@ -132,8 +132,7 @@ get_ambulatory_care_conditions_sub_geography <- function(sub_geography,
     	sub_geography_column
   " |>
     stringr::str_replace_all(
-      c(
-        "age_cutoff" = age,
+      c("age_cutoff" = age,
         "start_date" = start,
         "sub_geography_column" = sub_geography_column,
         "where_clause" = where_clause
