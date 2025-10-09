@@ -61,9 +61,8 @@ get_frailty_data <- function(sub_geography, start, connection) {
     ON b.Der_Pseudo_NHS_Number = a.Der_Pseudo_NHS_Number
       AND a.Discharge_Date BETWEEN DATEADD(year, -2, b.Discharge_Date) AND b.Discharge_Date
   " |>
-    stringr::str_replace_all(c(
-      "start_date" = start,
-      "sub_geography_column" = sub_geography_column
+    stringr::str_replace_all(c("start_date" = start,
+                               "sub_geography_column" = sub_geography_column
     ))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
