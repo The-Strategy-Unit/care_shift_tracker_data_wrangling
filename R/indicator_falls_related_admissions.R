@@ -38,7 +38,21 @@ get_falls_related_admissions_sub_geography <- function(sub_geography,
     		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
         Der_Age_at_CDS_Activity_Date >= 65 AND
         LEFT(Admission_Method, 1) = '2' AND
-        LEFT(Der_Primary_Diagnosis_Code, 4) = 'R296'
+        (LEFT(Der_Primary_Diagnosis_Code, 4) = 'R296' OR
+          ((Der_Primary_Diagnosis_Code LIKE 'S%' OR 
+            Der_Primary_Diagnosis_Code LIKE 'T%') AND
+            Der_Diagnosis_All LIKE '%W[01]%') OR   ----explicit_fractures
+          ((Der_Diagnosis_All LIKE '%M48[45]%' OR  
+          Der_Diagnosis_All LIKE '%M80[01234589]%' OR  
+          Der_Diagnosis_All LIKE '%S22[01]%' OR 
+          Der_Diagnosis_All LIKE '%S32[012347]%' OR     
+          Der_Diagnosis_All LIKE '%S42[234]%' OR     
+          Der_Diagnosis_All LIKE '%S52%' OR     
+          Der_Diagnosis_All LIKE '%S620%' OR    
+          Der_Diagnosis_All LIKE '%S72[012348]%' OR  
+          Der_Diagnosis_All LIKE '%T08X%' ) AND 
+          Der_Diagnosis_All NOT LIKE '%[VWXY]%') ----implicit_fractures
+        )
     	 ) AS Sub
     
     GROUP BY 
