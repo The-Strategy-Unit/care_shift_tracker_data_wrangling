@@ -35,7 +35,7 @@ get_raid_ae_sub_geography <- function(sub_geography,
       
       WHERE 
     		Discharge_Date >= 'start_date' AND
-    		Age_at_End_of_Episode_SUS >= age_cutoff AND
+    		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
     		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
         Last_Episode_In_Spell_Indicator = '1' AND
       	Der_Provider_Code = 'RK9' AND
@@ -51,8 +51,7 @@ get_raid_ae_sub_geography <- function(sub_geography,
     	sub_geography_column
   " |>
     stringr::str_replace_all(
-      c(
-        "age_cutoff" = age,
+      c("age_cutoff" = age,
         "start_date" = start,
         "sub_geography_column" = sub_geography_column
       )
