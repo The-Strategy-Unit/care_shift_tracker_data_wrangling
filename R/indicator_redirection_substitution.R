@@ -12,7 +12,7 @@
 #'
 #' @returns A dataframe with the number of emergency readmissions within 28 days 
 #' admissions/beddays by LSOA/GP code and month.
-get_other_redirection_indicators_sub_geography <- function(
+get_other_redirection_indicators_episodes <- function(
     age, 
     start, 
     zero_los_no_procedure,
