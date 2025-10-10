@@ -53,31 +53,38 @@ get_ambulatory_care_conditions_where_clause <- function(condition) {
     "(
     ((Der_Primary_Diagnosis_Code LIKE 'I20%' OR 
     Der_Primary_Diagnosis_Code LIKE 'I24[089]%' ) AND
-    (Der_Procedure_All NOT LIKE '[ABCDEFGHJKLMNOPQRSTVW]%' AND
-    Der_Procedure_All NOT LIKE 'X0[1245]%' ) ) OR ----   angina
+    ((Der_Procedure_All NOT LIKE '[ABCDEFGHJKLMNOPQRSTVW]%' AND
+    Der_Procedure_All NOT LIKE 'X0[1245]%' ) OR 
+    Der_Procedure_All IS NULL )) OR ----angina
     
     (Der_Primary_Diagnosis_Code LIKE 'J4[56]%') OR ---asthma
-      
+    
     ((Der_Primary_Diagnosis_Code LIKE 'I110%' OR 
     Der_Primary_Diagnosis_Code LIKE 'I50%' OR 
     Der_Primary_Diagnosis_Code LIKE 'I10%' OR 
     Der_Primary_Diagnosis_Code LIKE 'I119%' OR 
     Der_Primary_Diagnosis_Code LIKE 'J81%' ) AND
-    (Der_Procedure_All NOT LIKE '%K[0-4]%' AND
+    ((Der_Procedure_All NOT LIKE '%K[0-4]%' AND
     Der_Procedure_All NOT LIKE '%K5[02567]%' AND
     Der_Procedure_All NOT LIKE '%K6[016789]%'  AND
-    Der_Procedure_All NOT LIKE '%K71)%' )) OR   -----congestive_heart_failure / hypertension
+    Der_Procedure_All NOT LIKE '%K71%' ) OR 
+    Der_Procedure_All IS NULL) ) OR -----congestive_heart_failure / hypertension
     
     (Der_Primary_Diagnosis_Code LIKE 'J4[12347]%' OR 
     (Der_Primary_Diagnosis_Code LIKE 'J20%' AND
-    Der_Diagnosis_All LIKE '%J4[12347]%' )) OR ----   copd
-    
-    Der_Diagnosis_All LIKE '%E1[01234][012345678]%' OR ----diabetes_complications
+    Der_Diagnosis_All LIKE '%J4[12347]%' )) OR ----copd
     
     (Der_Primary_Diagnosis_Code LIKE 'D50[189]%') OR ---iron-deficiency_anaemia
+    
     (Der_Primary_Diagnosis_Code LIKE 'E4[0123]X%' OR
     Der_Primary_Diagnosis_Code LIKE 'E550%' OR
-    Der_Primary_Diagnosis_Code LIKE 'E643)%') --- nutritional_deficiencies
+    Der_Primary_Diagnosis_Code LIKE 'E643%') OR ---nutritional_deficiencies
+    
+    (Der_Diagnosis_All LIKE '%E10[0-8]%' OR
+    Der_Diagnosis_All LIKE '%E11[0-8]%' OR
+    Der_Diagnosis_All LIKE '%E12[0-8]%' OR
+    Der_Diagnosis_All LIKE '%E13[0-8]%' OR
+    Der_Diagnosis_All LIKE '%E14[0-8]%' ) --- diabetes complications
     )
     "
   } else if (condition == "vaccine_preventable") {
