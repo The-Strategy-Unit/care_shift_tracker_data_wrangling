@@ -13,66 +13,72 @@
 #' to either acute or chronic ambulatory care conditions.
 get_ambulatory_care_conditions_where_clause <- function(condition) {
   sql <- if (condition == "acute") {
-    " (
-  ((Der_Primary_Diagnosis_Code LIKE 'L0[34]%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'L08[089]%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'L88X%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'L980%' ) AND
-  (Der_Procedure_All NOT LIKE '%[ABCDEFGHJKLMNOPQRTVW]%' AND
-  Der_Procedure_All NOT LIKE '%S[123]%' AND
-  Der_Procedure_All NOT LIKE '%S4[1234589]%' AND
-  Der_Procedure_All NOT LIKE '%X0[1245]%' ) ) ----   cellulitis 
-OR
-(Der_Primary_Diagnosis_Code LIKE 'G4[01]%' OR
- Der_Primary_Diagnosis_Code LIKE 'O15%' OR
- Der_Primary_Diagnosis_Code LIKE 'R56%' ) ---Convulsions and epilepsy
-OR
-(Der_Primary_Diagnosis_Code LIKE 'E86X%' OR
- Der_Primary_Diagnosis_Code LIKE 'K52[289]%') ---dehydration_and_gastroenteritis
-OR
-(Der_Primary_Diagnosis_Code LIKE 'A690)%' OR
- Der_Primary_Diagnosis_Code LIKE 'K0[2-68]%' OR
- Der_Primary_Diagnosis_Code LIKE 'K09[89]%' OR
- Der_Primary_Diagnosis_Code LIKE 'K1[23]%' )  --- dental_conditions
-OR
-(Der_Primary_Diagnosis_Code LIKE 'H6[67]%' OR
-  Der_Primary_Diagnosis_Code LIKE 'J0[236]%' OR
-  Der_Primary_Diagnosis_Code LIKE 'J312%' ) --ent_infections
-OR
-(Der_Primary_Diagnosis_Code LIKE 'N7[034]%') ---pelvic_inflammatory_disease
-OR
-(Der_Primary_Diagnosis_Code LIKE 'K2[5678][012456]%') ---perforated_bleeding_ulcer
-OR
-(Der_Primary_Diagnosis_Code LIKE 'N1[012]%' OR
-  Der_Primary_Diagnosis_Code LIKE 'N136%' ) ---pyelonephritis
-OR Der_Diagnosis_All LIKE '%R02X%' --gangrene
-)
-"
+    "(
+    ((Der_Primary_Diagnosis_Code LIKE 'L0[34]%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'L08[089]%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'L88X%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'L980%' ) AND
+    (Der_Procedure_All NOT LIKE '%[ABCDEFGHJKLMNOPQRTVW]%' AND
+    Der_Procedure_All NOT LIKE '%S[123]%' AND
+    Der_Procedure_All NOT LIKE '%S4[1234589]%' AND
+    Der_Procedure_All NOT LIKE '%X0[1245]%' ) ) OR ----cellulitis 
+  
+  (Der_Primary_Diagnosis_Code LIKE 'G4[01]%' OR
+   Der_Primary_Diagnosis_Code LIKE 'O15%' OR
+   Der_Primary_Diagnosis_Code LIKE 'R56%' ) OR ---Convulsions and epilepsy
+
+  (Der_Primary_Diagnosis_Code LIKE 'E86X%' OR
+   Der_Primary_Diagnosis_Code LIKE 'K52[289]%') OR ---dehydration_and_gastroenteritis
+  
+  (Der_Primary_Diagnosis_Code LIKE 'A690)%' OR
+   Der_Primary_Diagnosis_Code LIKE 'K0[2-68]%' OR
+   Der_Primary_Diagnosis_Code LIKE 'K09[89]%' OR
+   Der_Primary_Diagnosis_Code LIKE 'K1[23]%') OR ---dental_conditions
+  
+  (Der_Primary_Diagnosis_Code LIKE 'H6[67]%' OR
+    Der_Primary_Diagnosis_Code LIKE 'J0[236]%' OR
+    Der_Primary_Diagnosis_Code LIKE 'J312%' ) OR ---ent_infections
+  
+  (Der_Primary_Diagnosis_Code LIKE 'N7[034]%') OR ---pelvic_inflammatory_disease
+  
+  (Der_Primary_Diagnosis_Code LIKE 'K2[5678][012456]%') OR ---perforated_bleeding_ulcer
+  
+  (Der_Primary_Diagnosis_Code LIKE 'N1[012]%' OR
+    Der_Primary_Diagnosis_Code LIKE 'N136%' ) OR ---pyelonephritis
+  
+  Der_Diagnosis_All LIKE '%R02X%' --gangrene
+  )
+  "
   } else if (condition == "chronic") {
     "(
-  ((Der_Primary_Diagnosis_Code LIKE 'I20%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'I24[089]%' ) AND
-  (Der_Procedure_All NOT LIKE '[ABCDEFGHJKLMNOPQRSTVW]%' AND
-  Der_Procedure_All NOT LIKE 'X0[1245]%' ) ) OR ----   angina
+    ((Der_Primary_Diagnosis_Code LIKE 'I20%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'I24[089]%' ) AND
+    (Der_Procedure_All NOT LIKE '[ABCDEFGHJKLMNOPQRSTVW]%' AND
+    Der_Procedure_All NOT LIKE 'X0[1245]%' ) ) OR ----   angina
+    
     (Der_Primary_Diagnosis_Code LIKE 'J4[56]%') OR ---asthma
-  ((Der_Primary_Diagnosis_Code LIKE 'I110%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'I50%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'I10%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'I119%' OR 
-  Der_Primary_Diagnosis_Code LIKE 'J81%' ) AND
-  (Der_Procedure_All NOT LIKE '%K[0-4]%' AND
-  Der_Procedure_All NOT LIKE '%K5[02567]%' AND
-  Der_Procedure_All NOT LIKE '%K6[016789]%'  AND
-  Der_Procedure_All NOT LIKE '%K71)%' )  ) OR   -----congestive_heart_failure / hypertension
-  (Der_Primary_Diagnosis_Code LIKE 'J4[12347]%' OR 
-  (Der_Primary_Diagnosis_Code LIKE 'J20%' AND
-  Der_Diagnosis_All LIKE '%J4[12347]%' )) OR ----   copd
-  Der_Diagnosis_All LIKE '%E1[01234][012345678]%' OR ----diabetes_complications
-  (Der_Primary_Diagnosis_Code LIKE 'D50[189]%') OR ---iron-deficiency_anaemia
+      
+    ((Der_Primary_Diagnosis_Code LIKE 'I110%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'I50%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'I10%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'I119%' OR 
+    Der_Primary_Diagnosis_Code LIKE 'J81%' ) AND
+    (Der_Procedure_All NOT LIKE '%K[0-4]%' AND
+    Der_Procedure_All NOT LIKE '%K5[02567]%' AND
+    Der_Procedure_All NOT LIKE '%K6[016789]%'  AND
+    Der_Procedure_All NOT LIKE '%K71)%' )) OR   -----congestive_heart_failure / hypertension
+    
+    (Der_Primary_Diagnosis_Code LIKE 'J4[12347]%' OR 
+    (Der_Primary_Diagnosis_Code LIKE 'J20%' AND
+    Der_Diagnosis_All LIKE '%J4[12347]%' )) OR ----   copd
+    
+    Der_Diagnosis_All LIKE '%E1[01234][012345678]%' OR ----diabetes_complications
+    
+    (Der_Primary_Diagnosis_Code LIKE 'D50[189]%') OR ---iron-deficiency_anaemia
     (Der_Primary_Diagnosis_Code LIKE 'E4[0123]X%' OR
     Der_Primary_Diagnosis_Code LIKE 'E550%' OR
     Der_Primary_Diagnosis_Code LIKE 'E643)%') --- nutritional_deficiencies
-  )
+    )
     "
   } else if (condition == "vaccine_preventable") {
     "(
@@ -80,7 +86,8 @@ OR Der_Diagnosis_All LIKE '%R02X%' --gangrene
     Der_Diagnosis_All LIKE '%J15[3479]%' OR 
     Der_Diagnosis_All LIKE '%J168%' OR 
     Der_Diagnosis_All LIKE '%J18[18]%'  ) AND
-    (Der_Diagnosis_All NOT LIKE '%D57%')) OR ----   influenza_and_pneumonia
+    (Der_Diagnosis_All NOT LIKE '%D57%')) OR ----influenza_and_pneumonia
+    
     (Der_Diagnosis_All LIKE '%A3[567]%' OR 
     Der_Diagnosis_All LIKE '%A80%' OR 
     Der_Diagnosis_All LIKE '%B0[56]%' OR 
