@@ -115,7 +115,7 @@ get_ambulatory_care_conditions_where_clause <- function(condition) {
 #' @param start The minimum date for the query.
 #' @param connection The ODBC connection.
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
-#' @param condition Either `"acute"` or `"chronic"`.
+#' @param condition Either `"acute"`, `"chronic"`, `"vaccine_preventable"`.
 #'
 #' @returns A dataframe of the number of admissions/beddays for ambulatory care 
 #' conditions (acute/chronic) by LSOA/GP code and month.
