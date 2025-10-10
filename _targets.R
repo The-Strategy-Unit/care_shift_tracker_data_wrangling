@@ -759,6 +759,68 @@ list(
     )
   ),
   
+  ## Redirection ---------------------------------------------------------------
+  tar_target(
+    zero_los_no_procedure_where_clause,
+    "Discharge_Method IN ('1', '2', '3') AND
+    DATEDIFF(day, Admission_Date, Discharge_Date) = 0 AND
+    (Der_Procedure_Count=0 OR Der_Procedure_All IS NULL) 
+    "
+  ),
+  tar_target(
+    medicines_related_admissions_where_clause,
+    "(Der_Diagnosis_All LIKE '%Y4%' OR
+      Der_Diagnosis_All LIKE '%Y5[01234567]%') OR ---explicit
+      
+    ((Der_Primary_Diagnosis_Code LIKE 'E16[012]%' OR
+      Der_Primary_Diagnosis_Code LIKE 'E781%' OR
+      Der_Primary_Diagnosis_Code LIKE 'R55X%' OR
+      Der_Primary_Diagnosis_Code LIKE 'R739%' OR
+      Der_Primary_Diagnosis_Code LIKE 'T383%') AND
+      (Der_Diagnosis_All LIKE '%E1[01234]%') AND
+      (Der_Diagnosis_All NOT LIKE '%Y4%' AND
+      Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - anti-diabetics  
+      
+    ((Der_Primary_Diagnosis_Code LIKE 'R55X%' OR
+      Der_Primary_Diagnosis_Code LIKE 'S060%' OR
+      Der_Primary_Diagnosis_Code LIKE 'S52[012345678]%' OR
+      Der_Primary_Diagnosis_Code LIKE 'S628%' OR
+      Der_Primary_Diagnosis_Code LIKE 'S720%' OR
+      Der_Primary_Diagnosis_Code LIKE 'W%') AND
+      (Der_Diagnosis_All LIKE '%F%') AND
+      (Der_Diagnosis_All NOT LIKE '%Y4%' AND
+      Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - benzodiasepines
+    
+    ((Der_Primary_Diagnosis_Code LIKE 'E86X%' OR
+       Der_Primary_Diagnosis_Code LIKE 'E87[56]%' OR
+       Der_Primary_Diagnosis_Code LIKE 'I470%' OR
+       Der_Primary_Diagnosis_Code LIKE 'I49[89]%' OR
+       Der_Primary_Diagnosis_Code LIKE 'R55X%' OR
+       Der_Primary_Diagnosis_Code LIKE 'R571%') AND
+       (Der_Diagnosis_All LIKE '%I10X%' OR
+       Der_Diagnosis_All LIKE '%I1[12][09]%' OR
+       Der_Diagnosis_All LIKE '%I13[01239]%' OR
+       Der_Diagnosis_All LIKE '%I150%') AND
+       (Der_Diagnosis_All NOT LIKE '%Y4%' AND
+       Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - diurectics
+    
+    ((Der_Primary_Diagnosis_Code LIKE 'E87[56]%' OR
+      Der_Primary_Diagnosis_Code LIKE 'I50[019]%' OR
+      Der_Primary_Diagnosis_Code LIKE 'K25[059]%' OR
+      Der_Primary_Diagnosis_Code LIKE 'K922%' OR
+      Der_Primary_Diagnosis_Code LIKE 'R10[34]%') AND
+      (Der_Diagnosis_All LIKE '%M05[389]%' OR
+      Der_Diagnosis_All LIKE '%M06[089]%' OR
+      Der_Diagnosis_All LIKE '%M080%' OR
+      Der_Diagnosis_All LIKE '%M15[0123489]%' OR
+      Der_Diagnosis_All LIKE '%M16[012345679]%' OR
+      Der_Diagnosis_All LIKE '%M1[78][0123459]%' OR
+      Der_Diagnosis_All LIKE '%M19[01289]%') AND
+      (Der_Diagnosis_All NOT LIKE '%Y4%' AND
+      Der_Diagnosis_All NOT LIKE '%Y5[0-7]%')) ---implicit - nsaids
+    "
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
