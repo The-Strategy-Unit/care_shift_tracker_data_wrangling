@@ -74,8 +74,27 @@ OR Der_Diagnosis_All LIKE '%R02X%' --gangrene
     Der_Primary_Diagnosis_Code LIKE 'E643)%') --- nutritional_deficiencies
   )
     "
-  } else {
-    "Please choose an ambulatory care condition: 'acute' or 'chronic'."
+  } else if (condition == "vaccine_preventable") {
+    "(
+    ((Der_Diagnosis_All LIKE '%J1[0134]%' OR 
+    Der_Diagnosis_All LIKE '%J15[3479]%' OR 
+    Der_Diagnosis_All LIKE '%J168%' OR 
+    Der_Diagnosis_All LIKE '%J18[18]%'  ) AND
+    (Der_Diagnosis_All NOT LIKE '%D57%')) OR ----   influenza_and_pneumonia
+    (Der_Diagnosis_All LIKE '%A3[567]%' OR 
+    Der_Diagnosis_All LIKE '%A80%' OR 
+    Der_Diagnosis_All LIKE '%B0[56]%' OR 
+    Der_Diagnosis_All LIKE '%B16[19]%' OR 
+    Der_Diagnosis_All LIKE '%B18[01]%' OR 
+    Der_Diagnosis_All LIKE '%B26%' OR 
+    Der_Diagnosis_All LIKE '%G000%' OR 
+    Der_Diagnosis_All LIKE '%M014%') ---other
+    )
+    "
+  } 
+  
+  else {
+    "Please choose an ambulatory care condition: 'acute', 'chronic' or 'vaccine_preventable."
   }
   
   return(sql)
