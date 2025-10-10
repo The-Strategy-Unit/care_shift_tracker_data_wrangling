@@ -322,20 +322,22 @@ list(
   ## Emergency readmission within 28 days --------------------------------------
   # LSOA and GP
   tar_target(
+    readmission_within_28_days_episodes,
+    get_readmission_within_28_days_episodes(age_cutoff, 
+                                            start_date, 
+                                            con)
+  ),
+  tar_target(
     readmission_within_28_days_lsoa,
-    get_readmission_within_28_days_sub_geography("lsoa", 
-                                                 age_cutoff, 
-                                                 start_date, 
-                                                 con) |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+    readmission_within_28_days_episodes |>
+      get_indicator_at_sub_geography_level("lsoa") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
   ),
   tar_target(
     readmission_within_28_days_gp,
-    get_readmission_within_28_days_sub_geography("gp", 
-                                                 age_cutoff, 
-                                                 start_date, 
-                                                 con) |>
-      join_to_geography_lookup("pcn", gp_to_pcn)
+    readmission_within_28_days_episodes |>
+      get_indicator_at_sub_geography_level("gp") |> 
+      join_to_geography_lookup("pcn", gp_to_pcn) 
   ),
   # ICB and LA
   tarchetypes::tar_map(
@@ -764,7 +766,7 @@ list(
     zero_los_no_procedure_where_clause,
     "Discharge_Method IN ('1', '2', '3') AND
     DATEDIFF(day, Admission_Date, Discharge_Date) = 0 AND
-    (Der_Procedure_Count=0 OR Der_Procedure_All IS NULL) 
+    (Der_Procedure_Count = 0 OR Der_Procedure_All IS NULL) 
     "
   ),
   tar_target(
