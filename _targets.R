@@ -397,7 +397,7 @@ list(
   ## Ambulatory Care Conditions ------------------------------------------------
   # LSOA and GP
   tarchetypes::tar_map(
-    list(condition = c("acute", "chronic")),
+    list(condition = c("acute", "chronic", "vaccine_preventable")),
     tar_target(
       ambulatory_care_conditions_lsoa,
       get_ambulatory_care_conditions_sub_geography("lsoa", 
@@ -409,7 +409,7 @@ list(
     )
   ),
   tarchetypes::tar_map(
-    list(condition = c("acute", "chronic")),
+    list(condition = c("acute", "chronic", "vaccine_preventable")),
     tar_target(
       ambulatory_care_conditions_gp,
       get_ambulatory_care_conditions_sub_geography("gp", 
