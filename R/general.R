@@ -115,6 +115,31 @@ aggregate_indicator_to_geography_level <- function(data,
   return(wrangled)
 }
 
+#' Aggregate sub-geography level to geography level.
+#'
+#' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
+#' an indicator.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe with the data aggregated to geography level and also by
+#' age range and sex.
+aggregate_indicator_to_geography_level_by_age_sex <- function(data,
+                                                   geography, 
+                                                   indicator_name) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      admissions = sum(admissions, na.rm = TRUE),
+      beddays = sum(beddays, na.rm = TRUE),
+      .by = c(date, age_range, sex, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(indicator = indicator_name) |>
+    tidy_data_for_indicator_wrangling(geography)
+  
+  return(wrangled)
+}
+
 #' Episode level data for an emergency related indicator.
 #'
 #' @param age The minimum age cutoff.
@@ -204,7 +229,7 @@ get_indicator_at_sub_geography_level <- function(data, sub_geography) {
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #'
 #' @returns A dataframe of the number of admissions/beddays for the indicator
-#' at LSOA/GP level by month and also  by age range and sex.
+#' at LSOA/GP level by month and also by age range and sex.
 get_indicator_at_sub_geography_level_by_age_sex <- function(data, 
                                                             sub_geography) {
   sub_geography_column <- get_subgeography_column(sub_geography) |>
@@ -286,6 +311,7 @@ tidy_data_for_indicator_wrangling <- function(data, geography){
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
+      dplyr::any_of(c("age_range", "sex")),
       admissions,
       beddays
     )

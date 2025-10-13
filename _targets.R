@@ -221,9 +221,9 @@ list(
       tidyr::pivot_longer(dplyr::contains("2021"), 
                           names_to = "sex", 
                           values_to = "pop") |>
-      dplyr::mutate(sex = sex |>
-                      stringr::str_remove("_2021") |>
-                      stringr::str_replace_all("males", "male"),
+      dplyr::mutate(sex = ifelse(stringr::str_detect(sex, "female"),
+                                 "2", 
+                                 "1"),
                     age_range = age |>
                       stringr::str_replace_all(c("Aged " = "",
                                                  " to " = "-",
@@ -1101,16 +1101,16 @@ list(
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
 
-  # # ICB and LA
-  # tarchetypes::tar_map(
-  #   list(geography = c("icb", "la")),
-  #   tar_target(
-  #     redirection,
-  #     aggregate_indicator_to_geography_level(redirection_lsoa, 
-  #                                            geography,
-  #                                            "redirection")
-  #   )
-  # ),
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      redirection,
+      aggregate_indicator_to_geography_level_by_age_sex(redirection_lsoa,
+                                                        geography,
+                                                        "redirection")
+    )
+  ),
   # tarchetypes::tar_map(
   #   list(activity_type = c("admissions", "beddays")),
   #   tar_target(
@@ -1138,12 +1138,12 @@ list(
   #   )
   # ),
   # PCN
-  # tar_target(
-  #   redirection_pcn,
-  #   aggregate_indicator_to_geography_level(redirection_gp, 
-  #                                          "pcn",
-  #                                          "redirection")
-  # ),
+  tar_target(
+    redirection_pcn,
+    aggregate_indicator_to_geography_level_by_age_sex(redirection_gp,
+                                                      "pcn",
+                                                      "redirection")
+  ),
   # tarchetypes::tar_map(
   #   list(activity_type = c("admissions", "beddays")),
   #   tar_target(
