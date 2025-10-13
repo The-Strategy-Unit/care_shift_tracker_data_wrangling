@@ -1083,33 +1083,34 @@ list(
                     der_postcode_lsoa_2021_code, 
                     gp_practice_sus, 
                     date, 
+                    sex,
                     age_range, 
                     spelldur) |>
       unique() 
   ),
-  tar_target(
-    redirection_lsoa,
-    redirection_episodes |>
-      get_indicator_at_sub_geography_level("lsoa") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
-  ),
-  tar_target(
-    redirection_gp,
-    redirection_episodes |>
-      get_indicator_at_sub_geography_level("gp") |>
-      join_to_geography_lookup("pcn", gp_to_pcn)
-  ),
-  
-  # ICB and LA
-  tarchetypes::tar_map(
-    list(geography = c("icb", "la")),
-    tar_target(
-      redirection,
-      aggregate_indicator_to_geography_level(redirection_lsoa, 
-                                             geography,
-                                             "redirection")
-    )
-  ),
+  # tar_target(
+  #   redirection_lsoa,
+  #   redirection_episodes |>
+  #     get_indicator_at_sub_geography_level("lsoa") |>
+  #     join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  # ),
+  # tar_target(
+  #   redirection_gp,
+  #   redirection_episodes |>
+  #     get_indicator_at_sub_geography_level("gp") |>
+  #     join_to_geography_lookup("pcn", gp_to_pcn)
+  # ),
+  # 
+  # # ICB and LA
+  # tarchetypes::tar_map(
+  #   list(geography = c("icb", "la")),
+  #   tar_target(
+  #     redirection,
+  #     aggregate_indicator_to_geography_level(redirection_lsoa, 
+  #                                            geography,
+  #                                            "redirection")
+  #   )
+  # ),
   # tarchetypes::tar_map(
   #   list(activity_type = c("admissions", "beddays")),
   #   tar_target(
