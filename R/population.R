@@ -136,6 +136,74 @@ get_population_lsoa <- function(age, start, connection) {
   return(data)
 }
 
+get_population_lsoa_by_age_sex <- function(age, start, connection) {
+  query <- "
+    SELECT
+      Area_code,
+      Effective_Snapshot_Date,
+      Sex,
+      CASE WHEN Age = '90+' THEN '80+'
+           WHEN Age BETWEEN 0 AND 4 THEN '0-4'
+           WHEN Age BETWEEN 5 AND 9 THEN '5-9'
+           WHEN Age BETWEEN 10 AND 14 THEN '10-14'
+           WHEN Age BETWEEN 15 AND 19 THEN '15-19'
+           WHEN Age BETWEEN 20 AND 24 THEN '20-24'
+           WHEN Age BETWEEN 25 AND 29 THEN '25-29'
+           WHEN Age BETWEEN 30 AND 34 THEN '30-34'
+           WHEN Age BETWEEN 35 AND 39 THEN '35-39'
+           WHEN Age BETWEEN 40 AND 44 THEN '40-44'
+           WHEN Age BETWEEN 45 AND 49 THEN '45-49'
+           WHEN Age BETWEEN 50 AND 54 THEN '50-54'
+           WHEN Age BETWEEN 55 AND 59 THEN '55-59'
+           WHEN Age BETWEEN 60 AND 64 THEN '60-64'
+           WHEN Age BETWEEN 65 AND 69 THEN '65-69'
+           WHEN Age BETWEEN 70 AND 74 THEN '70-74'
+           WHEN Age BETWEEN 75 AND 79 THEN '75-79'
+           WHEN Age >=80 THEN '80+'
+           ELSE NULL
+           END AS age_range,
+      SUM(Size) AS population_size
+
+    FROM [UKHF_Demography].[ONS_Population_Estimates_For_LSOAs_By_Year_Of_Age1_1]
+
+    WHERE Age >= 'age_cutoff'
+      AND LEFT(Area_code, 1) = 'E'
+      AND Effective_Snapshot_Date >= 'start_date'
+
+    GROUP BY
+      Area_code,        
+      Effective_Snapshot_Date,
+      Sex,
+      CASE WHEN Age = '90+' THEN '80+'
+           WHEN Age BETWEEN 0 AND 4 THEN '0-4'
+           WHEN Age BETWEEN 5 AND 9 THEN '5-9'
+           WHEN Age BETWEEN 10 AND 14 THEN '10-14'
+           WHEN Age BETWEEN 15 AND 19 THEN '15-19'
+           WHEN Age BETWEEN 20 AND 24 THEN '20-24'
+           WHEN Age BETWEEN 25 AND 29 THEN '25-29'
+           WHEN Age BETWEEN 30 AND 34 THEN '30-34'
+           WHEN Age BETWEEN 35 AND 39 THEN '35-39'
+           WHEN Age BETWEEN 40 AND 44 THEN '40-44'
+           WHEN Age BETWEEN 45 AND 49 THEN '45-49'
+           WHEN Age BETWEEN 50 AND 54 THEN '50-54'
+           WHEN Age BETWEEN 55 AND 59 THEN '55-59'
+           WHEN Age BETWEEN 60 AND 64 THEN '60-64'
+           WHEN Age BETWEEN 65 AND 69 THEN '65-69'
+           WHEN Age BETWEEN 70 AND 74 THEN '70-74'
+           WHEN Age BETWEEN 75 AND 79 THEN '75-79'
+           WHEN Age >=80 THEN '80+'
+           ELSE NULL
+           END
+  " |>
+    stringr::str_replace_all(c("age_cutoff" = as.character(age), 
+                               "start_date" = start))
+  
+  data <- DBI::dbGetQuery(connection, query) |>
+    janitor::clean_names()
+  
+  return(data)
+}
+
 #' Get PCN populations from the GP populations.
 #' Note: there are two distinct GP population datasets (pre and post 
 #' 2017-04-01). It does not matter which order they are provided in.

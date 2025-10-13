@@ -202,6 +202,40 @@ list(
                        gp_to_pcn)
   ),
   
+  ## Population by age range and sex -------------------------------------------
+  tar_target(
+    population_lsoa_by_age_sex,
+    get_population_lsoa_by_age_sex(age_cutoff, start_date, con)
+  ),
+  
+  ## England census ------------------------------------------------------------
+  tar_target(
+    census_url,
+    "https://www.ons.gov.uk/visualisations/dvc1914/fig4/datadownload.xlsx"
+    ),
+  tar_target(
+    standard_england_pop_2021_census,
+    scrape_xls(census_url, skip = 5) |>
+      janitor::clean_names() |>
+      dplyr::select(age, dplyr::contains("2021")) |>
+      tidyr::pivot_longer(dplyr::contains("2021"), 
+                          names_to = "sex", 
+                          values_to = "pop") |>
+      dplyr::mutate(sex = sex |>
+                      stringr::str_remove("_2021") |>
+                      stringr::str_replace_all("males", "male"),
+                    age_range = age |>
+                      stringr::str_replace_all(c("Aged " = "",
+                                                 " to " = "-",
+                                                 " years" = "",
+                                                 "4 and under" = "0-4",
+                                                 "90 and over" = "85+",
+                                                 "85-89" = "85+"))) |>
+      na.omit() |>
+      dplyr::summarise(pop = sum(pop),
+                       .by = c(age_range, sex))
+  ),
+  
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
   # LSOA and GP
@@ -1057,14 +1091,71 @@ list(
     redirection_lsoa,
     redirection_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     redirection_gp,
     redirection_episodes |>
-      get_indicator_at_sub_geography_level("gp") |> 
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      get_indicator_at_sub_geography_level("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
+  
+  # ICB and LA
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      redirection,
+      aggregate_indicator_to_geography_level(redirection_lsoa, 
+                                             geography,
+                                             "redirection")
+    )
+  ),
+  # tarchetypes::tar_map(
+  #   list(activity_type = c("admissions", "beddays")),
+  #   tar_target(
+  #     readmission_indicator_icb,
+  #     get_indicators_per_pop(
+  #       redirection_icb,
+  #       population_icb_by_age_sex,
+  #       "icb",
+  #       latest_population_year,
+  #       activity_type
+  #     )
+  #   )
+  # ),
+  # tarchetypes::tar_map(
+  #   list(activity_type = c("admissions", "beddays")),
+  #   tar_target(
+  #     readmission_indicator_la,
+  #     get_indicators_per_pop(
+  #       redirection_la,
+  #       population_la_by_age_sex,
+  #       "la",
+  #       latest_population_year,
+  #       activity_type
+  #     )
+  #   )
+  # ),
+  # PCN
+  tar_target(
+    redirection_pcn,
+    aggregate_indicator_to_geography_level(redirection_gp, 
+                                           "pcn",
+                                           "redirection")
+  ),
+  # tarchetypes::tar_map(
+  #   list(activity_type = c("admissions", "beddays")),
+  #   tar_target(
+  #     readmission_indicator_pcn,
+  #     get_indicators_per_pop(
+  #       redirection_pcn,
+  #       population_pcn_by_age_sex,
+  #       "pcn",
+  #       latest_population_year,
+  #       activity_type
+  #     )
+  #   )
+  # ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
