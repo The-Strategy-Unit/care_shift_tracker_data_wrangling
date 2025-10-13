@@ -90,6 +90,38 @@ join_to_population_data <- function(data,
   return(wrangled)
 }
 
+#' Join a dataframe at geography level to its population data.
+#'
+#' @param data A dataframe at geography level.
+#' @param population The population data by month and geography.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param latest_population_year The latest year that population data is
+#' available for.
+#'
+#' @returns A dataframe containing `data` joined to the `population` data.
+join_to_population_data_by_age_sex <- function(data,
+                                               population,
+                                               geography,
+                                               latest_population_year) {
+  wrangled <- if (geography == "pcn") {
+    data  |>
+      dplyr::left_join(population, by = c(geography, "date", "age_range", "sex"))
+  } else {
+    data |>
+      dplyr::mutate(
+        year = stringr::str_sub(date, start = 1, end = 4),
+        population_year = ifelse(
+          year > latest_population_year,
+          as.character(latest_population_year),
+          as.character(year)
+        )
+      ) |>
+      dplyr::left_join(population, by = c(geography, "population_year", "age_range", "sex"))
+  }
+  
+  return(wrangled)
+}
+
 ## Indicator wrangling ---------------------------------------------------------
 #' Aggregate sub-geography level to geography level.
 #'
