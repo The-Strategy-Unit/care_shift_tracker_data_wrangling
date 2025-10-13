@@ -268,3 +268,20 @@ tidy_data_for_indicator_wrangling <- function(data, geography){
   
   return(wrangled)
 }
+
+# Other ------------------------------------------------------------------------
+scrape_xls <- function(url, sheet = 1, skip = 0) {
+tmp <- tempfile(fileext = "")
+
+download.file(url = url,
+              destfile = tmp,
+              mode = "wb")
+
+data <- readxl::read_excel(path = tmp,
+                           sheet = sheet,
+                           skip = skip) |>
+  janitor::clean_names()
+
+return(data)
+
+}
