@@ -7,15 +7,13 @@
 #' Used in `get_frailty_sub_geography()` to get the number of admssions/beddays
 #' and diagnosis code at the patient level.
 #'
-#' @param sub_geography Either `"lsoa"` or `"gp"`.
 #' @param start The minimum date for the query.
 #' @param connection The ODBC connection.
 #'
 #' @returns A patient and spell level dataframe with the number of 
 #' admissions/beddays and diagnosis for each discharge linked to their previous
-#' discharges, by month of and subgeography.
-get_frailty_data <- function(sub_geography, start, connection) {
-  sub_geography_column <- get_subgeography_column(sub_geography)
+#' discharges, by month and subgeography.
+get_frailty_data <- function(start, connection) {
   
   query <- "
   WITH patients AS (
@@ -23,7 +21,8 @@ get_frailty_data <- function(sub_geography, start, connection) {
       APCE_Ident,
       Der_Pseudo_NHS_Number,
       convert(varchar(7), Discharge_Date, 120) AS date,
-      sub_geography_column,
+    	Der_Postcode_LSOA_2021_Code,
+    	GP_Practice_SUS,
       Discharge_Date,
       DATEDIFF(day, Admission_Date, Discharge_Date) AS Spelldur
 
@@ -40,7 +39,8 @@ get_frailty_data <- function(sub_geography, start, connection) {
     b.APCE_Ident,
     b.Der_Pseudo_NHS_Number,
     b.date,
-    b.sub_geography_column,
+    b.Der_Postcode_LSOA_2021_Code,
+    b.GP_Practice_SUS,
     b.Discharge_Date,
     b.Spelldur,
     a.diagnosis
@@ -61,9 +61,7 @@ get_frailty_data <- function(sub_geography, start, connection) {
     ON b.Der_Pseudo_NHS_Number = a.Der_Pseudo_NHS_Number
       AND a.Discharge_Date BETWEEN DATEADD(year, -2, b.Discharge_Date) AND b.Discharge_Date
   " |>
-    stringr::str_replace_all(c("start_date" = start,
-                               "sub_geography_column" = sub_geography_column
-    ))
+    stringr::str_replace_all(c("start_date" = start))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
@@ -94,23 +92,36 @@ get_frailty_geography <- function(data, geography, lookup) {
   return(wrangled)
 }
 
-#' The number of admssions/beddays for frailty admissions LSOA/GP and month.
+#' Turn frailty episode level indicator data into sub-geography level.
 #'
-#' @param scores The `frailty_risk_scores.csv`
+#' @param data Data for the frailty indicators at episode level.
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
-#' @param start The minimum date for the query.
-#' @param connection The ODBC connection.
 #'
-#' @returns A dataframe with the number of admssions/beddays for high and 
-#' intermediate frailty emergency admissions by month and subgeography.
-get_frailty_sub_geography <- function(sub_geography, 
-                                              start, 
-                                              connection, 
-                                              scores) {
-  data <- get_frailty_data(sub_geography, start, connection)
-  
+#' @returns A dataframe of the number of admissions/beddays for the frailty
+#' indicators at LSOA/GP level by month.
+get_frailty_sub_geography <- function(data,
+                                      sub_geography) {
   sub_geography_column <- get_subgeography_column(sub_geography) |>
-    snakecase::to_snake_case()
+  snakecase::to_snake_case()
+  
+  wrangled <- data |>
+    dplyr::summarise(admissions = dplyr::n(), 
+                     beddays = sum(spelldur),
+                     .by = c(date,
+                             indicator,
+                             !!rlang::sym(sub_geography_column)))
+  
+  return(wrangled)
+}
+
+#' Frailty episodes data with frailty risk scores.
+#' 
+#' @param data The dataframe `frailty_episodes`.
+#' @param scores The `frailty_risk_scores.csv`
+#'
+#' @returns A dataframe of high and intermediate frailty risk episodes.
+get_frailty_with_risk_scores <- function(data, 
+                                         scores) {
   
   wrangled <- data |>
     dplyr::left_join(scores, by = c("diagnosis" = "icd10")) |>
@@ -122,7 +133,8 @@ get_frailty_sub_geography <- function(sub_geography,
         apce_ident,
         date,
         der_pseudo_nhs_number,
-        !!rlang::sym(sub_geography_column),
+        der_postcode_lsoa_2021_code,
+        gp_practice_sus,
         spelldur
       )
     ) |>
@@ -134,13 +146,8 @@ get_frailty_sub_geography <- function(sub_geography,
         "frail_elderly_intermediate",
         "frail_elderly_high"
       )
-    ) |>
-    dplyr::summarise(admissions = dplyr::n(),
-                     beddays = sum(spelldur),
-                     .by = c(date, 
-                             indicator, 
-                             !!rlang::sym(sub_geography_column)))
+    ) 
   
   return(wrangled)
 }
-
+ 

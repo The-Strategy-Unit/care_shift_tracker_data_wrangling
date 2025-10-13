@@ -253,15 +253,22 @@ list(
     read.csv(frailty_risk_scores_filename) |>
       janitor::clean_names()
   ),
+  tar_target(
+    frailty_episodes,
+    get_frailty_data(start_date, con)
+  ),
   # LSOA and GP
+  tar_target(
+    frailty_episodes_with_risk_scores,
+    get_frailty_with_risk_scores(frailty_episodes,
+                                 frailty_risk_scores)
+  ),
   tarchetypes::tar_map(
     list(sub_geography = c("gp", "lsoa")),
     tar_target(
       frailty,
-      get_frailty_sub_geography(sub_geography, 
-                                start_date, 
-                                con, 
-                                frailty_risk_scores)
+      get_frailty_sub_geography(frailty_episodes_with_risk_scores,
+                                sub_geography)
     )
   ),
   # ICB and LA
