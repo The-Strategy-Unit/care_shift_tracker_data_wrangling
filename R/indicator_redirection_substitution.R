@@ -57,5 +57,41 @@ get_end_of_life_episodes <- function(age,
   return(wrangled)
 }
 
-
+get_indicators_age_sex_standardised_rates <- function(data,
+                                                      population,
+                                                      geography,
+                                                      latest_population_year,
+                                                      activity_type,
+                                                      standard_pop) {
+  wrangled <- data |>
+    join_to_population_data_by_age_sex(population, geography, latest_population_year) |>
+    dplyr::filter(!is.na(population_size),
+                  population_size > 0) |>
+    # There were <5 patients with a discharge date before their admission date
+    # in one indicator at GP level. So the line below is to exclude these rows:
+    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
+    dplyr::left_join(standard_pop, 
+                     by = c("age_range", "sex")) |>
+    dplyr::group_by(date, !!rlang::sym(geography)) |>
+    dplyr::rename(x = !!rlang::sym(activity_type)) |>
+    PHEindicatormethods::calculate_dsr(x = x,
+                                       n = population_size,
+                                       stdpop = pop) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
+                                ~janitor::round_half_up(.)),
+                  indicator = glue::glue("redirection_age_sex_standardised_{activity_type}")) |>
+    dplyr::select(
+      indicator,
+      date,
+      !!rlang::sym(geography),
+      numerator = total_count,
+      denominator = total_pop,
+      value,
+      lowercl,
+      uppercl
+    )
+  
+  return(wrangled)
+}
 

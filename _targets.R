@@ -1134,32 +1134,32 @@ list(
                                                         "redirection")
     )
   ),
-  # tarchetypes::tar_map(
-  #   list(activity_type = c("admissions", "beddays")),
-  #   tar_target(
-  #     readmission_indicator_icb,
-  #     get_indicators_per_pop(
-  #       redirection_icb,
-  #       population_icb_by_age_sex,
-  #       "icb",
-  #       latest_population_year,
-  #       activity_type
-  #     )
-  #   )
-  # ),
-  # tarchetypes::tar_map(
-  #   list(activity_type = c("admissions", "beddays")),
-  #   tar_target(
-  #     readmission_indicator_la,
-  #     get_indicators_per_pop(
-  #       redirection_la,
-  #       population_la_by_age_sex,
-  #       "la",
-  #       latest_population_year,
-  #       activity_type
-  #     )
-  #   )
-  # ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      redirection_indicator_icb,
+      get_indicators_age_sex_standardised_rates(
+        data = redirection_icb,
+        population = population_by_age_sex_icb,
+        geography = "icb",
+        latest_population_year,
+        activity_type,
+        standard_england_pop_2021_census) 
+    )
+  ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      redirection_indicator_la,
+      get_indicators_age_sex_standardised_rates(
+        data = redirection_la,
+        population = population_by_age_sex_la,
+        geography = "la",
+        latest_population_year,
+        activity_type,
+        standard_england_pop_2021_census)
+    )
+  ),
   # PCN
   tar_target(
     redirection_pcn,
@@ -1170,14 +1170,14 @@ list(
   # tarchetypes::tar_map(
   #   list(activity_type = c("admissions", "beddays")),
   #   tar_target(
-  #     readmission_indicator_pcn,
-  #     get_indicators_per_pop(
-  #       redirection_pcn,
-  #       population_pcn_by_age_sex,
-  #       "pcn",
+  #     redirection_indicator_pcn,
+  #     get_indicators_age_sex_standardised_rates(
+  #       data = redirection_pcn,
+  #       population = population_by_age_sex_pcn,
+  #       geography = "pcn",
   #       latest_population_year,
-  #       activity_type
-  #     )
+  #       activity_type,
+  #       standard_england_pop_2021_census)
   #   )
   # ),
   
