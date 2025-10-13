@@ -38,8 +38,6 @@ get_raid_ae_sub_geography <- function(sub_geography,
     		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
     		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
         Last_Episode_In_Spell_Indicator = '1' AND
-      	Der_Provider_Code = 'RK9' AND
-        Der_Financial_Year = '2024/25' AND
         Admission_Method = '21' AND
         Discharge_Method !='4' AND
         Der_Primary_Diagnosis_Code LIKE 'F%' AND
