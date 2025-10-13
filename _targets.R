@@ -1213,7 +1213,9 @@ list(
       raid_ae_indicator_icb_admissions,
       raid_ae_indicator_icb_beddays,
       falls_indicator_icb_admissions,
-      falls_indicator_icb_beddays
+      falls_indicator_icb_beddays,
+      redirection_indicator_icb_admissions,
+      redirection_indicator_icb_beddays
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -1245,7 +1247,9 @@ list(
       raid_ae_indicator_la_admissions,
       raid_ae_indicator_la_beddays,
       falls_indicator_la_admissions,
-      falls_indicator_la_beddays
+      falls_indicator_la_beddays,
+      redirection_indicator_la_admissions,
+      redirection_indicator_la_beddays
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")), 
@@ -1277,7 +1281,9 @@ list(
       raid_ae_indicator_pcn_admissions,
       raid_ae_indicator_pcn_beddays,
       falls_indicator_pcn_admissions,
-      falls_indicator_pcn_beddays
+      falls_indicator_pcn_beddays,
+      redirection_indicator_pcn_admissions,
+      redirection_indicator_pcn_beddays
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator, 
