@@ -1088,19 +1088,19 @@ list(
                     spelldur) |>
       unique() 
   ),
-  # tar_target(
-  #   redirection_lsoa,
-  #   redirection_episodes |>
-  #     get_indicator_at_sub_geography_level("lsoa") |>
-  #     join_to_geography_lookup("icb", lsoa_to_higher_geographies)
-  # ),
-  # tar_target(
-  #   redirection_gp,
-  #   redirection_episodes |>
-  #     get_indicator_at_sub_geography_level("gp") |>
-  #     join_to_geography_lookup("pcn", gp_to_pcn)
-  # ),
-  # 
+  tar_target(
+    redirection_lsoa,
+    redirection_episodes |>
+      get_indicator_at_sub_geography_level_by_age_sex("lsoa") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tar_target(
+    redirection_gp,
+    redirection_episodes |>
+      get_indicator_at_sub_geography_level_by_age_sex("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
+  ),
+
   # # ICB and LA
   # tarchetypes::tar_map(
   #   list(geography = c("icb", "la")),
@@ -1138,12 +1138,12 @@ list(
   #   )
   # ),
   # PCN
-  tar_target(
-    redirection_pcn,
-    aggregate_indicator_to_geography_level(redirection_gp, 
-                                           "pcn",
-                                           "redirection")
-  ),
+  # tar_target(
+  #   redirection_pcn,
+  #   aggregate_indicator_to_geography_level(redirection_gp, 
+  #                                          "pcn",
+  #                                          "redirection")
+  # ),
   # tarchetypes::tar_map(
   #   list(activity_type = c("admissions", "beddays")),
   #   tar_target(

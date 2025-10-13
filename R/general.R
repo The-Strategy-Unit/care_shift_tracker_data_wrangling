@@ -198,6 +198,30 @@ get_indicator_at_sub_geography_level <- function(data, sub_geography) {
   return(wrangled)
 }
 
+#' Turn episode level indicator data into sub-geography level.
+#'
+#' @param data Data for an indicator at episode level.
+#' @param sub_geography Either `"lsoa"` or `"gp"`.
+#'
+#' @returns A dataframe of the number of admissions/beddays for the indicator
+#' at LSOA/GP level by month and also  by age range and sex.
+get_indicator_at_sub_geography_level_by_age_sex <- function(data, 
+                                                            sub_geography) {
+  sub_geography_column <- get_subgeography_column(sub_geography) |>
+    snakecase::to_snake_case()
+  
+  wrangled <- data |>
+    unique() |>
+    dplyr::summarise(admissions = dplyr::n(),
+                     beddays = sum(spelldur, na.rm = TRUE),
+                     .by = c(date, 
+                             age_range, 
+                             sex, 
+                             !!rlang::sym(sub_geography_column)))
+  
+  return(wrangled)
+}
+
 #' Weight the indicators by 100,000 population.
 #'
 #' @param data The number of admissions/beddays for an indicator by ICB/LA/PCN 
