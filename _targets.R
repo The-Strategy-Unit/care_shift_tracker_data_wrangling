@@ -229,7 +229,21 @@ list(
         geography)
     )
   ),
-  
+  # GP to PCN
+  targets::tar_target(
+    population_gp_pre_2017_04_01_by_age_sex,
+    get_population_gp_pre_2017_04_01_by_age_sex(age_bands, start_date, con) 
+  ),
+  targets::tar_target(
+    population_gp_post_2017_04_01_by_age_sex,
+    get_population_gp_post_2017_04_01_by_age_sex(age_bands, start_date, con) 
+  ),
+  targets::tar_target(
+    population_by_age_sex_pcn,
+    get_population_pcn_by_age_sex(population_gp_pre_2017_04_01_by_age_sex, 
+                                  population_gp_post_2017_04_01_by_age_sex,
+                                  gp_to_pcn)
+  ),
   ## England census ------------------------------------------------------------
   tar_target(
     census_url,
@@ -1167,19 +1181,19 @@ list(
                                                       "pcn",
                                                       "redirection")
   ),
-  # tarchetypes::tar_map(
-  #   list(activity_type = c("admissions", "beddays")),
-  #   tar_target(
-  #     redirection_indicator_pcn,
-  #     get_indicators_age_sex_standardised_rates(
-  #       data = redirection_pcn,
-  #       population = population_by_age_sex_pcn,
-  #       geography = "pcn",
-  #       latest_population_year,
-  #       activity_type,
-  #       standard_england_pop_2021_census)
-  #   )
-  # ),
+  tarchetypes::tar_map(
+    list(activity_type = c("admissions", "beddays")),
+    tar_target(
+      redirection_indicator_pcn,
+      get_indicators_age_sex_standardised_rates(
+        data = redirection_pcn,
+        population = population_by_age_sex_pcn,
+        geography = "pcn",
+        latest_population_year,
+        activity_type,
+        standard_england_pop_2021_census)
+    )
+  ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
