@@ -207,6 +207,28 @@ list(
     population_lsoa_by_age_sex,
     get_population_lsoa_by_age_sex(age_cutoff, start_date, con)
   ),
+  tar_target(
+    population_lsoa_mapped_to_higher_geographies_by_age_sex,
+    population_lsoa_by_age_sex |>
+      dplyr::rename(lsoa11cd = area_code) |>
+      dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
+      dplyr::left_join(lsoa_to_higher_geographies |>
+                         dplyr::select(-geometry), by = "lsoa21cd") |>
+      dplyr::mutate(
+        number = dplyr::n(),
+        .by = c(lsoa11cd, effective_snapshot_date),
+        population_size_amended = population_size / number
+      )
+  ),
+  tarchetypes::tar_map(
+    list(geography = c("icb", "la")),
+    tar_target(
+      population_by_age_sex,
+      get_population_higher_geography_from_lsoa_by_age_sex(
+        population_lsoa_mapped_to_higher_geographies_by_age_sex, 
+        geography)
+    )
+  ),
   
   ## England census ------------------------------------------------------------
   tar_target(
@@ -229,8 +251,9 @@ list(
                                                  " to " = "-",
                                                  " years" = "",
                                                  "4 and under" = "0-4",
-                                                 "90 and over" = "85+",
-                                                 "85-89" = "85+"))) |>
+                                                 "90 and over" = "80+",
+                                                 "80-84" = "80+",
+                                                 "85-89" = "80+"))) |>
       na.omit() |>
       dplyr::summarise(pop = sum(pop),
                        .by = c(age_range, sex))
