@@ -1016,6 +1016,55 @@ list(
       Der_Diagnosis_All NOT LIKE '%Y5[0-7]%')) ---implicit - nsaids
     "
   ),
+  tar_target(redirection_where_clause,
+             paste(zero_los_no_procedure_where_clause,
+                   medicines_related_admissions_where_clause,
+                   sep = " AND ")),
+  tar_target(
+    zero_los_and_medicine_related_episodes,
+    get_emergency_indicator_episodes(age_cutoff, 
+                                     start_date, 
+                                     redirection_where_clause,
+                                     con)
+  ),
+  
+  tar_target(
+    end_of_life_episodes,
+    get_end_of_life_episodes(age_cutoff, start_date, con) 
+  ),
+  
+  # LSOA and GP
+  tar_target(
+    redirection_episodes,
+    # Combining all the redirection mitigators into one indicator:
+    zero_los_and_medicine_related_episodes |>
+      dplyr::bind_rows(
+        end_of_life_episodes,
+        readmission_within_28_days_episodes,
+        ambulatory_care_conditions_acute_episodes,
+        ambulatory_care_conditions_chronic_episodes,
+        frailty_episodes_with_risk_scores
+      ) |>
+      dplyr::select(apce_ident, 
+                    der_postcode_lsoa_2021_code, 
+                    gp_practice_sus, 
+                    date, 
+                    age_range, 
+                    spelldur) |>
+      unique() 
+  ),
+  tar_target(
+    redirection_lsoa,
+    redirection_episodes |>
+      get_indicator_at_sub_geography_level("lsoa") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+  ),
+  tar_target(
+    redirection_gp,
+    redirection_episodes |>
+      get_indicator_at_sub_geography_level("gp") |> 
+      join_to_geography_lookup("pcn", gp_to_pcn) 
+  ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
