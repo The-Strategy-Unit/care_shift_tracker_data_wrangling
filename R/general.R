@@ -366,3 +366,39 @@ data <- readxl::read_excel(path = tmp,
 return(data)
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+#' Transform LSOA 2011 data to LSOA 2021 data.
+#'
+#' @param data A dataframe with a column of LSOA11 codes.
+#' @param lookup A dataframe of LSOA11 codes mapped to LSOA21 codes.
+#' @param value_column A string for the name of the column that may need to be
+#' adjusted.
+#'
+#' @returns A dataframe with a column of LSOA21 codes and with the value 
+#' column's numbers adjusted according to LSOA splits.
+recode_lsoa11_as_lsoa21 <- function(data, lookup, value_column) {
+  wrangled <- data |>
+    # first map 11 to 21 codes:
+    dplyr::left_join(lookup, 
+                     by = c("der_postcode_lsoa_2011_code" = "lsoa11cd")) |>
+    # then adjuste numbers according to splits in LSOA:
+    dplyr::mutate(
+      number = dplyr::n(),
+      .by = c(der_postcode_lsoa_2011_code, date),
+      value_column = !!rlang::sym(value_column) / number
+    ) |>
+    dplyr::rename(der_postcode_lsoa_2021_code = lsoa21cd)
+  
+  return(wrangled)
+}

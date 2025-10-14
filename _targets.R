@@ -786,15 +786,7 @@ list(
                                                          age_cutoff, 
                                                          start_date, 
                                                          con) |>
-      # first map 11 to 21 codes and amend numbers according to splits in lsoa:
-      dplyr::left_join(lsoa11_to_lsoa_21, 
-                       by = c("der_postcode_lsoa_2011_code" = "lsoa11cd")) |>
-      dplyr::mutate(
-        number = dplyr::n(),
-        .by = c(der_postcode_lsoa_2011_code, date),
-        frequent_attenders_amended = frequent_attenders / number
-      ) |>
-      dplyr::rename(der_postcode_lsoa_2021_code = lsoa21cd) |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "frequent_attenders") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
     ),
   tar_target(
