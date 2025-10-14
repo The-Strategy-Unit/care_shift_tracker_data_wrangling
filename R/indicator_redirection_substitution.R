@@ -8,7 +8,7 @@ get_end_of_life_episodes <- function(age,
   query <- "
   	SELECT
   		APCE_Ident,
-    	Der_Postcode_LSOA_2021_Code,
+    	Der_Postcode_LSOA_2011_Code,
     	GP_Practice_SUS,
     	convert(varchar(7), Discharge_Date, 120) AS date,
     	Sex,
