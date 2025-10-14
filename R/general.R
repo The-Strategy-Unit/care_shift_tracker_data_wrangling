@@ -218,7 +218,6 @@ get_emergency_indicator_episodes <- function(age,
       Last_Episode_In_Spell_Indicator = '1' AND
   		Discharge_Date >= 'start_date' AND
   		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
-  		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
   		LEFT(a.Admission_Method, 1) = '2' AND
   		where_clause
   " |>

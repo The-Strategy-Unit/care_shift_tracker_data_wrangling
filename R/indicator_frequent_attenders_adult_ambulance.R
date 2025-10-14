@@ -50,7 +50,6 @@ get_frequent_attenders_adult_ambulance_sub_geography <- function(sub_geography,
 	WHERE 
 		EC_Departure_Date >= 'start_date' AND
     Der_Age_at_CDS_Activity_Date >= age_cutoff AND
-    LEFT(Der_Postcode_LSOA_Code, 1) = 'E' AND
 		a.AEA_Arrival_Mode LIKE '1' AND
 		a.EC_AttendanceCategory != '4' AND
 		a.Der_Pseudo_NHS_number IS NOT NULL

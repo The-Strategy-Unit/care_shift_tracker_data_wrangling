@@ -39,7 +39,6 @@ get_end_of_life_episodes <- function(age,
       Last_Episode_In_Spell_Indicator = '1' AND
   		Discharge_Date >= 'start_date' AND
   		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
-  		LEFT(Der_Postcode_LSOA_2021_Code, 1) = 'E' AND
   		Discharge_Method = '4' AND
   		DATEDIFF(day, Admission_Date, Discharge_Date) <= 14 AND
   		(Der_Diagnosis_All LIKE '%,[V-Y]%'
