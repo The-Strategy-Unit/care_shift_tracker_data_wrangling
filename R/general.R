@@ -219,7 +219,7 @@ get_emergency_indicator_episodes <- function(age,
   		Discharge_Date >= 'start_date' AND
   		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
   		LEFT(a.Admission_Method, 1) = '2' AND
-  		where_clause
+  		(where_clause)
   " |>
     stringr::str_replace_all(
       c("age_cutoff" = age,
