@@ -26,6 +26,7 @@ targets::tar_read(lsoa_population) |>
 
 - So method was to divide the LSOA11 population by the number of LA it mapped to before calculating the LA population size
 - For recent years where LSOA population estimates were not yet available, the latest available year's data was used
+- For APCE indicators, LSOA11 codes were used, since more populated in the data
 
 ## GP to PCN
 
@@ -42,3 +43,4 @@ targets::tar_read(lsoa_population) |>
 
 - Someone who has attended AE 3 times or more - according to CPMA defs?
 - Source data was at 2011 lsoa level, so had to map to 2021 lsoa codes. For the few lsoa11 that split into multiple lsoa21, number of frequent attenders was split equally between the lsoa21 codes.
+
