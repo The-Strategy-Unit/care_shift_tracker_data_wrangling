@@ -12,6 +12,7 @@
 - But 4 LSOA11 codes mapped to multiple LA:
 
 ```{r}
+#| eval: false
 targets::tar_read(lsoa_population) |> 
   dplyr::rename(lsoa11cd = area_code) |>
   dplyr::left_join(targets::tar_read(lsoa11_to_lsoa_21), by = "lsoa11cd") |>
@@ -26,7 +27,28 @@ targets::tar_read(lsoa_population) |>
 
 - So method was to divide the LSOA11 population by the number of LA it mapped to before calculating the LA population size
 - For recent years where LSOA population estimates were not yet available, the latest available year's data was used
+
+
 - For APCE indicators, LSOA11 codes were used, since more populated in the data
+  - There were no rows in `[Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]` where `Der_Postcode_LSOA_2021_Code` was provided but `Der_Postcode_LSOA_2011_Code` was not:
+  
+```{sql}
+#| eval: false
+SELECT
+	Der_financial_year,	
+	COUNT(*)
+
+FROM [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]
+
+WHERE 
+  Der_Postcode_LSOA_2021_Code IS NOT NULL AND 
+  Der_Postcode_LSOA_2011_Code IS NULL 
+
+GROUP BY Der_financial_year
+
+ORDER BY Der_financial_year
+```
+  
 
 ## GP to PCN
 
