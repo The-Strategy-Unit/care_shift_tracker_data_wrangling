@@ -133,7 +133,7 @@ get_frailty_with_risk_scores <- function(data,
         apce_ident,
         date,
         der_pseudo_nhs_number,
-        der_postcode_2011_lsoa_code,
+        der_postcode_lsoa_2011_code,
         gp_practice_sus,
         spelldur
       )
