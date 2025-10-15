@@ -25,7 +25,7 @@ get_geography_column <- function(geography) {
 #' @returns A string.
 get_subgeography_column <- function(sub_geography) {
   column <- if (sub_geography == "lsoa") {
-    "Der_Postcode_LSOA_2021_Code"
+    "Der_Postcode_LSOA_2011_Code"
   } else if (sub_geography == "gp") {
     "GP_Practice_SUS"
   }
@@ -187,7 +187,7 @@ get_emergency_indicator_episodes <- function(age,
   query <- "
   	SELECT
   		APCE_Ident,
-    	Der_Postcode_LSOA_2021_Code,
+    	Der_Postcode_LSOA_2011_Code,
     	GP_Practice_SUS,
     	convert(varchar(7), Discharge_Date, 120) AS date,
     	Sex,
@@ -372,15 +372,9 @@ return(data)
 
 
 
-
-
-
-
-
-
 #' Transform LSOA 2011 data to LSOA 2021 data.
 #'
-#' @param data A dataframe with a column of LSOA11 codes.
+#' @param data A dataframe with a column of LSOA11 codes. 
 #' @param lookup A dataframe of LSOA11 codes mapped to LSOA21 codes.
 #' @param value_column A string for the name of the column that may need to be
 #' adjusted.
@@ -388,17 +382,23 @@ return(data)
 #' @returns A dataframe with a column of LSOA21 codes and with the value 
 #' column's numbers adjusted according to LSOA splits.
 recode_lsoa11_as_lsoa21 <- function(data, lookup, value_column) {
+  
   wrangled <- data |>
     # first map 11 to 21 codes:
     dplyr::left_join(lookup, 
                      by = c("der_postcode_lsoa_2011_code" = "lsoa11cd")) |>
-    # then adjuste numbers according to splits in LSOA:
+    # then adjust numbers according to splits in LSOA:
     dplyr::mutate(
       number = dplyr::n(),
-      .by = c(der_postcode_lsoa_2011_code, date),
-      value_column = !!rlang::sym(value_column) / number
+      value_column = !!rlang::sym(value_column) / number,
+      .by = c(der_postcode_lsoa_2011_code, date)
     ) |>
     dplyr::rename(der_postcode_lsoa_2021_code = lsoa21cd)
+  
+  if(value_column == "admissions") {
+    wrangled <- wrangled |>
+      dplyr::mutate(beddays = beddays / number)
+  }
   
   return(wrangled)
 }
