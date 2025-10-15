@@ -278,17 +278,18 @@ list(
   # LSOA and GP
   tar_target(
     elective_non_elective_lsoa,
-    get_elective_non_elective_sub_geography("lsoa", 
-                                            age_cutoff, 
-                                            start_date, 
+    get_elective_non_elective_sub_geography("lsoa",
+                                            age_cutoff,
+                                            start_date,
                                             con) |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
-  ), 
+  ),
   tar_target(
     elective_non_elective_gp,
-    get_elective_non_elective_sub_geography("gp", 
-                                            age_cutoff, 
-                                            start_date, 
+    get_elective_non_elective_sub_geography("gp",
+                                            age_cutoff,
+                                            start_date,
                                             con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
@@ -298,8 +299,8 @@ list(
          activity_type = rep(c("admissions", "beddays"), each = 2)),
     tar_target(
       elective_non_elective_ratio,
-      get_elective_non_elective_ratio(elective_non_elective_lsoa, 
-                                      geography, 
+      get_elective_non_elective_ratio(elective_non_elective_lsoa,
+                                      geography,
                                       activity_type)
     )
   ),
@@ -308,8 +309,8 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       elective_non_elective_ratio_pcn,
-      get_elective_non_elective_ratio(elective_non_elective_gp, 
-                                      "pcn", 
+      get_elective_non_elective_ratio(elective_non_elective_gp,
+                                      "pcn",
                                       activity_type)
     )
   ),
@@ -342,13 +343,18 @@ list(
                                 sub_geography)
     )
   ),
+  tar_target(
+    frailty_lsoa_2021,
+    frailty_lsoa |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions")
+  ),
   # ICB and LA
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       frailty,
-      get_frailty_geography(frailty_lsoa, 
-                            geography, 
+      get_frailty_geography(frailty_lsoa_2021,
+                            geography,
                             lsoa_to_higher_geographies)
     )
   ),
@@ -396,7 +402,7 @@ list(
       )
     )
   ),
-  
+
   ## Emergency readmission within 28 days --------------------------------------
   tar_target(
     readmissions_where_clause,
@@ -430,6 +436,7 @@ list(
     readmission_within_28_days_lsoa,
     readmission_within_28_days_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
   ),
   tar_target(
@@ -500,38 +507,38 @@ list(
   tar_target(
     ambulatory_care_acute_where_clause,
     "(
-    ((Der_Primary_Diagnosis_Code LIKE 'L0[34]%' OR 
-    Der_Primary_Diagnosis_Code LIKE 'L08[089]%' OR 
-    Der_Primary_Diagnosis_Code LIKE 'L88X%' OR 
+    ((Der_Primary_Diagnosis_Code LIKE 'L0[34]%' OR
+    Der_Primary_Diagnosis_Code LIKE 'L08[089]%' OR
+    Der_Primary_Diagnosis_Code LIKE 'L88X%' OR
     Der_Primary_Diagnosis_Code LIKE 'L980%' ) AND
     (Der_Procedure_All NOT LIKE '%[ABCDEFGHJKLMNOPQRTVW]%' AND
     Der_Procedure_All NOT LIKE '%S[123]%' AND
     Der_Procedure_All NOT LIKE '%S4[1234589]%' AND
-    Der_Procedure_All NOT LIKE '%X0[1245]%' ) ) OR ----cellulitis 
-  
+    Der_Procedure_All NOT LIKE '%X0[1245]%' ) ) OR ----cellulitis
+
     (Der_Primary_Diagnosis_Code LIKE 'G4[01]%' OR
      Der_Primary_Diagnosis_Code LIKE 'O15%' OR
      Der_Primary_Diagnosis_Code LIKE 'R56%' ) OR ---Convulsions and epilepsy
-  
+
     (Der_Primary_Diagnosis_Code LIKE 'E86X%' OR
      Der_Primary_Diagnosis_Code LIKE 'K52[289]%') OR ---dehydration_and_gastroenteritis
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'A690)%' OR
      Der_Primary_Diagnosis_Code LIKE 'K0[2-68]%' OR
      Der_Primary_Diagnosis_Code LIKE 'K09[89]%' OR
      Der_Primary_Diagnosis_Code LIKE 'K1[23]%') OR ---dental_conditions
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'H6[67]%' OR
       Der_Primary_Diagnosis_Code LIKE 'J0[236]%' OR
       Der_Primary_Diagnosis_Code LIKE 'J312%' ) OR ---ent_infections
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'N7[034]%') OR ---pelvic_inflammatory_disease
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'K2[5678][012456]%') OR ---perforated_bleeding_ulcer
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'N1[012]%' OR
       Der_Primary_Diagnosis_Code LIKE 'N136%' ) OR ---pyelonephritis
-    
+
     Der_Diagnosis_All LIKE '%R02X%' --gangrene
     )
     "
@@ -539,8 +546,8 @@ list(
   # LSOA and GP
   tar_target(
     ambulatory_care_conditions_acute_episodes,
-    get_emergency_indicator_episodes(age_cutoff, 
-                                     start_date, 
+    get_emergency_indicator_episodes(age_cutoff,
+                                     start_date,
                                      ambulatory_care_acute_where_clause,
                                      con)
   ),
@@ -548,13 +555,14 @@ list(
     ambulatory_care_conditions_acute_lsoa,
     ambulatory_care_conditions_acute_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     ambulatory_care_conditions_acute_gp,
     ambulatory_care_conditions_acute_episodes |>
-      get_indicator_at_sub_geography_level("gp") |> 
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      get_indicator_at_sub_geography_level("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   # ICB and LA
   tarchetypes::tar_map(
@@ -562,8 +570,8 @@ list(
     tar_target(
       ambulatory_care_conditions_acute,
       aggregate_indicator_to_geography_level(
-        ambulatory_care_conditions_acute_lsoa, 
-        geography, 
+        ambulatory_care_conditions_acute_lsoa,
+        geography,
         "ambulatory_care_conditions_acute")
     )
   ),
@@ -614,40 +622,40 @@ list(
       )
     )
   ),
-  
+
   ### Chronic ------------------------------------------------------------------
   tar_target(
     ambulatory_care_chronic_where_clause,
     "(
-    ((Der_Primary_Diagnosis_Code LIKE 'I20%' OR 
+    ((Der_Primary_Diagnosis_Code LIKE 'I20%' OR
     Der_Primary_Diagnosis_Code LIKE 'I24[089]%' ) AND
     ((Der_Procedure_All NOT LIKE '[ABCDEFGHJKLMNOPQRSTVW]%' AND
-    Der_Procedure_All NOT LIKE 'X0[1245]%' ) OR 
+    Der_Procedure_All NOT LIKE 'X0[1245]%' ) OR
     Der_Procedure_All IS NULL )) OR ----angina
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'J4[56]%') OR ---asthma
-    
-    ((Der_Primary_Diagnosis_Code LIKE 'I110%' OR 
-    Der_Primary_Diagnosis_Code LIKE 'I50%' OR 
-    Der_Primary_Diagnosis_Code LIKE 'I10%' OR 
-    Der_Primary_Diagnosis_Code LIKE 'I119%' OR 
+
+    ((Der_Primary_Diagnosis_Code LIKE 'I110%' OR
+    Der_Primary_Diagnosis_Code LIKE 'I50%' OR
+    Der_Primary_Diagnosis_Code LIKE 'I10%' OR
+    Der_Primary_Diagnosis_Code LIKE 'I119%' OR
     Der_Primary_Diagnosis_Code LIKE 'J81%' ) AND
     ((Der_Procedure_All NOT LIKE '%K[0-4]%' AND
     Der_Procedure_All NOT LIKE '%K5[02567]%' AND
     Der_Procedure_All NOT LIKE '%K6[016789]%'  AND
-    Der_Procedure_All NOT LIKE '%K71%' ) OR 
+    Der_Procedure_All NOT LIKE '%K71%' ) OR
     Der_Procedure_All IS NULL) ) OR -----congestive_heart_failure / hypertension
-    
-    (Der_Primary_Diagnosis_Code LIKE 'J4[12347]%' OR 
+
+    (Der_Primary_Diagnosis_Code LIKE 'J4[12347]%' OR
     (Der_Primary_Diagnosis_Code LIKE 'J20%' AND
     Der_Diagnosis_All LIKE '%J4[12347]%' )) OR ----copd
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'D50[189]%') OR ---iron-deficiency_anaemia
-    
+
     (Der_Primary_Diagnosis_Code LIKE 'E4[0123]X%' OR
     Der_Primary_Diagnosis_Code LIKE 'E550%' OR
     Der_Primary_Diagnosis_Code LIKE 'E643%') OR ---nutritional_deficiencies
-    
+
     (Der_Diagnosis_All LIKE '%E10[0-8]%' OR
     Der_Diagnosis_All LIKE '%E11[0-8]%' OR
     Der_Diagnosis_All LIKE '%E12[0-8]%' OR
@@ -659,8 +667,8 @@ list(
   # LSOA and GP
   tar_target(
     ambulatory_care_conditions_chronic_episodes,
-    get_emergency_indicator_episodes(age_cutoff, 
-                                     start_date, 
+    get_emergency_indicator_episodes(age_cutoff,
+                                     start_date,
                                      ambulatory_care_chronic_where_clause,
                                      con)
   ),
@@ -668,13 +676,14 @@ list(
     ambulatory_care_conditions_chronic_lsoa,
     ambulatory_care_conditions_chronic_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     ambulatory_care_conditions_chronic_gp,
     ambulatory_care_conditions_chronic_episodes |>
-      get_indicator_at_sub_geography_level("gp") |> 
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      get_indicator_at_sub_geography_level("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   # ICB and LA
   tarchetypes::tar_map(
@@ -682,8 +691,8 @@ list(
     tar_target(
       ambulatory_care_conditions_chronic,
       aggregate_indicator_to_geography_level(
-        ambulatory_care_conditions_chronic_lsoa, 
-        geography, 
+        ambulatory_care_conditions_chronic_lsoa,
+        geography,
         "ambulatory_care_conditions_chronic")
     )
   ),
@@ -734,24 +743,24 @@ list(
       )
     )
   ),
-  
+
   ### Vaccine preventable ------------------------------------------------------
   tar_target(
     ambulatory_care_vaccine_preventable_where_clause,
     "(
-    ((Der_Diagnosis_All LIKE '%J1[0134]%' OR 
-    Der_Diagnosis_All LIKE '%J15[3479]%' OR 
-    Der_Diagnosis_All LIKE '%J168%' OR 
+    ((Der_Diagnosis_All LIKE '%J1[0134]%' OR
+    Der_Diagnosis_All LIKE '%J15[3479]%' OR
+    Der_Diagnosis_All LIKE '%J168%' OR
     Der_Diagnosis_All LIKE '%J18[18]%'  ) AND
     (Der_Diagnosis_All NOT LIKE '%D57%')) OR ----influenza_and_pneumonia
-    
-    (Der_Diagnosis_All LIKE '%A3[567]%' OR 
-    Der_Diagnosis_All LIKE '%A80%' OR 
-    Der_Diagnosis_All LIKE '%B0[56]%' OR 
-    Der_Diagnosis_All LIKE '%B16[19]%' OR 
-    Der_Diagnosis_All LIKE '%B18[01]%' OR 
-    Der_Diagnosis_All LIKE '%B26%' OR 
-    Der_Diagnosis_All LIKE '%G000%' OR 
+
+    (Der_Diagnosis_All LIKE '%A3[567]%' OR
+    Der_Diagnosis_All LIKE '%A80%' OR
+    Der_Diagnosis_All LIKE '%B0[56]%' OR
+    Der_Diagnosis_All LIKE '%B16[19]%' OR
+    Der_Diagnosis_All LIKE '%B18[01]%' OR
+    Der_Diagnosis_All LIKE '%B26%' OR
+    Der_Diagnosis_All LIKE '%G000%' OR
     Der_Diagnosis_All LIKE '%M014%') ---other
     )
     "
@@ -760,8 +769,8 @@ list(
   tar_target(
     ambulatory_care_conditions_vaccine_preventable_episodes,
     get_emergency_indicator_episodes(
-      age_cutoff, 
-      start_date, 
+      age_cutoff,
+      start_date,
       ambulatory_care_vaccine_preventable_where_clause,
       con)
   ),
@@ -769,39 +778,32 @@ list(
     ambulatory_care_conditions_vaccine_preventable_lsoa,
     ambulatory_care_conditions_vaccine_preventable_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     ambulatory_care_conditions_vaccine_preventable_gp,
     ambulatory_care_conditions_vaccine_preventable_episodes |>
-      get_indicator_at_sub_geography_level("gp") |> 
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      get_indicator_at_sub_geography_level("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
-  
+
   ## A&E frequent attenders (adult, ambulance conveyed) ------------------------
   # LSOA and GP
   tar_target(
     frequent_attenders_adult_ambulance_lsoa,
-    get_frequent_attenders_adult_ambulance_sub_geography("lsoa", 
-                                                         age_cutoff, 
-                                                         start_date, 
+    get_frequent_attenders_adult_ambulance_sub_geography("lsoa",
+                                                         age_cutoff,
+                                                         start_date,
                                                          con) |>
-      # first map 11 to 21 codes and amend numbers according to splits in lsoa:
-      dplyr::left_join(lsoa11_to_lsoa_21, 
-                       by = c("der_postcode_lsoa_2011_code" = "lsoa11cd")) |>
-      dplyr::mutate(
-        number = dplyr::n(),
-        .by = c(der_postcode_lsoa_2011_code, date),
-        frequent_attenders_amended = frequent_attenders / number
-      ) |>
-      dplyr::rename(der_postcode_lsoa_2021_code = lsoa21cd) |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "frequent_attenders") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
     ),
   tar_target(
     frequent_attenders_adult_ambulance_gp,
-    get_frequent_attenders_adult_ambulance_sub_geography("gp", 
-                                                         age_cutoff, 
-                                                         start_date, 
+    get_frequent_attenders_adult_ambulance_sub_geography("gp",
+                                                         age_cutoff,
+                                                         start_date,
                                                          con) |>
       dplyr::rename(gp_practice_sus = gp_practice_code) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
@@ -812,8 +814,8 @@ list(
     tar_target(
       frequent_attenders_adult_ambulance,
       get_frequent_attenders_adult_ambulance_geography(
-        frequent_attenders_adult_ambulance_lsoa, 
-        geography) 
+        frequent_attenders_adult_ambulance_lsoa,
+        geography)
     )
   ),
   tar_target(
@@ -840,8 +842,8 @@ list(
   tar_target(
     frequent_attenders_adult_ambulance_pcn,
     get_frequent_attenders_adult_ambulance_geography(
-      frequent_attenders_adult_ambulance_gp, 
-      "pcn") 
+      frequent_attenders_adult_ambulance_gp,
+      "pcn")
   ),
   tar_target(
     frequent_attenders_indicator_pcn,
@@ -853,22 +855,23 @@ list(
       "attenders"
     )
   ),
-  
+
   ## Mental Health Admissions via ED -------------------------------------------
   # LSOA and GP
   tar_target(
     raid_ae_lsoa,
-    get_raid_ae_sub_geography("lsoa", 
-                              age_cutoff, 
-                              start_date, 
+    get_raid_ae_sub_geography("lsoa",
+                              age_cutoff,
+                              start_date,
                               con) |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     raid_ae_gp,
-    get_raid_ae_sub_geography("gp", 
-                              age_cutoff, 
-                              start_date, 
+    get_raid_ae_sub_geography("gp",
+                              age_cutoff,
+                              start_date,
                               con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
@@ -877,7 +880,7 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       raid_ae,
-      aggregate_indicator_to_geography_level(raid_ae_lsoa, 
+      aggregate_indicator_to_geography_level(raid_ae_lsoa,
                                              geography,
                                              "raid_ae")
     )
@@ -911,7 +914,7 @@ list(
   # PCN
   tar_target(
     raid_ae_pcn,
-    aggregate_indicator_to_geography_level(raid_ae_gp, 
+    aggregate_indicator_to_geography_level(raid_ae_gp,
                                            "pcn",
                                            "raid_ae")
   ),
@@ -928,23 +931,23 @@ list(
       )
     )
   ),
-  
+
   ## Emergency hospital admissions due to falls in people over 65 --------------
   tar_target(
     falls_where_clause,
     "(LEFT(Der_Primary_Diagnosis_Code, 4) = 'R296' OR
-      ((Der_Primary_Diagnosis_Code LIKE 'S%' OR 
+      ((Der_Primary_Diagnosis_Code LIKE 'S%' OR
         Der_Primary_Diagnosis_Code LIKE 'T%') AND
         Der_Diagnosis_All LIKE '%W[01]%') OR   ----explicit_fractures
-      ((Der_Diagnosis_All LIKE '%M48[45]%' OR  
-      Der_Diagnosis_All LIKE '%M80[01234589]%' OR  
-      Der_Diagnosis_All LIKE '%S22[01]%' OR 
-      Der_Diagnosis_All LIKE '%S32[012347]%' OR     
-      Der_Diagnosis_All LIKE '%S42[234]%' OR     
-      Der_Diagnosis_All LIKE '%S52%' OR     
-      Der_Diagnosis_All LIKE '%S620%' OR    
-      Der_Diagnosis_All LIKE '%S72[012348]%' OR  
-      Der_Diagnosis_All LIKE '%T08X%' ) AND 
+      ((Der_Diagnosis_All LIKE '%M48[45]%' OR
+      Der_Diagnosis_All LIKE '%M80[01234589]%' OR
+      Der_Diagnosis_All LIKE '%S22[01]%' OR
+      Der_Diagnosis_All LIKE '%S32[012347]%' OR
+      Der_Diagnosis_All LIKE '%S42[234]%' OR
+      Der_Diagnosis_All LIKE '%S52%' OR
+      Der_Diagnosis_All LIKE '%S620%' OR
+      Der_Diagnosis_All LIKE '%S72[012348]%' OR
+      Der_Diagnosis_All LIKE '%T08X%' ) AND
       Der_Diagnosis_All NOT LIKE '%[VWXY]%') ----implicit_fractures
     )
     "
@@ -952,8 +955,8 @@ list(
   # LSOA and GP
   tar_target(
     falls_related_admissions_episodes,
-    get_emergency_indicator_episodes(age_cutoff, 
-                                     start_date, 
+    get_emergency_indicator_episodes(age_cutoff,
+                                     start_date,
                                      falls_where_clause,
                                      con)
   ),
@@ -961,20 +964,21 @@ list(
     falls_related_admissions_lsoa,
     falls_related_admissions_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     falls_related_admissions_gp,
     falls_related_admissions_episodes |>
-      get_indicator_at_sub_geography_level("gp") |> 
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      get_indicator_at_sub_geography_level("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   # ICB and LA
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       falls_related_admissions,
-      aggregate_indicator_to_geography_level(falls_related_admissions_lsoa, 
+      aggregate_indicator_to_geography_level(falls_related_admissions_lsoa,
                                              geography,
                                              "falls_related_admissions")
     )
@@ -1008,7 +1012,7 @@ list(
   # PCN
   tar_target(
     falls_related_admissions_pcn,
-    aggregate_indicator_to_geography_level(falls_related_admissions_gp, 
+    aggregate_indicator_to_geography_level(falls_related_admissions_gp,
                                            "pcn",
                                            "falls_related_admissions")
   ),
@@ -1025,20 +1029,20 @@ list(
       )
     )
   ),
-  
+
   ## Redirection / Substitution ------------------------------------------------
   tar_target(
     zero_los_no_procedure_where_clause,
     "Discharge_Method IN ('1', '2', '3') AND
     DATEDIFF(day, Admission_Date, Discharge_Date) = 0 AND
-    (Der_Procedure_Count = 0 OR Der_Procedure_All IS NULL) 
+    (Der_Procedure_Count = 0 OR Der_Procedure_All IS NULL)
     "
   ),
   tar_target(
     medicines_related_admissions_where_clause,
     "(Der_Diagnosis_All LIKE '%Y4%' OR
       Der_Diagnosis_All LIKE '%Y5[01234567]%') OR ---explicit
-      
+
     ((Der_Primary_Diagnosis_Code LIKE 'E16[012]%' OR
       Der_Primary_Diagnosis_Code LIKE 'E781%' OR
       Der_Primary_Diagnosis_Code LIKE 'R55X%' OR
@@ -1046,8 +1050,8 @@ list(
       Der_Primary_Diagnosis_Code LIKE 'T383%') AND
       (Der_Diagnosis_All LIKE '%E1[01234]%') AND
       (Der_Diagnosis_All NOT LIKE '%Y4%' AND
-      Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - anti-diabetics  
-      
+      Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - anti-diabetics
+
     ((Der_Primary_Diagnosis_Code LIKE 'R55X%' OR
       Der_Primary_Diagnosis_Code LIKE 'S060%' OR
       Der_Primary_Diagnosis_Code LIKE 'S52[012345678]%' OR
@@ -1057,7 +1061,7 @@ list(
       (Der_Diagnosis_All LIKE '%F%') AND
       (Der_Diagnosis_All NOT LIKE '%Y4%' AND
       Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - benzodiasepines
-    
+
     ((Der_Primary_Diagnosis_Code LIKE 'E86X%' OR
        Der_Primary_Diagnosis_Code LIKE 'E87[56]%' OR
        Der_Primary_Diagnosis_Code LIKE 'I470%' OR
@@ -1070,7 +1074,7 @@ list(
        Der_Diagnosis_All LIKE '%I150%') AND
        (Der_Diagnosis_All NOT LIKE '%Y4%' AND
        Der_Diagnosis_All NOT LIKE '%Y5[01234567]%')) OR ---implicit - diurectics
-    
+
     ((Der_Primary_Diagnosis_Code LIKE 'E87[56]%' OR
       Der_Primary_Diagnosis_Code LIKE 'I50[019]%' OR
       Der_Primary_Diagnosis_Code LIKE 'K25[059]%' OR
@@ -1093,17 +1097,17 @@ list(
                    sep = " AND ")),
   tar_target(
     zero_los_and_medicine_related_episodes,
-    get_emergency_indicator_episodes(age_cutoff, 
-                                     start_date, 
+    get_emergency_indicator_episodes(age_cutoff,
+                                     start_date,
                                      redirection_where_clause,
                                      con)
   ),
-  
+
   tar_target(
     end_of_life_episodes,
-    get_end_of_life_episodes(age_cutoff, start_date, con) 
+    get_end_of_life_episodes(age_cutoff, start_date, con)
   ),
-  
+
   # LSOA and GP
   tar_target(
     redirection_episodes,
@@ -1116,19 +1120,20 @@ list(
         ambulatory_care_conditions_chronic_episodes,
         frailty_episodes_with_risk_scores
       ) |>
-      dplyr::select(apce_ident, 
-                    der_postcode_lsoa_2021_code, 
-                    gp_practice_sus, 
-                    date, 
+      dplyr::select(apce_ident,
+                    der_postcode_lsoa_2011_code,
+                    gp_practice_sus,
+                    date,
                     sex,
-                    age_range, 
+                    age_range,
                     spelldur) |>
-      unique() 
+      unique() # To account for potential overlap between the subindicators
   ),
   tar_target(
     redirection_lsoa,
     redirection_episodes |>
       get_indicator_at_sub_geography_level_by_age_sex("lsoa") |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
@@ -1158,7 +1163,7 @@ list(
         geography = "icb",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census) 
+        standard_england_pop_2021_census)
     )
   ),
   tarchetypes::tar_map(
@@ -1194,13 +1199,13 @@ list(
         standard_england_pop_2021_census)
     )
   ),
-  
+
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
     dplyr::bind_rows(
-      elective_non_elective_ratio_icb_admissions, 
-      elective_non_elective_ratio_icb_beddays,  
+      elective_non_elective_ratio_icb_admissions,
+      elective_non_elective_ratio_icb_beddays,
       frailty_indicators_icb_admissions,
       frailty_indicators_icb_beddays,
       readmission_indicator_icb_admissions,
@@ -1218,14 +1223,14 @@ list(
       redirection_indicator_icb_beddays
       ) |>
     dplyr::left_join(icb_lookup |>
-                       dplyr::select(-dplyr::any_of("geometry")), 
+                       dplyr::select(-dplyr::any_of("geometry")),
                      "icb") |>
-    dplyr::select(indicator, 
-                  icb, 
-                  icb_name, 
-                  date, 
-                  numerator, 
-                  denominator, 
+    dplyr::select(indicator,
+                  icb,
+                  icb_name,
+                  date,
+                  numerator,
+                  denominator,
                   value,
                   lowercl,
                   uppercl)
@@ -1233,8 +1238,8 @@ list(
   tar_target(
     indicators_la,
     dplyr::bind_rows(
-      elective_non_elective_ratio_la_admissions, 
-      elective_non_elective_ratio_la_beddays,   
+      elective_non_elective_ratio_la_admissions,
+      elective_non_elective_ratio_la_beddays,
       frailty_indicators_la_admissions,
       frailty_indicators_la_beddays,
       readmission_indicator_la_admissions,
@@ -1252,14 +1257,14 @@ list(
       redirection_indicator_la_beddays
       ) |>
     dplyr::left_join(la_lookup |>
-                       dplyr::select(-dplyr::any_of("geometry")), 
+                       dplyr::select(-dplyr::any_of("geometry")),
                      "la") |>
-    dplyr::select(indicator, 
-                  la, 
-                  la_name, 
-                  date, 
-                  numerator, 
-                  denominator, 
+    dplyr::select(indicator,
+                  la,
+                  la_name,
+                  date,
+                  numerator,
+                  denominator,
                   value,
                   lowercl,
                   uppercl)
@@ -1267,8 +1272,8 @@ list(
   tar_target(
     indicators_pcn,
     dplyr::bind_rows(
-      elective_non_elective_ratio_pcn_admissions, 
-      elective_non_elective_ratio_pcn_beddays,  
+      elective_non_elective_ratio_pcn_admissions,
+      elective_non_elective_ratio_pcn_beddays,
       frailty_indicators_pcn_admissions,
       frailty_indicators_pcn_beddays,
       readmission_indicator_pcn_admissions,
@@ -1286,12 +1291,12 @@ list(
       redirection_indicator_pcn_beddays
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
-    dplyr::select(indicator, 
-                  pcn, 
-                  pcn_name, 
-                  date, 
-                  numerator, 
-                  denominator, 
+    dplyr::select(indicator,
+                  pcn,
+                  pcn_name,
+                  date,
+                  numerator,
+                  denominator,
                   value,
                   lowercl,
                   uppercl)

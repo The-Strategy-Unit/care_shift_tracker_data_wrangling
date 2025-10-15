@@ -21,7 +21,7 @@ get_frailty_data <- function(start, connection) {
       APCE_Ident,
       Der_Pseudo_NHS_Number,
       convert(varchar(7), Discharge_Date, 120) AS date,
-    	Der_Postcode_LSOA_2021_Code,
+    	Der_Postcode_LSOA_2011_Code,
     	GP_Practice_SUS,
       Discharge_Date,
       DATEDIFF(day, Admission_Date, Discharge_Date) AS Spelldur
@@ -39,7 +39,7 @@ get_frailty_data <- function(start, connection) {
     b.APCE_Ident,
     b.Der_Pseudo_NHS_Number,
     b.date,
-    b.Der_Postcode_LSOA_2021_Code,
+    b.Der_Postcode_LSOA_2011_Code,
     b.GP_Practice_SUS,
     b.Discharge_Date,
     b.Spelldur,
@@ -133,7 +133,7 @@ get_frailty_with_risk_scores <- function(data,
         apce_ident,
         date,
         der_pseudo_nhs_number,
-        der_postcode_lsoa_2021_code,
+        der_postcode_lsoa_2011_code,
         gp_practice_sus,
         spelldur
       )
