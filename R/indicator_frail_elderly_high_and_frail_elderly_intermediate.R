@@ -24,6 +24,26 @@ get_frailty_data <- function(start, connection) {
     	Der_Postcode_LSOA_2011_Code,
     	GP_Practice_SUS,
       Discharge_Date,
+    	Sex,
+      CASE WHEN Der_Age_At_CDS_Activity_Date BETWEEN 0 AND 4 THEN '0-4'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 5 AND 9 THEN '5-9'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 10 AND 14 THEN '10-14'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 15 AND 19 THEN '15-19'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 20 AND 24 THEN '20-24'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 25 AND 29 THEN '25-29'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 30 AND 34 THEN '30-34'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 35 AND 39 THEN '35-39'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 40 AND 44 THEN '40-44'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 45 AND 49 THEN '45-49'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 50 AND 54 THEN '50-54'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 55 AND 59 THEN '55-59'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 60 AND 64 THEN '60-64'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 65 AND 69 THEN '65-69'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 70 AND 74 THEN '70-74'
+           WHEN Der_Age_At_CDS_Activity_Date BETWEEN 75 AND 79 THEN '75-79'
+           WHEN Der_Age_At_CDS_Activity_Date >=80 THEN '80+'
+           ELSE NULL
+           END AS age_range,
       DATEDIFF(day, Admission_Date, Discharge_Date) AS Spelldur
 
     FROM [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]
@@ -42,6 +62,8 @@ get_frailty_data <- function(start, connection) {
     b.Der_Postcode_LSOA_2011_Code,
     b.GP_Practice_SUS,
     b.Discharge_Date,
+    b.sex,
+    b.age_range,
     b.Spelldur,
     a.diagnosis
 
@@ -135,6 +157,8 @@ get_frailty_with_risk_scores <- function(data,
         der_pseudo_nhs_number,
         der_postcode_lsoa_2011_code,
         gp_practice_sus,
+        age_range,
+        sex,
         spelldur
       )
     ) |>
