@@ -88,6 +88,11 @@ list(
       unique()
   ),
   
+  tar_target(
+    prov_site_type,
+    get_eric_site_classifications(con)
+  ),
+  
   ## Geography codes to names --------------------------------------------------
   tar_target(
     icb_lookup,
