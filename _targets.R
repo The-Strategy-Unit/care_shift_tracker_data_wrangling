@@ -940,7 +940,7 @@ list(
   ## Emergency hospital admissions due to falls in people over 65 --------------
   tar_target(
     falls_where_clause,
-    "(LEFT(Der_Primary_Diagnosis_Code, 4) = 'R296' OR
+    "(LEFT(Der_Primary_Diagnosis_Code, 4) = 'R296' OR ----tendency to fall
       ((Der_Primary_Diagnosis_Code LIKE 'S%' OR
         Der_Primary_Diagnosis_Code LIKE 'T%') AND
         Der_Diagnosis_All LIKE '%W[01]%') OR   ----explicit_fractures
