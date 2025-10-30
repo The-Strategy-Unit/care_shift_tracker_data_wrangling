@@ -278,6 +278,62 @@ list(
                        .by = c(age_range, sex))
   ),
   
+  tar_target(
+    prov_act_dist_geog,
+    get_prov_dist_by_lsoa(con)
+  ),
+  tar_target(
+    prov_act_dist_icb,
+    prov_act_dist_geog |>
+      dplyr::filter(prov_code != "", lsoa_2011 != "") |>
+      dplyr::left_join(lsoa11_to_lsoa_21 |>
+                         dplyr::select(1,2), by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
+      dplyr::left_join(lsoa_to_higher_geographies |>
+                         dplyr::select(1,6:8), by = "lsoa21cd", relationship = "many-to-many")|>
+      dplyr::filter(!is.na(icb24cd)) |>
+      dplyr::group_by(prov_code, der_financial_year, icb24cd, icb24cdh, icb24nm) |>
+      dplyr::summarise(patients = sum(patients),
+                       beddays = sum(beddays)) |>
+      dplyr::group_by(prov_code, der_financial_year) |>
+      dplyr::mutate(prop_pat = patients/sum(patients),
+                    prop_bed = beddays/sum(beddays))
+  ),
+  tar_target(
+    prov_act_dist_lad,
+    prov_act_dist_geog |>
+      dplyr::filter(prov_code != "", lsoa_2011 != "") |>
+      dplyr::left_join(lsoa11_to_lsoa_21 |>
+                         dplyr::select(1,2), by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
+      dplyr::left_join(lsoa_to_higher_geographies |>
+                         dplyr::select(1,11:12), by = "lsoa21cd", relationship = "many-to-many")|>
+      dplyr::filter(!is.na(lad24cd)) |>
+      dplyr::group_by(prov_code, der_financial_year, lad24cd, lad24nm) |>
+      dplyr::summarise(patients = sum(patients),
+                       beddays = sum(beddays)) |>
+      dplyr::group_by(prov_code, der_financial_year) |>
+      dplyr::mutate(prop_pat = patients/sum(patients),
+                    prop_bed = beddays/sum(beddays))
+  ),
+  
+  tar_target(
+    prov_act_dist_prac,
+    get_prov_dist_by_practice(con)
+  ),
+  tar_target(
+    prov_act_dist_pcn,
+    prov_act_dist_prac |>
+      dplyr::filter(prov_code != "", gp_prac != "") |>
+      dplyr::left_join(gp_to_pcn |>
+                         dplyr::select(1:2,5:6), by = c("gp_prac" = "partner_organisation_code"), relationship = "many-to-many") |>
+      dplyr::filter(!is.na(pcn_code)) |>
+      dplyr::group_by(prov_code, der_financial_year, pcn_code, pcn_name) |>
+      dplyr::summarise(patients = sum(patients),
+                       beddays = sum(beddays)) |>
+      dplyr::group_by(prov_code, der_financial_year) |>
+      dplyr::mutate(prop_pat = patients/sum(patients),
+                    prop_bed = beddays/sum(beddays))
+  ),
+  
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
   # LSOA and GP
