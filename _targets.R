@@ -5,7 +5,9 @@
 
 # Load packages required to define the pipeline:
 library(targets)
-# library(tarchetypes) # Load other packages as needed.
+library(tarchetypes)
+library(tidyverse)
+library(stringr)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(
@@ -90,7 +92,8 @@ list(
   
   tar_target(
     prov_site_type,
-    get_eric_site_classifications(con)
+    get_eric_site_classifications(con) |>
+      dplyr::mutate(der_financial_year = stringr::str_replace(der_fin_year, "^(\\d{4})\\-(\\d{2})(\\d{2})$", "\\1/\\3"))
   ),
   
   ## Geography codes to names --------------------------------------------------
