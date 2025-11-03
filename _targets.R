@@ -281,6 +281,7 @@ list(
                        .by = c(age_range, sex))
   ),
   
+  ## Distribution of SUS provider activity by ICB, LAD and PCN -----------------
   tar_target(
     prov_act_dist_geog,
     get_prov_dist_by_lsoa(con)
@@ -1262,6 +1263,20 @@ list(
         activity_type,
         standard_england_pop_2021_census)
     )
+  ),
+  
+  # Available beds data, categorised and distributed
+  tar_target(
+    beds_available_data,
+    get_kh03_data(con)
+  ),
+  
+  tar_target(
+    bed_split_icb,
+    assign_kh03_beds_icb(beds_available_data, prov_site_type, prov_act_dist_icb) |>
+      group_by(icb24cd, der_financial_year) |>
+      mutate(year_tot = sum(beds),
+             perc = beds/year_tot*100)
   ),
 
   # All indicators -------------------------------------------------------------
