@@ -1278,6 +1278,21 @@ list(
       mutate(year_tot = sum(beds),
              perc = beds/year_tot*100)
   ),
+  tar_target(
+    bed_split_lad,
+    assign_kh03_beds_lad(beds_available_data, prov_site_type, prov_act_dist_lad) |>
+      group_by(lad24cd, der_financial_year) |>
+      mutate(year_tot = sum(beds),
+             perc = beds/year_tot*100)
+  ),
+  tar_target(
+    bed_split_pcn,
+    assign_kh03_beds_pcn(beds_available_data, prov_site_type, prov_act_dist_pcn) |>
+      group_by(pcn_code, der_financial_year) |>
+      mutate(year_tot = sum(beds),
+             perc = beds/year_tot*100)
+  ),
+  
 
   # All indicators -------------------------------------------------------------
   tar_target(

@@ -55,3 +55,45 @@ assign_kh03_beds_icb <- function(data, lookup, dist_geog) {
   
   return(wrangled)
 }
+
+assign_kh03_beds_lad <- function(data, lookup, dist_geog) {
+  lookup_trim <- lookup |>
+    select(1,3,8) |>
+    distinct() |>
+    arrange(organisation_code, org_class, der_financial_year)
+  
+  wrangled <- data |>
+    filter(!is.na(bed_total)) |>
+    left_join(lookup_trim, by = c("organisation_code", "der_financial_year")) |>
+    # join results to activity distributions
+    left_join(dist_geog |>
+                select(1:4,8), by = c("organisation_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
+    mutate(beds_adj = bed_total*prop_bed) |>
+    group_by(lad24cd, lad24nm, der_financial_year, org_class) |>
+    summarise(beds = round(sum(beds_adj),4)) |>
+    filter(!is.na(lad24cd)) |>
+    arrange(lad24cd, org_class, der_financial_year)
+  
+  return(wrangled)
+}
+
+assign_kh03_beds_pcn <- function(data, lookup, dist_geog) {
+  lookup_trim <- lookup |>
+    select(1,3,8) |>
+    distinct() |>
+    arrange(organisation_code, org_class, der_financial_year)
+  
+  wrangled <- data |>
+    filter(!is.na(bed_total)) |>
+    left_join(lookup_trim, by = c("organisation_code", "der_financial_year")) |>
+    # join results to activity distributions
+    left_join(dist_geog |>
+                select(1:4,8), by = c("organisation_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
+    mutate(beds_adj = bed_total*prop_bed) |>
+    group_by(pcn_code, pcn_name, der_financial_year, org_class) |>
+    summarise(beds = round(sum(beds_adj),4)) |>
+    filter(!is.na(pcn_code)) |>
+    arrange(pcn_code, org_class, der_financial_year)
+  
+  return(wrangled)
+}
