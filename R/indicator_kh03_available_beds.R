@@ -32,7 +32,7 @@ get_kh03_data <- function(connection) {
 #' Assigning care setting categories to the above
 #' @param data - the raw data captured in above target
 #' @param lookup - the ERIC classifications (require grouping for provider level)
-#' @param dist - the target with the provider beddays distributed to ICB
+#' @param dist - the target with the provider beddays distributed to ICB, LAD or PCN
 #' @returns A dataframe with each provider assigned to community, acute or other.
 
 assign_kh03_beds_icb <- function(data, lookup, dist_geog) {

@@ -1293,6 +1293,12 @@ list(
              perc = beds/year_tot*100)
   ),
   
+  # NHS workforce data, categorised and distributed
+  tar_target(
+    workforce_data,
+    get_workforce_data(con)
+  ),
+  
 
   # All indicators -------------------------------------------------------------
   tar_target(
