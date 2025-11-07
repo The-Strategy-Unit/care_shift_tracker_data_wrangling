@@ -1,4 +1,5 @@
-# Functions to get the distribution of provider activity by geography and practice to support weighting of certain indicator data to ICB/LAD/PCN.
+#' Functions to get the distribution of provider activity by geography and practice to support weighting of
+#' KH03 beds indicator data to ICB/LAD/PCN.
 
 #' @param connection The ODBC connection 
 #' @returns A dataframe with the provider activity over time distributed by either lsoa or gp practice
@@ -51,4 +52,11 @@ get_prov_dist_by_practice <- function(connection) {
     janitor::clean_names()
   
   return(wrangled)
+}
+
+get_prov_pats_lsoa <- function(url) {
+  
+  data <- readr::read_csv(url, col_names = c("prov_code", "der_financial_year", "lsoa_2011", "pats"))
+  
+  return(data)
 }

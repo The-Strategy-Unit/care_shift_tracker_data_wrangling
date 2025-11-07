@@ -281,7 +281,7 @@ list(
                        .by = c(age_range, sex))
   ),
   
-  ## Distribution of SUS provider activity by ICB, LAD and PCN -----------------
+  ## Distribution of SUS provider activity by ICB, LAD and PCN for bed data ----
   tar_target(
     prov_act_dist_geog,
     get_prov_dist_by_lsoa(con)
@@ -336,6 +336,32 @@ list(
       dplyr::group_by(prov_code, der_financial_year) |>
       dplyr::mutate(prop_pat = patients/sum(patients),
                     prop_bed = beddays/sum(beddays))
+  ),
+  
+  ## Distribution of provider patients (SUS,CSDS,MHSDS) for workforce data -----
+  tar_target(
+    prov_pat_dist_lsoa,
+    get_prov_pats_lsoa("data/prov_lsoa_pats.csv") |>
+      dplyr::left_join(lsoa11_to_lsoa_21, by = c("lsoa_2011" = "lsoa11cd")) |>
+      dplyr::left_join(lsoa_to_higher_geographies |>
+                         select(1,6:8,11:12), by = "lsoa21cd") |>
+      janitor::clean_names()
+  ),
+  tar_target(
+    prov_pat_dist_icb,
+    prov_pat_dist_lsoa |>
+      dplyr::group_by(prov_code, icb24cd, icb24nm, der_financial_year) |>
+      dplyr::summarise(pats = sum(pats)) |>
+      dplyr::group_by(prov_code, der_financial_year) |>
+      dplyr::mutate(prop_pat = pats/sum(pats))
+  ),
+  tar_target(
+    prov_pat_dist_lad,
+    prov_pat_dist_lsoa |>
+      dplyr::group_by(prov_code, lad24cd, lad24nm, der_financial_year) |>
+      dplyr::summarise(pats = sum(pats)) |>
+      dplyr::group_by(prov_code, der_financial_year) |>
+      dplyr::mutate(prop_pat = pats/sum(pats))
   ),
   
   # Indicators -----------------------------------------------------------------
