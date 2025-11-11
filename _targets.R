@@ -1334,7 +1334,7 @@ list(
   
   # ICB
   tar_target(
-    del_dis_days_icb,
+    delayed_discharge_percent_icb_beddays,
     del_dis_days |>
       filter(!is.na(lsoa_2011)) |>
       left_join(lsoa11_to_lsoa_21 |>
@@ -1351,13 +1351,19 @@ list(
       mutate(perc = round(ddd/spell_los*100,2),) |>
       group_by(icb24cd, icb24cdh, icb24nm, year_mon, spells) |>
       PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
-      select(1:10) |>
-      arrange(icb24cd, year_mon)
+      ungroup() |>
+      mutate(indicator = 'delayed_discharge_percent_icb_beddays') |>
+      select(14,2,4,6:10) |>
+      dplyr::rename(icb = icb24cdh,
+                    date = year_mon,
+                    numerator = ddd,
+                    denominator = spell_los) |>
+      arrange(icb, date)
       ),
   
   # LAD
   tar_target(
-    del_dis_days_lad,
+    delayed_discharge_percent_la_beddays,
     del_dis_days |>
       filter(!is.na(lsoa_2011)) |>
       left_join(lsoa11_to_lsoa_21 |>
@@ -1374,13 +1380,19 @@ list(
       mutate(perc = round(ddd/spell_los*100,2),) |>
       group_by(lad24cd, lad24nm, year_mon, spells) |>
       PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
-      select(1:9) |>
-      arrange(lad24cd, year_mon)
+      ungroup() |>
+      mutate(indicator = 'delayed_discharge_percent_la_beddays') |>
+      select(indicator,year_mon,lad24cd,ddd,spell_los,value,lowercl,uppercl) |>
+      dplyr::rename(la = lad24cd,
+                    date = year_mon,
+                    numerator = ddd,
+                    denominator = spell_los) |>
+      arrange(la, date)
   ),
   
   # PCN
   tar_target(
-    del_dis_days_pcn,
+    delayed_discharge_percent_pcn_beddays,
     del_dis_days |>
       filter(!is.na(gp_prac)) |>
       left_join(gp_to_pcn |>
@@ -1394,8 +1406,14 @@ list(
       mutate(perc = round(ddd/spell_los*100,2),) |>
       group_by(pcn_code, pcn_name, year_mon, spells) |>
       PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
-      select(1:9) |>
-      arrange(pcn_code, year_mon)
+      ungroup() |>
+      mutate(indicator = 'delayed_discharge_percent_pcn_beddays') |>
+      select(indicator,year_mon,pcn_code,ddd,spell_los,value,lowercl,uppercl) |>
+      dplyr::rename(pcn = pcn_code,
+                    date = year_mon,
+                    numerator = ddd,
+                    denominator = spell_los) |>
+      arrange(pcn, date)
   ),
   
 
