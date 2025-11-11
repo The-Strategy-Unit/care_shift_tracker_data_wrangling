@@ -7,7 +7,8 @@
 library(targets)
 library(tarchetypes)
 library(tidyverse)
-library(stringr)# Load other packages as needed.
+library(stringr)
+library(PHEindicatormethods)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(
@@ -1291,7 +1292,7 @@ list(
     )
   ),
   
-  # Available beds data, categorised and distributed
+  ### Available beds data, categorised and distributed -------------------------
   tar_target(
     beds_available_data,
     get_kh03_data(con)
@@ -1319,14 +1320,86 @@ list(
              perc = beds/year_tot*100)
   ),
   
-  # NHS workforce data, categorised and distributed
+  ### NHS workforce data, categorised and distributed --------------------------
   tar_target(
     workforce_data,
     get_workforce_data(con)
   ),
   
+  ### Delayed discharge days as % of all bed days ------------------------------
+  tar_target(
+    del_dis_days,
+    get_delay_disch_data(con)
+  ),
+  
+  # ICB
+  tar_target(
+    del_dis_days_icb,
+    del_dis_days |>
+      filter(!is.na(lsoa_2011)) |>
+      left_join(lsoa11_to_lsoa_21 |>
+                  select(1:2), by = c("lsoa_2011" = "lsoa11cd"), relationship =
+                  "many-to-many") |>
+      left_join(lsoa_to_higher_geographies |>
+                  select(1,6:8), by = "lsoa21cd", relationship =
+                  "many-to-many") |>
+      group_by(icb24cd, icb24cdh, icb24nm, year_mon) |>
+      summarise(spells = sum(spells),
+                spell_los = sum(spell_los_tot),
+                ddd = sum(ddd_tot)) |>
+      filter(!is.na(icb24cd)) |>
+      mutate(perc = round(ddd/spell_los*100,2),) |>
+      group_by(icb24cd, icb24cdh, icb24nm, year_mon, spells) |>
+      PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
+      select(1:10) |>
+      arrange(icb24cd, year_mon)
+      ),
+  
+  # LAD
+  tar_target(
+    del_dis_days_lad,
+    del_dis_days |>
+      filter(!is.na(lsoa_2011)) |>
+      left_join(lsoa11_to_lsoa_21 |>
+                  select(1:2), by = c("lsoa_2011" = "lsoa11cd"), relationship =
+                  "many-to-many") |>
+      left_join(lsoa_to_higher_geographies |>
+                  select(1,11:12), by = "lsoa21cd", relationship =
+                  "many-to-many") |>
+      group_by(lad24cd, lad24nm, year_mon) |>
+      summarise(spells = sum(spells),
+                spell_los = sum(spell_los_tot),
+                ddd = sum(ddd_tot)) |>
+      filter(!is.na(lad24cd)) |>
+      mutate(perc = round(ddd/spell_los*100,2),) |>
+      group_by(lad24cd, lad24nm, year_mon, spells) |>
+      PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
+      select(1:9) |>
+      arrange(lad24cd, year_mon)
+  ),
+  
+  # PCN
+  tar_target(
+    del_dis_days_pcn,
+    del_dis_days |>
+      filter(!is.na(gp_prac)) |>
+      left_join(gp_to_pcn |>
+                  select(1:2,5:6), by = c("gp_prac" = "partner_organisation_code"), relationship =
+                  "many-to-many") |>
+      group_by(pcn_code, pcn_name, year_mon) |>
+      summarise(spells = sum(spells),
+                spell_los = sum(spell_los_tot),
+                ddd = sum(ddd_tot)) |>
+      filter(!is.na(pcn_code), spell_los > 0, ddd <= spell_los) |>
+      mutate(perc = round(ddd/spell_los*100,2),) |>
+      group_by(pcn_code, pcn_name, year_mon, spells) |>
+      PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
+      select(1:9) |>
+      arrange(pcn_code, year_mon)
+  ),
+  
 
-  # All indicators -------------------------------------------------------------
+  ### All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
     dplyr::bind_rows(
