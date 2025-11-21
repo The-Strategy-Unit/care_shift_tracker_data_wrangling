@@ -373,6 +373,7 @@ list(
       dplyr::group_by(prov_code, der_financial_year) |>
       dplyr::mutate(prop_pat = pats/sum(pats))
   ),
+  #### still need the data for PCN to add the additional target
   
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
@@ -1373,7 +1374,7 @@ list(
       group_by(icb24cd, icb24cdh, icb24nm, year_mon, spells) |>
       PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
       ungroup() |>
-      mutate(indicator = 'delayed_discharge_percent_icb_beddays') |>
+      mutate(indicator = 'delayed_discharge_percent_beddays') |>
       select(14,2,4,6:10) |>
       dplyr::rename(icb = icb24cdh,
                     date = year_mon,
@@ -1402,7 +1403,7 @@ list(
       group_by(lad24cd, lad24nm, year_mon, spells) |>
       PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
       ungroup() |>
-      mutate(indicator = 'delayed_discharge_percent_la_beddays') |>
+      mutate(indicator = 'delayed_discharge_percent_beddays') |>
       select(indicator,year_mon,lad24cd,ddd,spell_los,value,lowercl,uppercl) |>
       dplyr::rename(la = lad24cd,
                     date = year_mon,
@@ -1428,7 +1429,7 @@ list(
       group_by(pcn_code, pcn_name, year_mon, spells) |>
       PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
       ungroup() |>
-      mutate(indicator = 'delayed_discharge_percent_pcn_beddays') |>
+      mutate(indicator = 'delayed_discharge_percent_beddays') |>
       select(indicator,year_mon,pcn_code,ddd,spell_los,value,lowercl,uppercl) |>
       dplyr::rename(pcn = pcn_code,
                     date = year_mon,
@@ -1458,7 +1459,8 @@ list(
       falls_indicator_icb_admissions,
       falls_indicator_icb_beddays,
       redirection_indicator_icb_admissions,
-      redirection_indicator_icb_beddays
+      redirection_indicator_icb_beddays,
+      delayed_discharge_percent_icb_beddays
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")),
@@ -1492,7 +1494,8 @@ list(
       falls_indicator_la_admissions,
       falls_indicator_la_beddays,
       redirection_indicator_la_admissions,
-      redirection_indicator_la_beddays
+      redirection_indicator_la_beddays,
+      delayed_discharge_percent_la_beddays
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")),
@@ -1526,7 +1529,8 @@ list(
       falls_indicator_pcn_admissions,
       falls_indicator_pcn_beddays,
       redirection_indicator_pcn_admissions,
-      redirection_indicator_pcn_beddays
+      redirection_indicator_pcn_beddays,
+      delayed_discharge_percent_pcn_beddays
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator,
