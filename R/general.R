@@ -176,12 +176,14 @@ aggregate_indicator_to_geography_level_by_age_sex <- function(data,
 #'
 #' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
+#' @param lag The maximum date for the query.
 #' @param where The SQl where clause to filter the data to a particular indicator.
 #' @param connection The ODBC connection.
 #'
 #' @returns A dataframe of episode level data for an emergency related indicator.
 get_emergency_indicator_episodes <- function(age, 
                                              start, 
+                                             lag,
                                              where,
                                              connection) {
   query <- "
@@ -217,6 +219,7 @@ get_emergency_indicator_episodes <- function(age,
   	WHERE 
       Last_Episode_In_Spell_Indicator = '1' AND
   		Discharge_Date >= 'start_date' AND
+      Discharge_Date < 'lag_date' AND
   		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
   		LEFT(a.Admission_Method, 1) = '2' AND
   		(where_clause)
@@ -224,6 +227,7 @@ get_emergency_indicator_episodes <- function(age,
     stringr::str_replace_all(
       c("age_cutoff" = age,
         "start_date" = start,
+        "lag_date" = lag,
         "where_clause" = where
       )
     )

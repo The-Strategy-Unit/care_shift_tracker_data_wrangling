@@ -1,9 +1,19 @@
-# Functions for emergency readmissions within 28 days indicators:
-# `readmission_within_28_days_per_pop_admissions` and 
-# `readmission_within_28_days_per_pop_beddays`.
+# Functions for redirection and substitution indicators:
+# `redirection_age_sex_standardised_admissions` and 
+# `redirection_age_sex_standardised_beddays`.
 
+#' The number of end of life admissions/beddays by LSOA/GP and month.
+#'
+#' @param age The minimum age cutoff.
+#' @param start The minimum date for the query.
+#' @param lag The maximum date for the query.
+#' @param connection The ODBC connection.
+#'
+#' @returns A dataframe with the number of end of life admissions/beddays 
+# 'by LSOA/GP code and month.
 get_end_of_life_episodes <- function(age, 
                                      start, 
+                                     lag,
                                      connection) {
   query <- "
   	SELECT
@@ -38,6 +48,7 @@ get_end_of_life_episodes <- function(age,
   	WHERE 
       Last_Episode_In_Spell_Indicator = '1' AND
   		Discharge_Date >= 'start_date' AND
+  		Discharge_Date < 'lag_date' AND
   		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
   		Discharge_Method = '4' AND
   		DATEDIFF(day, Admission_Date, Discharge_Date) <= 14 AND
@@ -46,7 +57,8 @@ get_end_of_life_episodes <- function(age,
   " |>
     stringr::str_replace_all(
       c("age_cutoff" = age,
-        "start_date" = start
+        "start_date" = start,
+        "lag_date" = lag
       )
     )
   
@@ -56,6 +68,20 @@ get_end_of_life_episodes <- function(age,
   return(wrangled)
 }
 
+#' Get the redirection/substitution indicators standardised by age and sex for
+#' a geography.
+#'
+#' @param data The redirection/substitution indicators at sub-geography level.
+#' @param population Population data at the geography of interest by age and 
+#' sex.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param latest_population_year The last year that population data is available
+#' for.
+#' @param activity_type Either `"admissions"` or `"beddays"`.
+#' @param standard_pop England 2021 census population data.
+#'
+#' @returns A dataframe of the redirection/substitution indicators standardised 
+#' by age and sex for a geography.
 get_indicators_age_sex_standardised_rates <- function(data,
                                                       population,
                                                       geography,

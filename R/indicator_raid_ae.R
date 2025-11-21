@@ -4,16 +4,18 @@
 
 #' Mental Health Admissions via ED admissions/beddays by LSOA/GP code and month.
 #'
+#' @param sub_geography Either `"lsoa"` or `"gp"`.
 #' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
+#' @param lag The maximum date for the query.
 #' @param connection The ODBC connection.
-#' @param sub_geography Either `"lsoa"` or `"gp"`.
 #'
 #' @returns A dataframe with the number of Mental Health Admissions via ED 
 #' admissions/beddays by LSOA/GP code and month.
 get_raid_ae_sub_geography <- function(sub_geography, 
                                       age, 
                                       start, 
+                                      lag,
                                       connection) {
   sub_geography_column <- get_subgeography_column(sub_geography)
   
@@ -35,6 +37,7 @@ get_raid_ae_sub_geography <- function(sub_geography,
       
       WHERE 
     		Discharge_Date >= 'start_date' AND
+    		Discharge_Date < 'lag_date' AND
     		Der_Age_at_CDS_Activity_Date >= age_cutoff AND
         Last_Episode_In_Spell_Indicator = '1' AND
         Admission_Method = '21' AND
@@ -50,6 +53,7 @@ get_raid_ae_sub_geography <- function(sub_geography,
     stringr::str_replace_all(
       c("age_cutoff" = age,
         "start_date" = start,
+        "lag_date" = lag,
         "sub_geography_column" = sub_geography_column
       )
     )
