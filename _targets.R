@@ -1473,7 +1473,8 @@ list(
                   denominator,
                   value,
                   lowercl,
-                  uppercl)
+                  uppercl) |>
+    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
   ),
   tar_target(
     indicators_la,
@@ -1508,7 +1509,8 @@ list(
                   denominator,
                   value,
                   lowercl,
-                  uppercl)
+                  uppercl) |>
+    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
   ),
   tar_target(
     indicators_pcn,
@@ -1541,6 +1543,7 @@ list(
                   denominator,
                   value,
                   lowercl,
-                  uppercl)
+                  uppercl) |>
+    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
   )
 )
