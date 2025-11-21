@@ -32,6 +32,8 @@ con <- DBI::dbConnect(
 
 # Replace the target list below with your own:
 list(
+  # Variables ------------------------------------------------------------------
+  ## Age -----------------------------------------------------------------------
   tar_target(age_cutoff, 65),
   tar_target(
     age_bands,
@@ -39,8 +41,15 @@ list(
   tar_target(
     age_bands_75_plus,
     "('75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
+  
+  ## Date ---------------------------------------------------------------------- 
   tar_target(start_date, "2008-04-01"),
-  tar_target(next_month, Sys.Date() |>
+  tar_target(admissions_lag_date, 
+             (Sys.Date() |>
+               lubridate::floor_date("month") - months(1))|>
+               as.character()),
+  tar_target(next_month, 
+             Sys.Date() |>
                lubridate::ceiling_date("month")),
   
   # Lookups --------------------------------------------------------------------
@@ -373,6 +382,7 @@ list(
     get_elective_non_elective_sub_geography("lsoa",
                                             age_cutoff,
                                             start_date,
+                                            admissions_lag_date,
                                             con) |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
@@ -382,6 +392,7 @@ list(
     get_elective_non_elective_sub_geography("gp",
                                             age_cutoff,
                                             start_date,
+                                            admissions_lag_date,
                                             con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
@@ -419,7 +430,7 @@ list(
   ),
   tar_target(
     frailty_episodes,
-    get_frailty_data(start_date, con)
+    get_frailty_data(start_date, admissions_lag_date, con)
   ),
   # LSOA and GP
   tar_target(
@@ -521,6 +532,7 @@ list(
     readmission_within_28_days_episodes,
     get_emergency_indicator_episodes(age_cutoff, 
                                      start_date, 
+                                     admissions_lag_date,
                                      readmissions_where_clause,
                                      con)
   ),
@@ -640,6 +652,7 @@ list(
     ambulatory_care_conditions_acute_episodes,
     get_emergency_indicator_episodes(age_cutoff,
                                      start_date,
+                                     admissions_lag_date,
                                      ambulatory_care_acute_where_clause,
                                      con)
   ),
@@ -761,6 +774,7 @@ list(
     ambulatory_care_conditions_chronic_episodes,
     get_emergency_indicator_episodes(age_cutoff,
                                      start_date,
+                                     admissions_lag_date,
                                      ambulatory_care_chronic_where_clause,
                                      con)
   ),
@@ -863,6 +877,7 @@ list(
     get_emergency_indicator_episodes(
       age_cutoff,
       start_date,
+      admissions_lag_date,
       ambulatory_care_vaccine_preventable_where_clause,
       con)
   ),
@@ -887,6 +902,7 @@ list(
     get_frequent_attenders_adult_ambulance_sub_geography("lsoa",
                                                          age_cutoff,
                                                          start_date,
+                                                         lag_date,
                                                          con) |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "frequent_attenders") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
@@ -896,6 +912,7 @@ list(
     get_frequent_attenders_adult_ambulance_sub_geography("gp",
                                                          age_cutoff,
                                                          start_date,
+                                                         lag_date,
                                                          con) |>
       dplyr::rename(gp_practice_sus = gp_practice_code) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
@@ -955,6 +972,7 @@ list(
     get_raid_ae_sub_geography("lsoa",
                               age_cutoff,
                               start_date,
+                              admissions_lag_date,
                               con) |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
@@ -964,6 +982,7 @@ list(
     get_raid_ae_sub_geography("gp",
                               age_cutoff,
                               start_date,
+                              admissions_lag_date,
                               con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
@@ -1049,6 +1068,7 @@ list(
     falls_related_admissions_episodes,
     get_emergency_indicator_episodes(age_cutoff,
                                      start_date,
+                                     admissions_lag_date,
                                      falls_where_clause,
                                      con)
   ),
@@ -1191,13 +1211,14 @@ list(
     zero_los_and_medicine_related_episodes,
     get_emergency_indicator_episodes(age_cutoff,
                                      start_date,
+                                     admissions_lag_date,
                                      redirection_where_clause,
                                      con)
   ),
 
   tar_target(
     end_of_life_episodes,
-    get_end_of_life_episodes(age_cutoff, start_date, con)
+    get_end_of_life_episodes(age_cutoff, start_date, admissions_lag_date, con)
   ),
 
   # LSOA and GP

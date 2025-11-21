@@ -8,12 +8,13 @@
 #' and diagnosis code at the patient level.
 #'
 #' @param start The minimum date for the query.
+#' @param lag The maximum date for the query.
 #' @param connection The ODBC connection.
 #'
 #' @returns A patient and spell level dataframe with the number of 
 #' admissions/beddays and diagnosis for each discharge linked to their previous
 #' discharges, by month and subgeography.
-get_frailty_data <- function(start, connection) {
+get_frailty_data <- function(start, lag, connection) {
   
   query <- "
   WITH patients AS (
@@ -51,6 +52,7 @@ get_frailty_data <- function(start, connection) {
     WHERE
       Last_Episode_In_Spell_Indicator = '1' AND
       Discharge_Date >= 'start_date' AND
+      Discharge_Date < 'lag_date' AND
       Der_Age_at_CDS_Activity_Date >= 75 AND
       LEFT(Admission_Method, 1) = '2'
       )
@@ -83,7 +85,8 @@ get_frailty_data <- function(start, connection) {
     ON b.Der_Pseudo_NHS_Number = a.Der_Pseudo_NHS_Number
       AND a.Discharge_Date BETWEEN DATEADD(year, -2, b.Discharge_Date) AND b.Discharge_Date
   " |>
-    stringr::str_replace_all(c("start_date" = start))
+    stringr::str_replace_all(c("start_date" = start,
+                               "lag_date" = lag))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
