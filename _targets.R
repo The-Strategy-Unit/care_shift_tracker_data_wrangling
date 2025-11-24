@@ -1325,21 +1325,51 @@ list(
     assign_kh03_beds_icb(beds_available_data, prov_site_type, prov_act_dist_icb) |>
       group_by(icb24cd, der_financial_year) |>
       mutate(year_tot = sum(beds),
-             perc = beds/year_tot*100)
+             perc = beds/year_tot*100) |>
+      ungroup() |>
+      filter(org_class == 'Acute') |>
+      mutate(indicator = 'acute_bedshare_percent') |>
+      select(9,2,3,4,6:8) |>
+      dplyr::rename(icb = icb24cdh,
+                    date = der_financial_year,
+                    numerator = beds,
+                    denominator = year_tot,
+                    value = perc) |>
+      arrange(icb, date)
   ),
   tar_target(
     bed_split_lad,
     assign_kh03_beds_lad(beds_available_data, prov_site_type, prov_act_dist_lad) |>
       group_by(lad24cd, der_financial_year) |>
       mutate(year_tot = sum(beds),
-             perc = beds/year_tot*100)
+             perc = beds/year_tot*100) |>
+      ungroup() |>
+      filter(org_class == 'Acute') |>
+      mutate(indicator = 'acute_bedshare_percent') |>
+      select(8,1:3,5:7) |>
+      dplyr::rename(lad = lad24cd,
+                    date = der_financial_year,
+                    numerator = beds,
+                    denominator = year_tot,
+                    value = perc) |>
+      arrange(lad, date)
   ),
   tar_target(
     bed_split_pcn,
     assign_kh03_beds_pcn(beds_available_data, prov_site_type, prov_act_dist_pcn) |>
       group_by(pcn_code, der_financial_year) |>
       mutate(year_tot = sum(beds),
-             perc = beds/year_tot*100)
+             perc = beds/year_tot*100) |>
+      ungroup() |>
+      filter(org_class == 'Acute') |>
+      mutate(indicator = 'acute_bedshare_percent') |>
+      select(8,1,3,5:7) |>
+      dplyr::rename(pcn = pcn_code,
+                    date = der_financial_year,
+                    numerator = beds,
+                    denominator = year_tot,
+                    value = perc) |>
+      arrange(pcn, date)
   ),
   
   ### NHS workforce data, categorised and distributed --------------------------
@@ -1460,7 +1490,8 @@ list(
       falls_indicator_icb_beddays,
       redirection_indicator_icb_admissions,
       redirection_indicator_icb_beddays,
-      delayed_discharge_percent_icb_beddays
+      delayed_discharge_percent_icb_beddays,
+      bed_split_icb
       ) |>
     dplyr::left_join(icb_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")),
@@ -1496,7 +1527,8 @@ list(
       falls_indicator_la_beddays,
       redirection_indicator_la_admissions,
       redirection_indicator_la_beddays,
-      delayed_discharge_percent_la_beddays
+      delayed_discharge_percent_la_beddays,
+      bed_split_lad
       ) |>
     dplyr::left_join(la_lookup |>
                        dplyr::select(-dplyr::any_of("geometry")),
@@ -1532,7 +1564,8 @@ list(
       falls_indicator_pcn_beddays,
       redirection_indicator_pcn_admissions,
       redirection_indicator_pcn_beddays,
-      delayed_discharge_percent_pcn_beddays
+      delayed_discharge_percent_pcn_beddays,
+      bed_split_pcn
       ) |>
     dplyr::left_join(pcn_lookup, "pcn") |>
     dplyr::select(indicator,
