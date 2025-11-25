@@ -408,7 +408,7 @@ recode_lsoa11_as_lsoa21 <- function(data, lookup, value_column) {
 }
 
 write_indicator_to_parquet <- function(data, lookup, geography) {
-  data |>
+  wrangled <- data |>
     dplyr::left_join(lookup |>
                        dplyr::select(-dplyr::any_of("geography")),
                      geography) |>
@@ -425,6 +425,8 @@ write_indicator_to_parquet <- function(data, lookup, geography) {
       date = dplyr::case_when(
         indicator == "acute_bedshare_percent" ~ date,
         .default = as.character(lubridate::ymd(date, truncated = 1))
-      )) |>
-    arrow::write_parquet(glue::glue("indicators_{geography}.parquet"))
+      )) 
+  
+  wrangled |>
+    arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/indicators_{geography}.parquet"))
 }
