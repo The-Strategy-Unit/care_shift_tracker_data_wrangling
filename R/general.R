@@ -420,12 +420,9 @@ write_indicator_to_parquet <- function(data, lookup, geography) {
                   denominator,
                   value,
                   lowercl,
-                  uppercl) |>
-    dplyr::mutate(
-      date = dplyr::case_when(
-        indicator == "acute_bedshare_percent" ~ date,
-        .default = as.character(lubridate::ymd(date, truncated = 1))
-      )) 
+                  uppercl,
+                  frequency) |>
+    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
   
   wrangled |>
     arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/indicators_{geography}.parquet"))

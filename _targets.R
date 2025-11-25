@@ -405,8 +405,9 @@ list(
       elective_non_elective_ratio,
       get_elective_non_elective_ratio(elective_non_elective_lsoa,
                                       geography,
-                                      activity_type)
-    )
+                                      activity_type) |>
+        dplyr::mutate(frequency = "monthly")
+    ) 
   ),
   # PCN
   tarchetypes::tar_map(
@@ -415,7 +416,8 @@ list(
       elective_non_elective_ratio_pcn,
       get_elective_non_elective_ratio(elective_non_elective_gp,
                                       "pcn",
-                                      activity_type)
+                                      activity_type) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   
@@ -472,8 +474,9 @@ list(
         "icb",
         latest_population_year,
         activity_type
-      )
-    )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
+    ) 
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -485,7 +488,8 @@ list(
         "la",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -503,7 +507,8 @@ list(
         "pcn",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
 
@@ -570,7 +575,8 @@ list(
         "icb",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   tarchetypes::tar_map(
@@ -583,7 +589,8 @@ list(
         "la",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -603,7 +610,8 @@ list(
         "pcn",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   
@@ -691,7 +699,8 @@ list(
         "icb",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   tarchetypes::tar_map(
@@ -704,7 +713,8 @@ list(
         "la",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -725,7 +735,8 @@ list(
         "pcn",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
 
@@ -813,7 +824,8 @@ list(
         "icb",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   tarchetypes::tar_map(
@@ -826,7 +838,8 @@ list(
         "la",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -847,7 +860,8 @@ list(
         "pcn",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
 
@@ -936,7 +950,8 @@ list(
       "icb",
       latest_population_year,
       "attenders"
-    )
+    ) |>
+      dplyr::mutate(frequency = "monthly")
   ),
   tar_target(
     frequent_attenders_indicator_la,
@@ -946,7 +961,8 @@ list(
       "la",
       latest_population_year,
       "attenders"
-    )
+    ) |>
+      dplyr::mutate(frequency = "monthly")
   ),
   # PCN
   tar_target(
@@ -963,7 +979,8 @@ list(
       "pcn",
       latest_population_year,
       "attenders"
-    )
+    ) |>
+      dplyr::mutate(frequency = "monthly")
   ),
 
   ## Mental Health Admissions via ED -------------------------------------------
@@ -1007,7 +1024,8 @@ list(
         "icb",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   tarchetypes::tar_map(
@@ -1020,7 +1038,8 @@ list(
         "la",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -1040,7 +1059,8 @@ list(
         "pcn",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
 
@@ -1106,7 +1126,8 @@ list(
         "icb",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   tarchetypes::tar_map(
@@ -1119,7 +1140,8 @@ list(
         "la",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -1139,7 +1161,8 @@ list(
         "pcn",
         latest_population_year,
         activity_type
-      )
+      ) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
 
@@ -1277,7 +1300,8 @@ list(
         geography = "icb",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census)
+        standard_england_pop_2021_census) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   tarchetypes::tar_map(
@@ -1290,7 +1314,8 @@ list(
         geography = "la",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census)
+        standard_england_pop_2021_census) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
@@ -1310,7 +1335,8 @@ list(
         geography = "pcn",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census)
+        standard_england_pop_2021_census) |>
+        dplyr::mutate(frequency = "monthly")
     )
   ),
   
@@ -1335,7 +1361,10 @@ list(
                     numerator = beds,
                     denominator = year_tot,
                     value = perc) |>
-      arrange(icb, date)
+      arrange(icb, date) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+                      )
   ),
   tar_target(
     bed_split_lad,
@@ -1352,7 +1381,9 @@ list(
                     numerator = beds,
                     denominator = year_tot,
                     value = perc) |>
-      arrange(lad, date)
+      arrange(lad, date) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
   ),
   tar_target(
     bed_split_pcn,
@@ -1369,7 +1400,9 @@ list(
                     numerator = beds,
                     denominator = year_tot,
                     value = perc) |>
-      arrange(pcn, date)
+      arrange(pcn, date) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
   ),
   
   ## NHS workforce data, categorised and distributed ---------------------------
@@ -1410,7 +1443,8 @@ list(
                     date = year_mon,
                     numerator = ddd,
                     denominator = spell_los) |>
-      arrange(icb, date)
+      arrange(icb, date) |>
+      dplyr::mutate(frequency = "monthly")
       ),
   
   # LAD
@@ -1439,7 +1473,8 @@ list(
                     date = year_mon,
                     numerator = ddd,
                     denominator = spell_los) |>
-      arrange(la, date)
+      arrange(la, date) |>
+      dplyr::mutate(frequency = "monthly")
   ),
   
   # PCN
@@ -1465,7 +1500,8 @@ list(
                     date = year_mon,
                     numerator = ddd,
                     denominator = spell_los) |>
-      arrange(pcn, date)
+      arrange(pcn, date) |>
+      dplyr::mutate(frequency = "monthly")
   ),
   
 
