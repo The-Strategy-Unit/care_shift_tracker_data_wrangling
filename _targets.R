@@ -1314,7 +1314,7 @@ list(
     )
   ),
   
-  ### Available beds data, categorised and distributed -------------------------
+  ## Available beds data, categorised and distributed --------------------------
   tar_target(
     beds_available_data,
     get_kh03_data(con)
@@ -1372,13 +1372,13 @@ list(
       arrange(pcn, date)
   ),
   
-  ### NHS workforce data, categorised and distributed --------------------------
+  ## NHS workforce data, categorised and distributed ---------------------------
   tar_target(
     workforce_data,
     get_workforce_data(con)
   ),
   
-  ### Delayed discharge days as % of all bed days ------------------------------
+  ## Delayed discharge days as % of all bed days -------------------------------
   tar_target(
     del_dis_days,
     get_delay_disch_data(con)
@@ -1469,7 +1469,7 @@ list(
   ),
   
 
-  ### All indicators -------------------------------------------------------------
+  # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
     dplyr::bind_rows(
@@ -1505,7 +1505,8 @@ list(
                   value,
                   lowercl,
                   uppercl) |>
-    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
+    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) |>
+    arrow::write_parquet("indicators_icb.parquet")
   ),
   tar_target(
     indicators_la,
