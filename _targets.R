@@ -1580,5 +1580,21 @@ list(
       bed_split_pcn
       ) |>
       write_indicator_to_parquet(pcn_lookup, "pcn") 
-  )
+  ),
+  # Reference ------------------------------------------------------------------
+  tar_target(ref_icb,
+             get_ref_by_geography(icb_lookup, "icb")),
+  tar_target(ref_la,
+             get_ref_by_geography(la_lookup, "la")),
+  tar_target(ref_pcn,
+             get_ref_by_geography(pcn_lookup, "pcn")),
+  tar_target(
+    ref,
+    rbind(ref_icb, ref_la, ref_pcn) |>
+      dplyr::arrange(geography, name) |>
+      dplyr::mutate(shortname = name |>
+                      stringr::str_replace_all(c("NHS " = "",
+                                                 " Integrated Care Board" = "",
+                                                 " PCN" = "")))|>
+      arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref.parquet")))
 )

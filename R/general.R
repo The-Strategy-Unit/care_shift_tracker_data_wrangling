@@ -427,3 +427,13 @@ write_indicator_to_parquet <- function(data, lookup, geography) {
   wrangled |>
     arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/indicators_{geography}.parquet"))
 }
+
+get_ref_by_geography <- function(data, geo) {
+  ref <- data |>
+    dplyr::select(code = !!rlang::sym(geo), 
+                  name = glue::glue("{geo}_name")) |>
+    unique() |>
+    dplyr::mutate(geography = geo)
+  
+  return(ref)
+}
