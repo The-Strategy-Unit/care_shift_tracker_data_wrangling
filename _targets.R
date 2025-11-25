@@ -8,7 +8,8 @@ library(targets)
 library(tarchetypes)
 library(tidyverse)
 library(stringr)
-library(PHEindicatormethods)# Load other packages as needed.
+library(PHEindicatormethods)
+library(arrow)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(
@@ -360,7 +361,7 @@ list(
   tar_target(
     prov_pat_dist_icb,
     prov_pat_dist_lsoa |>
-      dplyr::group_by(prov_code, icb24cd, icb24nm, der_financial_year) |>
+      dplyr::group_by(prov_code, icb24cdh, icb24nm, der_financial_year) |>
       dplyr::summarise(pats = sum(pats)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
       dplyr::mutate(prop_pat = pats/sum(pats))
@@ -1376,12 +1377,12 @@ list(
       filter(org_class == 'Acute') |>
       mutate(indicator = 'acute_bedshare_percent') |>
       select(8,1:3,5:7) |>
-      dplyr::rename(lad = lad24cd,
+      dplyr::rename(la = lad24cd,
                     date = der_financial_year,
                     numerator = beds,
                     denominator = year_tot,
                     value = perc) |>
-      arrange(lad, date) |>
+      arrange(la, date) |>
       dplyr::mutate(frequency = "fin_yearly",
                     date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
   ),
@@ -1409,6 +1410,48 @@ list(
   tar_target(
     workforce_data,
     get_workforce_data(con)
+  ),
+  
+  # icb
+  tar_target(
+    workforce_acute_icb,
+    assign_workforce_icb(workforce_data,prov_pat_dist_icb) |>
+      group_by(icb24cdh, der_financial_year) |>
+      mutate(indicator = 'workforce_acute_perc',
+             year_tot = sum(pats),
+             perc = pats/year_tot*100) |>
+      ungroup() |>
+      filter(cluster_group == 'Acute') |>
+      select(6,1:2,4:5,7:8) |>
+      dplyr::rename(icb = icb24cdh,
+                    date = der_financial_year,
+                    numerator = pats,
+                    denominator = year_tot,
+                    value = perc) |>
+      arrange(icb, date) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+  ),
+  
+  # lad
+  tar_target(
+    workforce_acute_lad,
+    assign_workforce_lad(workforce_data,prov_pat_dist_lad) |>
+      group_by(lad24cd, der_financial_year) |>
+      mutate(indicator = 'workforce_acute_perc',
+             year_tot = sum(pats),
+             perc = pats/year_tot*100) |>
+      ungroup() |>
+      filter(cluster_group == 'Acute') |>
+      select(6,1:2,4:5,7:8) |>
+      dplyr::rename(la = lad24cd,
+                    date = der_financial_year,
+                    numerator = pats,
+                    denominator = year_tot,
+                    value = perc) |>
+      arrange(la, date) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
   ),
   
   ## Delayed discharge days as % of all bed days -------------------------------
@@ -1527,7 +1570,8 @@ list(
       redirection_indicator_icb_admissions,
       redirection_indicator_icb_beddays,
       delayed_discharge_percent_icb_beddays,
-      bed_split_icb
+      bed_split_icb,
+      workforce_acute_icb
       ) |>
       write_indicator_to_parquet(icb_lookup, "icb")
   ),
@@ -1552,7 +1596,8 @@ list(
       redirection_indicator_la_admissions,
       redirection_indicator_la_beddays,
       delayed_discharge_percent_la_beddays,
-      bed_split_lad
+      bed_split_lad,
+      workforce_acute_lad
       ) |>
       write_indicator_to_parquet(la_lookup, "la") 
   ),

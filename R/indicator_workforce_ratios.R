@@ -32,18 +32,36 @@ get_workforce_data <- function(connection) {
   return(wrangled)
 }
 
-# assign_workforce_icb <- function(data, dist_geog) {
-# 
-#   wrangled <- data |>
-#     filter(!is.na(bed_total)) |>
-#     # join results to activity distributions
-#     left_join(dist_geog |>
-#                 select(1:5,9), by = c("organisation_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
-#     mutate(beds_adj = bed_total*prop_bed) |>
-#     group_by(icb24cd, icb24cdh, icb24nm, der_financial_year, org_class) |>
-#     summarise(beds = round(sum(beds_adj),4)) |>
-#     filter(!is.na(icb24cd)) |>
-#     arrange(icb24cd, org_class, der_financial_year)
-#   
-#   return(wrangled)
-# }
+assign_workforce_icb <- function(data, dist_geog) {
+
+  wrangled <- data |>
+    # only use combined clinical staff numbers
+    filter(staff_group == 'Professionally qualified clinical staff') |>
+    # join results to activity distributions
+    left_join(dist_geog, by = c("org_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
+    mutate(pats_adj = total*prop_pat) |>
+    group_by(icb24cdh, icb24nm, cluster_group, der_financial_year) |>
+    summarise(pats = round(sum(pats_adj),4)) |>
+    ungroup() |>
+    filter(!is.na(icb24cdh)) |>
+    arrange(icb24cdh, cluster_group, der_financial_year)
+
+  return(wrangled)
+}
+
+assign_workforce_lad <- function(data, dist_geog) {
+  
+  wrangled <- data |>
+    # only use combined clinical staff numbers
+    filter(staff_group == 'Professionally qualified clinical staff') |>
+    # join results to activity distributions
+    left_join(dist_geog, by = c("org_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
+    mutate(pats_adj = total*prop_pat) |>
+    group_by(lad24cd, lad24nm, cluster_group, der_financial_year) |>
+    summarise(pats = round(sum(pats_adj),4)) |>
+    ungroup() |>
+    filter(!is.na(lad24cd)) |>
+    arrange(lad24cd, cluster_group, der_financial_year)
+  
+  return(wrangled)
+}
