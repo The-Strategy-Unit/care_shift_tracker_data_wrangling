@@ -1505,7 +1505,11 @@ list(
                   value,
                   lowercl,
                   uppercl) |>
-    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) |>
+    dplyr::mutate(
+      date = dplyr::case_when(
+        indicator == "acute_bedshare_percent" ~ date,
+        .default = as.character(lubridate::ymd(date, truncated = 1))
+        )) |>
     arrow::write_parquet("indicators_icb.parquet")
   ),
   tar_target(
