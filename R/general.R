@@ -355,6 +355,13 @@ tidy_data_for_indicator_wrangling <- function(data, geography){
 }
 
 # Other ------------------------------------------------------------------------
+#' Scrape excel file from URL.
+#'
+#' @param url The URL of the excel file to download.
+#' @param sheet The sheet number.
+#' @param skip The number of lines to skip.
+#'
+#' @returns A dataframe.
 scrape_xls <- function(url, sheet = 1, skip = 0) {
 tmp <- tempfile(fileext = "")
 
@@ -407,6 +414,13 @@ recode_lsoa11_as_lsoa21 <- function(data, lookup, value_column) {
   return(wrangled)
 }
 
+#' Writes indicator data to parquet files.
+#'
+#' @param data The indicator data for ICB/LA/PCN.
+#' @param lookup A lookup of ICB/LA/PCN codes and names.
+#' @param geography The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns Parquet files saved in the data folder of the app repo.
 write_indicator_to_parquet <- function(data, lookup, geography) {
   wrangled <- data |>
     dplyr::left_join(lookup |>
@@ -428,8 +442,14 @@ write_indicator_to_parquet <- function(data, lookup, geography) {
     arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/indicators_{geography}.parquet"))
 }
 
-get_ref_by_geography <- function(data, geo) {
-  ref <- data |>
+#' Gets reference data.
+#'
+#' @param lookup The ICB/LA/PCN lookup.
+#' @param geo The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A reference file of ICB/LA/PCN codes and names.
+get_ref_by_geography <- function(lookup, geo) {
+  ref <- lookup |>
     dplyr::select(code = !!rlang::sym(geo), 
                   name = glue::glue("{geo}_name")) |>
     unique() |>
