@@ -406,3 +406,25 @@ recode_lsoa11_as_lsoa21 <- function(data, lookup, value_column) {
   
   return(wrangled)
 }
+
+write_indicator_to_parquet <- function(data, lookup, geography) {
+  data |>
+    dplyr::left_join(lookup |>
+                       dplyr::select(-dplyr::any_of("geography")),
+                     geography) |>
+    dplyr::select(indicator,
+                  !!rlang::sym(geography),
+                  !!rlang::sym(glue::glue("{geography}_name")),
+                  date,
+                  numerator,
+                  denominator,
+                  value,
+                  lowercl,
+                  uppercl) |>
+    dplyr::mutate(
+      date = dplyr::case_when(
+        indicator == "acute_bedshare_percent" ~ date,
+        .default = as.character(lubridate::ymd(date, truncated = 1))
+      )) |>
+    arrow::write_parquet(glue::glue("indicators_{geography}.parquet"))
+}

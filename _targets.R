@@ -1493,24 +1493,7 @@ list(
       delayed_discharge_percent_icb_beddays,
       bed_split_icb
       ) |>
-    dplyr::left_join(icb_lookup |>
-                       dplyr::select(-dplyr::any_of("geometry")),
-                     "icb") |>
-    dplyr::select(indicator,
-                  icb,
-                  icb_name,
-                  date,
-                  numerator,
-                  denominator,
-                  value,
-                  lowercl,
-                  uppercl) |>
-    dplyr::mutate(
-      date = dplyr::case_when(
-        indicator == "acute_bedshare_percent" ~ date,
-        .default = as.character(lubridate::ymd(date, truncated = 1))
-        )) |>
-    arrow::write_parquet("indicators_icb.parquet")
+      write_indicator_to_parquet(icb_lookup, "icb")
   ),
   tar_target(
     indicators_la,
@@ -1535,19 +1518,7 @@ list(
       delayed_discharge_percent_la_beddays,
       bed_split_lad
       ) |>
-    dplyr::left_join(la_lookup |>
-                       dplyr::select(-dplyr::any_of("geometry")),
-                     "la") |>
-    dplyr::select(indicator,
-                  la,
-                  la_name,
-                  date,
-                  numerator,
-                  denominator,
-                  value,
-                  lowercl,
-                  uppercl) |>
-    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
+      write_indicator_to_parquet(la_lookup, "la") 
   ),
   tar_target(
     indicators_pcn,
@@ -1572,16 +1543,6 @@ list(
       delayed_discharge_percent_pcn_beddays,
       bed_split_pcn
       ) |>
-    dplyr::left_join(pcn_lookup, "pcn") |>
-    dplyr::select(indicator,
-                  pcn,
-                  pcn_name,
-                  date,
-                  numerator,
-                  denominator,
-                  value,
-                  lowercl,
-                  uppercl) |>
-    dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
+      write_indicator_to_parquet(pcn_lookup, "pcn") 
   )
 )
