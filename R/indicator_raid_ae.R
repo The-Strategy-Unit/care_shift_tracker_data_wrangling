@@ -42,8 +42,15 @@ get_raid_ae_sub_geography <- function(sub_geography,
         Last_Episode_In_Spell_Indicator = '1' AND
         Admission_Method = '21' AND
         Discharge_Method !='4' AND
-        Der_Primary_Diagnosis_Code LIKE 'F%' AND
-          (Der_Procedure_Count = 0 OR Der_Procedure_All IS NULL) 
+        (LEFT(Der_Primary_Diagnosis_Code, 3) IN ('F00', 'F01', 'F02', 'F03') OR -- Dementia
+          (LEFT(Der_Primary_Diagnosis_Code, 3) = 'F05' OR
+            LEFT(Der_Primary_Diagnosis_Code, 4) IN ('F430', 'F448') -- Delirium
+            ) OR
+          LEFT(Der_Primary_Diagnosis_Code, 3) IN ('F32', 'F33') OR -- Depression
+          LEFT(Der_Primary_Diagnosis_Code, 3) IN ('F40', 'F41') OR -- Anxiety  
+          LEFT(Der_Primary_Diagnosis_Code, 2) = 'F1' -- Substance misuse
+        ) AND 
+        (Der_Procedure_Count = 0 OR Der_Procedure_All IS NULL) 
     	 ) AS Sub
     
     GROUP BY 
