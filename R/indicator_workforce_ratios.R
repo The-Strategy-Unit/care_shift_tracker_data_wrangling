@@ -65,3 +65,20 @@ assign_workforce_lad <- function(data, dist_geog) {
   
   return(wrangled)
 }
+
+assign_workforce_pcn <- function(data, dist_geog) {
+  
+  wrangled <- data |>
+    # only use combined clinical staff numbers
+    filter(staff_group == 'Professionally qualified clinical staff') |>
+    # join results to activity distributions
+    left_join(dist_geog, by = c("org_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
+    mutate(pats_adj = total*prop_pat) |>
+    group_by(pcn_code, pcn_name, cluster_group, der_financial_year) |>
+    summarise(pats = round(sum(pats_adj),4)) |>
+    ungroup() |>
+    filter(!is.na(pcn_code)) |>
+    arrange(pcn_code, cluster_group, der_financial_year)
+  
+  return(wrangled)
+}

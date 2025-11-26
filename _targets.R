@@ -9,7 +9,8 @@ library(tarchetypes)
 library(tidyverse)
 library(stringr)
 library(PHEindicatormethods)
-library(arrow)# Load other packages as needed.
+library(arrow)
+library(glue)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(
@@ -374,7 +375,25 @@ list(
       dplyr::group_by(prov_code, der_financial_year) |>
       dplyr::mutate(prop_pat = pats/sum(pats))
   ),
-  #### still need the data for PCN to add the additional target
+  
+  tar_target(
+    prov_pat_dist_prac,
+    get_prov_pats_gpprac("data/prov_gpprac_pats.csv") |>
+      janitor::clean_names()
+  ),
+  tar_target(
+    prov_pat_dist_pcn,
+    prov_pat_dist_prac |>
+      dplyr::filter(prov_code != "", gp_prac != "") |>
+      dplyr::left_join(gp_to_pcn |>
+                         dplyr::select(1:2,5:6), by = c("gp_prac" = "partner_organisation_code"), relationship = "many-to-many") |>
+      dplyr::filter(!is.na(pcn_code)) |>
+      dplyr::group_by(prov_code, der_financial_year, pcn_code, pcn_name) |>
+      dplyr::summarise(patients = sum(pats)) |>
+      ungroup() |>
+      dplyr::group_by(prov_code, der_financial_year) |>
+      dplyr::mutate(prop_pat = patients/sum(patients))
+  ),
   
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
@@ -1454,6 +1473,27 @@ list(
                     date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
   ),
   
+  # pcn
+  tar_target(
+    workforce_acute_pcn,
+    assign_workforce_pcn(workforce_data,prov_pat_dist_pcn) |>
+      group_by(pcn_code, der_financial_year) |>
+      mutate(indicator = 'workforce_acute_perc',
+             year_tot = sum(pats),
+             perc = pats/year_tot*100) |>
+      ungroup() |>
+      filter(cluster_group == 'Acute') |>
+      select(6,4,1,5,7:8) |>
+      dplyr::rename(pcn = pcn_code,
+                    date = der_financial_year,
+                    numerator = pats,
+                    denominator = year_tot,
+                    value = perc) |>
+      arrange(pcn, date) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+  ),
+  
   ## Delayed discharge days as % of all bed days -------------------------------
   tar_target(
     del_dis_days,
@@ -1622,7 +1662,8 @@ list(
       redirection_indicator_pcn_admissions,
       redirection_indicator_pcn_beddays,
       delayed_discharge_percent_pcn_beddays,
-      bed_split_pcn
+      bed_split_pcn,
+      workforce_acute_pcn
       ) |>
       write_indicator_to_parquet(pcn_lookup, "pcn") 
   ),
@@ -1642,4 +1683,4 @@ list(
                                                  " Integrated Care Board" = "",
                                                  " PCN" = "")))|>
       arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref.parquet")))
-)
+  )

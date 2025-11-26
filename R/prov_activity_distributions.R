@@ -60,3 +60,10 @@ get_prov_pats_lsoa <- function(url) {
   
   return(data)
 }
+
+get_prov_pats_gpprac <- function(url) {
+  
+  data <- readr::read_csv(url, col_names = c("prov_code", "der_financial_year", "gp_prac", "pats"))
+  
+  return(data)
+}
