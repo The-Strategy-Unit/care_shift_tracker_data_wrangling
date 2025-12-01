@@ -1587,84 +1587,83 @@ list(
       dplyr::mutate(frequency = "monthly")
   ),
   
-
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
     dplyr::bind_rows(
-      elective_non_elective_ratio_icb_admissions,
+      #elective_non_elective_ratio_icb_admissions,
       elective_non_elective_ratio_icb_beddays,
-      frailty_indicators_icb_admissions,
+      #frailty_indicators_icb_admissions,
       frailty_indicators_icb_beddays,
-      readmission_indicator_icb_admissions,
+      #readmission_indicator_icb_admissions,
       readmission_indicator_icb_beddays,
-      ambulatory_acute_indicator_icb_admissions,
+      #ambulatory_acute_indicator_icb_admissions,
       ambulatory_acute_indicator_icb_beddays,
-      ambulatory_chronic_indicator_icb_admissions,
+      #ambulatory_chronic_indicator_icb_admissions,
       ambulatory_chronic_indicator_icb_beddays,
       frequent_attenders_indicator_icb,
-      raid_ae_indicator_icb_admissions,
+      #raid_ae_indicator_icb_admissions,
       raid_ae_indicator_icb_beddays,
-      falls_indicator_icb_admissions,
+      #falls_indicator_icb_admissions,
       falls_indicator_icb_beddays,
-      redirection_indicator_icb_admissions,
+      #redirection_indicator_icb_admissions,
       redirection_indicator_icb_beddays,
       delayed_discharge_percent_icb_beddays,
       bed_split_icb,
       workforce_acute_icb
-      ) |>
+    ) |>
       write_indicator_to_parquet(icb_lookup, "icb")
   ),
   tar_target(
     indicators_la,
     dplyr::bind_rows(
-      elective_non_elective_ratio_la_admissions,
+      #elective_non_elective_ratio_la_admissions,
       elective_non_elective_ratio_la_beddays,
-      frailty_indicators_la_admissions,
+      #frailty_indicators_la_admissions,
       frailty_indicators_la_beddays,
-      readmission_indicator_la_admissions,
+      #readmission_indicator_la_admissions,
       readmission_indicator_la_beddays,
-      ambulatory_acute_indicator_la_admissions,
+      #ambulatory_acute_indicator_la_admissions,
       ambulatory_acute_indicator_la_beddays,
-      ambulatory_chronic_indicator_la_admissions,
+      #ambulatory_chronic_indicator_la_admissions,
       ambulatory_chronic_indicator_la_beddays,
       frequent_attenders_indicator_la,
-      raid_ae_indicator_la_admissions,
+      #raid_ae_indicator_la_admissions,
       raid_ae_indicator_la_beddays,
-      falls_indicator_la_admissions,
+      #falls_indicator_la_admissions,
       falls_indicator_la_beddays,
-      redirection_indicator_la_admissions,
+      #redirection_indicator_la_admissions,
       redirection_indicator_la_beddays,
       delayed_discharge_percent_la_beddays,
       bed_split_lad,
       workforce_acute_lad
-      ) |>
+    ) |>
       write_indicator_to_parquet(la_lookup, "la") 
   ),
   tar_target(
     indicators_pcn,
     dplyr::bind_rows(
-      elective_non_elective_ratio_pcn_admissions,
+      #elective_non_elective_ratio_pcn_admissions,
       elective_non_elective_ratio_pcn_beddays,
-      frailty_indicators_pcn_admissions,
+      #frailty_indicators_pcn_admissions,
       frailty_indicators_pcn_beddays,
-      readmission_indicator_pcn_admissions,
+      #readmission_indicator_pcn_admissions,
       readmission_indicator_pcn_beddays,
-      ambulatory_acute_indicator_pcn_admissions,
+      #ambulatory_acute_indicator_pcn_admissions,
       ambulatory_acute_indicator_pcn_beddays,
-      ambulatory_chronic_indicator_pcn_admissions,
+      #ambulatory_chronic_indicator_pcn_admissions,
       ambulatory_chronic_indicator_pcn_beddays,
       frequent_attenders_indicator_pcn,
-      raid_ae_indicator_pcn_admissions,
+      #raid_ae_indicator_pcn_admissions,
       raid_ae_indicator_pcn_beddays,
-      falls_indicator_pcn_admissions,
+      #falls_indicator_pcn_admissions,
       falls_indicator_pcn_beddays,
-      redirection_indicator_pcn_admissions,
+      #redirection_indicator_pcn_admissions,
       redirection_indicator_pcn_beddays,
       delayed_discharge_percent_pcn_beddays,
       bed_split_pcn,
       workforce_acute_pcn
-      ) |>
+    ) |>
       write_indicator_to_parquet(pcn_lookup, "pcn") 
   ),
   # Reference ------------------------------------------------------------------
@@ -1683,4 +1682,4 @@ list(
                                                  " Integrated Care Board" = "",
                                                  " PCN" = "")))|>
       arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref.parquet")))
-  )
+)
