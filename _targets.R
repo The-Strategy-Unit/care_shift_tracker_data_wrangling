@@ -1682,7 +1682,7 @@ list(
                       stringr::str_replace_all(c("NHS " = "",
                                                  " Integrated Care Board" = "",
                                                  " PCN" = ""))) |>
-      arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref.parquet"))),
+      arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref_geography.parquet"))),
   
   ## Indicators ----------------------------------------------------------------
   tar_target(
