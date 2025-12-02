@@ -1667,6 +1667,7 @@ list(
       write_indicator_to_parquet(pcn_lookup, "pcn") 
   ),
   # Reference ------------------------------------------------------------------
+  ## Geography -----------------------------------------------------------------
   tar_target(ref_icb,
              get_ref_by_geography(icb_lookup, "icb")),
   tar_target(ref_la,
@@ -1682,4 +1683,7 @@ list(
                                                  " Integrated Care Board" = "",
                                                  " PCN" = "")))|>
       arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref.parquet")))
+  
+  ## Indicators ----------------------------------------------------------------
+   
 )
