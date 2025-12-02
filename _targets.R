@@ -1612,6 +1612,7 @@ list(
       bed_split_icb,
       workforce_acute_icb
     ) |>
+      dplyr::arrange(frequency, indicator, date) |>
       write_indicator_to_parquet(icb_lookup, "icb")
   ),
   tar_target(
@@ -1638,6 +1639,7 @@ list(
       bed_split_lad,
       workforce_acute_lad
     ) |>
+      dplyr::arrange(frequency, indicator, date) |>
       write_indicator_to_parquet(la_lookup, "la") 
   ),
   tar_target(
@@ -1664,9 +1666,11 @@ list(
       bed_split_pcn,
       workforce_acute_pcn
     ) |>
+      dplyr::arrange(frequency, indicator, date) |>
       write_indicator_to_parquet(pcn_lookup, "pcn") 
   ),
   # Reference ------------------------------------------------------------------
+  ## Geography -----------------------------------------------------------------
   tar_target(ref_icb,
              get_ref_by_geography(icb_lookup, "icb")),
   tar_target(ref_la,
@@ -1674,12 +1678,57 @@ list(
   tar_target(ref_pcn,
              get_ref_by_geography(pcn_lookup, "pcn")),
   tar_target(
-    ref,
+    ref_geography,
     rbind(ref_icb, ref_la, ref_pcn) |>
       dplyr::arrange(geography, name) |>
       dplyr::mutate(shortname = name |>
                       stringr::str_replace_all(c("NHS " = "",
                                                  " Integrated Care Board" = "",
-                                                 " PCN" = "")))|>
-      arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref.parquet")))
+                                                 " PCN" = ""))) |>
+      arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref_geography.parquet"))),
+  
+  ## Indicators ----------------------------------------------------------------
+  tar_target(
+    ref_indicator,
+    indicators_icb |>
+      dplyr::select(indicator) |>
+      unique() |>
+      dplyr::mutate(
+        theme = dplyr::case_when(
+          indicator %in% c("frequent_attenders_adult_ambulance_per_pop",
+                           "frail_elderly_intermediate_per_pop_beddays",
+                           "frail_elderly_high_per_pop_beddays",
+                           "falls_related_admissions_per_pop_beddays"
+          ) ~ "Frailty and vulnerability",
+          indicator %in% c("ambulatory_care_conditions_acute_per_pop_beddays",
+                           "ambulatory_care_conditions_chronic_per_pop_beddays",
+                           "readmission_within_28_days_per_pop_beddays",
+                           "redirection_age_sex_standardised_beddays"
+          ) ~ "Avoidable or preventable hospital use",
+          indicator %in% c("raid_ae_per_pop_beddays",
+                           "elec_non_elec_ratio_beddays",
+                           "delayed_discharge_percent_beddays"
+          ) ~ "System flows and pathways",
+          indicator %in% c("acute_bedshare_percent",
+                           "workforce_acute_perc"
+          ) ~ "Balancing resources",
+          .default = "Other"
+          ),
+        indicator_title = indicator |>
+          stringr::str_replace_all(
+            c("perc" = "percent",
+              "percentent" = "percent",
+              "per_pop" = "per 100,000 population",
+              "raid_ae" = "mental health admissions via ED",
+              "elec_" = "elective_",
+              "elecelective_" = "elective_",
+              "beddays" = "(beddays)",
+              "_" = " ")
+            ) |>
+          stringr::str_to_sentence() |>
+          stringr::str_replace("via ed", "via ED")
+        ) |>
+      dplyr::arrange(theme, indicator) |>
+      arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref_indicator.parquet"))
+  ) 
 )
