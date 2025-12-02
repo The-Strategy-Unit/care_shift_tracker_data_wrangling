@@ -1616,7 +1616,7 @@ list(
       workforce_acute_icb
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
-      write_indicator_to_parquet(icb_lookup, "icb")
+      pin_indicators(icb_lookup, "icb", board)
   ),
   tar_target(
     indicators_la,
@@ -1643,7 +1643,7 @@ list(
       workforce_acute_lad
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
-      write_indicator_to_parquet(la_lookup, "la") 
+      pin_indicators(la_lookup, "la", board) 
   ),
   tar_target(
     indicators_pcn,
@@ -1670,7 +1670,7 @@ list(
       workforce_acute_pcn
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
-      write_indicator_to_parquet(pcn_lookup, "pcn") 
+      pin_indicators(pcn_lookup, "pcn", board) 
   ),
   # Reference ------------------------------------------------------------------
   ## Geography -----------------------------------------------------------------

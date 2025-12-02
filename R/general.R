@@ -77,7 +77,7 @@ scrape_xls <- function(url, sheet = 1, skip = 0) {
 #' @param geography The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #'
 #' @returns Parquet files saved in the data folder of the app repo.
-write_indicator_to_parquet <- function(data, lookup, geography) {
+pin_indicators <- function(data, lookup, geography, board) {
   wrangled <- data |>
     dplyr::left_join(lookup |>
                        dplyr::select(-dplyr::any_of("geography")),
@@ -94,8 +94,17 @@ write_indicator_to_parquet <- function(data, lookup, geography) {
                   frequency) |>
     dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
   
-  wrangled |>
-    arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/indicators_{geography}.parquet"))
+  pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-indicators_{geography}")
+  
+  pins::pin_write(
+    board,
+    x = wrangled,
+    name = pin_name,
+    type = "parquet",
+    versioned = TRUE
+  )
+  
+  return(wrangled)
 }
 
 
