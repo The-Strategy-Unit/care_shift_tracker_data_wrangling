@@ -1612,6 +1612,7 @@ list(
       bed_split_icb,
       workforce_acute_icb
     ) |>
+      dplyr::arrange(frequency, indicator, date) |>
       write_indicator_to_parquet(icb_lookup, "icb")
   ),
   tar_target(
@@ -1638,6 +1639,7 @@ list(
       bed_split_lad,
       workforce_acute_lad
     ) |>
+      dplyr::arrange(frequency, indicator, date) |>
       write_indicator_to_parquet(la_lookup, "la") 
   ),
   tar_target(
@@ -1664,6 +1666,7 @@ list(
       bed_split_pcn,
       workforce_acute_pcn
     ) |>
+      dplyr::arrange(frequency, indicator, date) |>
       write_indicator_to_parquet(pcn_lookup, "pcn") 
   ),
   # Reference ------------------------------------------------------------------
@@ -1725,6 +1728,7 @@ list(
           stringr::str_to_sentence() |>
           stringr::str_replace("via ed", "via ED")
         ) |>
+      dplyr::arrange(theme, indicator) |>
       arrow::write_parquet(glue::glue("../care_shift_tracker_app/data/ref_indicator.parquet"))
   ) 
 )
