@@ -10,7 +10,9 @@ library(tidyverse)
 library(stringr)
 library(PHEindicatormethods)
 library(arrow)
-library(glue)# Load other packages as needed.
+library(glue)
+library(pins)
+library(rsconnect)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(
