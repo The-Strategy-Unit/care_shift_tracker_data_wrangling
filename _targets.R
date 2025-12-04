@@ -12,7 +12,8 @@ library(PHEindicatormethods)
 library(arrow)
 library(glue)
 library(pins)
-library(rsconnect)# Load other packages as needed.
+library(rsconnect)
+library(nanoparquet)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(

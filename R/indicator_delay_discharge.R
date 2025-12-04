@@ -13,8 +13,8 @@ get_delay_disch_data <- function(connection) {
   
     declare @startdate Datetime,
 		@enddate Datetime;
-    set @startdate = '2024-04-01';
-    set @enddate = '2025-09-01';
+    set @startdate = '2008-04-01';
+    set @enddate = '2025-10-31';
 
     with cte as
     (
@@ -46,7 +46,8 @@ get_delay_disch_data <- function(connection) {
   "
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
-    janitor::clean_names()
+    janitor::clean_names() |>
+    filter(ddd_tot <= spell_los_tot)
   
   return(wrangled)
 }
