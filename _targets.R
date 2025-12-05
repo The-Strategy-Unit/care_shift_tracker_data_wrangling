@@ -1593,7 +1593,7 @@ list(
       dplyr::mutate(frequency = "monthly")
   ),
  
-  ## Cost data, community to acute ratio providers re-distributed 
+  ## Cost data, community to acute ratio providers re-distributed --------------
   tar_target(
     ncc_cost_data,
     get_cost_data(con)

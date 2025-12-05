@@ -131,7 +131,8 @@ pin_ref_indicator <- function(data, board) {
                          "delayed_discharge_percent_beddays"
         ) ~ "System flows and pathways",
         indicator %in% c("acute_bedshare_percent",
-                         "workforce_acute_perc"
+                         "workforce_acute_perc",
+                         "costs_community_ratio"
         ) ~ "Balancing resources",
         .default = "Other"
       ),
