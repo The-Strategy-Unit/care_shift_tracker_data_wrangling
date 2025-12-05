@@ -356,7 +356,7 @@ list(
                     prop_bed = beddays/sum(beddays))
   ),
   
-  ## Distribution of provider patients (SUS,CSDS,MHSDS) for workforce data -----
+  ## Distribution of provider patients (SUS,CSDS,MHSDS) for workforce and costs data -----
   tar_target(
     prov_pat_dist_lsoa,
     get_prov_pats_lsoa("data/prov_lsoa_pats.csv") |>
@@ -1592,6 +1592,58 @@ list(
       arrange(pcn, date) |>
       dplyr::mutate(frequency = "monthly")
   ),
+ 
+  ## Cost data, community to acute ratio providers re-distributed 
+  tar_target(
+    ncc_cost_data,
+    get_cost_data(con)
+  ),
+  
+  # icb
+  tar_target(
+    costs_community_ratio_icb,
+    assign_costs_icb(ncc_cost_data,prov_pat_dist_lsoa) |>
+    mutate(indicator = 'costs_community_ratio') |>
+      select(7,1,3,5,4,6) |>
+      dplyr::rename(icb = icb24cdh,
+                    date = der_financial_year,
+                    numerator = comm_cost,
+                    denominator = acute_cost,
+                    value = ratio) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")) |>
+    arrange(icb, date)
+  ),
+  # lad
+  tar_target(
+    costs_community_ratio_la,
+    assign_costs_lad(ncc_cost_data,prov_pat_dist_lsoa) |>
+      mutate(indicator = 'costs_community_ratio') |>
+      select(7,1,3,5,4,6) |>
+      dplyr::rename(la = lad24cd,
+                    date = der_financial_year,
+                    numerator = comm_cost,
+                    denominator = acute_cost,
+                    value = ratio) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")) |>
+      arrange(la, date)
+  ),
+  # pcn
+  tar_target(
+    costs_community_ratio_pcn,
+    assign_costs_pcn(ncc_cost_data,gp_to_pcn,prov_pat_dist_prac) |>
+      mutate(indicator = 'costs_community_ratio') |>
+      select(7,1,3,5,4,6) |>
+      dplyr::rename(pcn = pcn_code,
+                    date = der_financial_year,
+                    numerator = comm_cost,
+                    denominator = acute_cost,
+                    value = ratio) |>
+      dplyr::mutate(frequency = "fin_yearly",
+                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")) |>
+      arrange(pcn, date)
+  ),
   
   # All indicators -------------------------------------------------------------
   tar_target(
@@ -1616,7 +1668,8 @@ list(
       redirection_indicator_icb_beddays,
       delayed_discharge_percent_icb_beddays,
       bed_split_icb,
-      workforce_acute_icb
+      workforce_acute_icb,
+      costs_community_ratio_icb
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(icb_lookup, "icb", board)
@@ -1643,7 +1696,8 @@ list(
       redirection_indicator_la_beddays,
       delayed_discharge_percent_la_beddays,
       bed_split_lad,
-      workforce_acute_lad
+      workforce_acute_lad,
+      costs_community_ratio_la
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(la_lookup, "la", board) 
@@ -1670,7 +1724,8 @@ list(
       redirection_indicator_pcn_beddays,
       delayed_discharge_percent_pcn_beddays,
       bed_split_pcn,
-      workforce_acute_pcn
+      workforce_acute_pcn,
+      costs_community_ratio_pcn
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(pcn_lookup, "pcn", board) 
