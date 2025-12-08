@@ -1,8 +1,6 @@
 # Functions for the older people with frailty admissions indicators:
-# `frail_elderly_high_per_pop_admissions`, 
-# `frail_elderly_high_per_pop_beddays`, 
-# `frail_elderly_intermediate_per_pop_admissions`and 
-# `frail_elderly_intermediate_per_pop_beddays`.
+# `frail_elderly_per_pop_admissions` and
+# `frail_elderly_per_pop_beddays`.
 
 #' Used in `get_frailty_sub_geography()` to get the number of admssions/beddays
 #' and diagnosis code at the patient level.
@@ -166,14 +164,18 @@ get_frailty_with_risk_scores <- function(data,
       )
     ) |>
     dplyr::filter(total_score >= 5) |>
-    dplyr::mutate(
-      indicator = ifelse(
-        total_score >= 5 &
-          total_score <= 15,
-        "frail_elderly_intermediate",
-        "frail_elderly_high"
-      )
-    ) 
+    # Had originally separated this indicator into intermediate and high, but 
+    # because of the small numbers in the high group, combined these into one
+    # indicator instead:
+    # dplyr::mutate(
+    #   indicator = ifelse(
+    #     total_score >= 5 &
+    #       total_score <= 15,
+    #     "frail_elderly_intermediate",
+    #     "frail_elderly_high"
+    #   )
+    # )
+    dplyr::mutate(indicator = "frail_elderly") 
   
   return(wrangled)
 }
