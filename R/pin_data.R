@@ -51,8 +51,7 @@ pin_ref_indicator <- function(data, board) {
     dplyr::mutate(
       theme = dplyr::case_when(
         indicator %in% c("frequent_attenders_adult_ambulance_per_pop",
-                         "frail_elderly_intermediate_per_pop_beddays",
-                         "frail_elderly_high_per_pop_beddays",
+                         "frail_elderly_per_pop_beddays",
                          "falls_related_admissions_per_pop_beddays"
         ) ~ "Frailty and vulnerability",
         indicator %in% c("ambulatory_care_conditions_acute_per_pop_beddays",
