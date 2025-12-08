@@ -90,38 +90,6 @@ join_to_population_data <- function(data,
   return(wrangled)
 }
 
-#' Join a dataframe at geography level to its population data.
-#'
-#' @param data A dataframe at geography level.
-#' @param population The population data by month and geography.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#' @param latest_population_year The latest year that population data is
-#' available for.
-#'
-#' @returns A dataframe containing `data` joined to the `population` data.
-join_to_population_data_by_age_sex <- function(data,
-                                               population,
-                                               geography,
-                                               latest_population_year) {
-  wrangled <- if (geography == "pcn") {
-    data  |>
-      dplyr::left_join(population, by = c(geography, "date", "age_range", "sex"))
-  } else {
-    data |>
-      dplyr::mutate(
-        year = stringr::str_sub(date, start = 1, end = 4),
-        population_year = ifelse(
-          year > latest_population_year,
-          as.character(latest_population_year),
-          as.character(year)
-        )
-      ) |>
-      dplyr::left_join(population, by = c(geography, "population_year", "age_range", "sex"))
-  }
-  
-  return(wrangled)
-}
-
 ## Indicator wrangling ---------------------------------------------------------
 #' Aggregate sub-geography level to geography level.
 #'
@@ -140,31 +108,6 @@ aggregate_indicator_to_geography_level <- function(data,
       admissions = sum(admissions, na.rm = TRUE),
       beddays = sum(beddays, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
-    ) |>
-    dplyr::mutate(indicator = indicator_name) |>
-    tidy_data_for_indicator_wrangling(geography)
-  
-  return(wrangled)
-}
-
-#' Aggregate sub-geography level to geography level.
-#'
-#' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
-#' an indicator.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
-#'
-#' @returns A dataframe with the data aggregated to geography level and also by
-#' age range and sex.
-aggregate_indicator_to_geography_level_by_age_sex <- function(data,
-                                                   geography, 
-                                                   indicator_name) {
-  geography_column <- get_geography_column(geography)
-  
-  wrangled <- data |>
-    dplyr::summarise(
-      admissions = sum(admissions, na.rm = TRUE),
-      beddays = sum(beddays, na.rm = TRUE),
-      .by = c(date, age_range, sex, !!rlang::sym(geography_column))
     ) |>
     dplyr::mutate(indicator = indicator_name) |>
     tidy_data_for_indicator_wrangling(geography)
@@ -254,30 +197,6 @@ get_indicator_at_sub_geography_level <- function(data, sub_geography) {
     dplyr::summarise(admissions = dplyr::n(),
                      beddays = sum(spelldur, na.rm = TRUE),
                      .by = c(date, !!rlang::sym(sub_geography_column)))
-  
-  return(wrangled)
-}
-
-#' Turn episode level indicator data into sub-geography level.
-#'
-#' @param data Data for an indicator at episode level.
-#' @param sub_geography Either `"lsoa"` or `"gp"`.
-#'
-#' @returns A dataframe of the number of admissions/beddays for the indicator
-#' at LSOA/GP level by month and also by age range and sex.
-get_indicator_at_sub_geography_level_by_age_sex <- function(data, 
-                                                            sub_geography) {
-  sub_geography_column <- get_subgeography_column(sub_geography) |>
-    snakecase::to_snake_case()
-  
-  wrangled <- data |>
-    unique() |>
-    dplyr::summarise(admissions = dplyr::n(),
-                     beddays = sum(spelldur, na.rm = TRUE),
-                     .by = c(date, 
-                             age_range, 
-                             sex, 
-                             !!rlang::sym(sub_geography_column)))
   
   return(wrangled)
 }
