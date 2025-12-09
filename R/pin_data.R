@@ -78,6 +78,7 @@ pin_ref_indicator <- function(data, board) {
             "elec_" = "elective_",
             "elecelective_" = "elective_",
             "beddays" = "(beddays)",
+            "elderly" = "older people",
             "_" = " ")
         ) |>
         stringr::str_to_sentence() |>
