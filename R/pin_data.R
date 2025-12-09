@@ -46,7 +46,7 @@ pin_indicators <- function(data, lookup, geography, board) {
 #' @returns The name of the pin.
 pin_ref_indicator <- function(data, board) {
   wrangled <- data |>
-    dplyr::select(indicator) |>
+    dplyr::select(indicator, frequency) |>
     unique() |>
     dplyr::mutate(
       theme = dplyr::case_when(
@@ -84,7 +84,7 @@ pin_ref_indicator <- function(data, board) {
         stringr::str_to_sentence() |>
         stringr::str_replace("via ed", "via ED")
     ) |>
-    dplyr::arrange(theme, indicator) 
+    dplyr::arrange(frequency, theme, indicator) 
   
   pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-ref-indicator")
   
