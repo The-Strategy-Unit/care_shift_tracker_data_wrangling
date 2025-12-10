@@ -88,7 +88,7 @@ GROUP BY
   " |>
     stringr::str_replace_all(
       c("age_cutoff" = age,
-        "start_date" = start,
+        "start_date" = "2019-04-01",
         "lag_date" = Sys.Date() |>
           lubridate::floor_date("month") |> 
           as.character(),
