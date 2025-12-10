@@ -11,7 +11,7 @@
 #'
 #' @returns A dataframe with the number of A&E frequent attenders by LSOA/GP 
 #' code and month.
-get_frequent_attenders_adult_ambulance_sub_geography <- function(sub_geography, 
+get_frequent_attenders_adult_ambulance_sub_geography_current <- function(sub_geography, 
                                                                  age, 
                                                                  start, 
                                                                  lag,
