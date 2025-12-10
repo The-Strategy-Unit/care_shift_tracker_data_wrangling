@@ -939,22 +939,44 @@ list(
   ## A&E frequent attenders (adult, ambulance conveyed) ------------------------
   # LSOA and GP
   tar_target(
-    frequent_attenders_adult_ambulance_lsoa,
-    get_frequent_attenders_adult_ambulance_sub_geography("lsoa",
-                                                         age_cutoff,
-                                                         start_date,
-                                                         lag_date,
-                                                         con) |>
-      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "frequent_attenders") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+    frequent_attenders_adult_ambulance_lsoa_current,
+    get_frequent_attenders_adult_ambulance_sub_geography_current("lsoa",
+                                                                 age_cutoff,
+                                                                 lag_date,
+                                                                 con)
     ),
   tar_target(
+    frequent_attenders_adult_ambulance_gp_current,
+    get_frequent_attenders_adult_ambulance_sub_geography_current("gp",
+                                                                 age_cutoff,
+                                                                 lag_date,
+                                                                 con)
+  ),
+  tar_target(
+    frequent_attenders_adult_ambulance_lsoa_archived,
+    get_frequent_attenders_adult_ambulance_sub_geography_archived("lsoa",
+                                                                 age_cutoff,
+                                                                 start_date,
+                                                                 con)
+  ),
+  tar_target(
+    frequent_attenders_adult_ambulance_gp_archived,
+    get_frequent_attenders_adult_ambulance_sub_geography_archived("gp",
+                                                                 age_cutoff,
+                                                                 start_date,
+                                                                 con)
+  ),
+  tar_target(
+    frequent_attenders_adult_ambulance_lsoa,
+    rbind(frequent_attenders_adult_ambulance_lsoa_current,
+          frequent_attenders_adult_ambulance_lsoa_archived) |>
+      recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "frequent_attenders") |>
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+  ),
+  tar_target(
     frequent_attenders_adult_ambulance_gp,
-    get_frequent_attenders_adult_ambulance_sub_geography("gp",
-                                                         age_cutoff,
-                                                         start_date,
-                                                         lag_date,
-                                                         con) |>
+    rbind(frequent_attenders_adult_ambulance_gp_current,
+          frequent_attenders_adult_ambulance_gp_archived) |>
       dplyr::rename(gp_practice_sus = gp_practice_code) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
