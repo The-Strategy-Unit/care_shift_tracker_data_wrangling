@@ -942,7 +942,6 @@ list(
     frequent_attenders_adult_ambulance_lsoa_current,
     get_frequent_attenders_adult_ambulance_sub_geography_current("lsoa",
                                                                  age_cutoff,
-                                                                 start_date,
                                                                  lag_date,
                                                                  con)
     ),
@@ -950,7 +949,6 @@ list(
     frequent_attenders_adult_ambulance_gp_current,
     get_frequent_attenders_adult_ambulance_sub_geography_current("gp",
                                                                  age_cutoff,
-                                                                 start_date,
                                                                  lag_date,
                                                                  con)
   ),
@@ -959,7 +957,6 @@ list(
     get_frequent_attenders_adult_ambulance_sub_geography_archived("lsoa",
                                                                  age_cutoff,
                                                                  start_date,
-                                                                 lag_date,
                                                                  con)
   ),
   tar_target(
@@ -967,7 +964,6 @@ list(
     get_frequent_attenders_adult_ambulance_sub_geography_archived("gp",
                                                                  age_cutoff,
                                                                  start_date,
-                                                                 lag_date,
                                                                  con)
   ),
   tar_target(

@@ -7,12 +7,11 @@
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #' @param age The minimum age cutoff.
 #' @param start The minimum date for the query.
-#' @param lag The maximum date for the query.
 #' @param connection The ODBC connection.
 #'
 #' @returns A dataframe with the number of A&E frequent attenders by LSOA/GP 
 #' code and month.
-get_frequent_attenders_adult_ambulance_sub_geography_archived <- function(sub_geography, age, start, lag, connection) {
+get_frequent_attenders_adult_ambulance_sub_geography_archived <- function(sub_geography, age, start, connection) {
   sub_geography_column <- if (sub_geography == "lsoa") {
     "Der_Postcode_LSOA_2011_Code"
   } else if (sub_geography == "gp") {
@@ -87,7 +86,6 @@ GROUP BY
       c(
         "age_cutoff" = age,
         "start_date" = start,
-        "lag_date" = "2019-04-01",
         "sub_geography_column" = sub_geography_column
       )
     )
@@ -102,7 +100,6 @@ GROUP BY
 #'
 #' @param sub_geography Either `"lsoa"` or `"gp"`.
 #' @param age The minimum age cutoff.
-#' @param start The minimum date for the query.
 #' @param lag The maximum date for the query.
 #' @param connection The ODBC connection.
 #'
@@ -110,7 +107,6 @@ GROUP BY
 #' code and month.
 get_frequent_attenders_adult_ambulance_sub_geography_current <- function(sub_geography, 
                                                                  age, 
-                                                                 start, 
                                                                  lag,
                                                                  connection) {
   sub_geography_column <- if (sub_geography == "lsoa") {
@@ -147,7 +143,7 @@ get_frequent_attenders_adult_ambulance_sub_geography_current <- function(sub_geo
 		b.Arrival_Date < a.Arrival_Date 
 
 	WHERE 
-		EC_Departure_Date >= 'start_date' AND
+		EC_Departure_Date >= '2019-04-01' AND
 		EC_Departure_Date < 'lag_date' AND
     Der_Age_at_CDS_Activity_Date >= age_cutoff AND
 		a.AEA_Arrival_Mode LIKE '1' AND
@@ -185,7 +181,6 @@ GROUP BY
   " |>
     stringr::str_replace_all(
       c("age_cutoff" = age,
-        "start_date" = "2019-04-01",
         "lag_date" = Sys.Date() |>
           lubridate::floor_date("month") |> 
           as.character(),
