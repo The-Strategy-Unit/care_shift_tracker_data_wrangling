@@ -38,7 +38,9 @@ get_frequent_attenders_adult_ambulance_sub_geography_archived <- function(sub_ge
 		FROM [Sus_AEA].[AEA_Core_1]
 
 		WHERE
-		 AEA_Attendance_Category = '1'
+		 AEA_Attendance_Category = '1' OR
+		 AEA_Attendance_Category IS NULL OR 
+		 AEA_Attendance_Category = '' 
 	 ) b
 	 ON
 		a.Der_Pseudo_NHS_Number = b.Der_Pseudo_NHS_Number AND
@@ -135,7 +137,9 @@ get_frequent_attenders_adult_ambulance_sub_geography_current <- function(sub_geo
 		FROM [Reporting_MESH_ECDS].[AEA_EC_Combined] 
  
 		WHERE 
-		 EC_AttendanceCategory = '1'  
+		 EC_AttendanceCategory = '1' OR 
+		 EC_AttendanceCategory IS NULL OR 
+		 EC_AttendanceCategory = '' 
 	 ) b 
 	 ON  
 		a.Der_Pseudo_NHS_Number = b.Der_Pseudo_NHS_Number AND
