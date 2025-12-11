@@ -35,7 +35,7 @@ con <- DBI::dbConnect(
   Authentication = "ActiveDirectoryInteractive"
 )
 
-## Pins connection -------------------------------------------------------------
+# Pins connection --------------------------------------------------------------
 board <- pins::board_connect(server = "connect.strategyunitwm.nhs.uk")
 
 # Replace the target list below with your own:
