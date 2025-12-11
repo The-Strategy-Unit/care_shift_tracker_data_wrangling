@@ -1667,6 +1667,16 @@ list(
       arrange(pcn, date)
   ),
   
+  ## Bed split between acute and community provider sites ----------------------
+  tar_target(
+    bedday_split_data_lsoa,
+    get_epi_bedday_data_lsoa(con)
+  ),
+  tar_target(
+    bedday_split_data_prac,
+    get_epi_bedday_data_prac(con)
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
