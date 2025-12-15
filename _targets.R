@@ -1129,7 +1129,9 @@ list(
       Der_Diagnosis_All LIKE '%S72[012348]%' OR
       Der_Diagnosis_All LIKE '%T08X%' ) AND
       Der_Diagnosis_All NOT LIKE '%[VWXY]%') ----implicit_fractures
-    )
+    ) AND
+    Der_Procedure_Count >= 1 AND
+    DATEDIFF(day, Admission_Date, Discharge_Date) >= 2
     "
   ),
   # LSOA and GP
