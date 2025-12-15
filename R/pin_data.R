@@ -104,17 +104,19 @@ pin_ref_indicator <- function(data, board) {
 #' @param ref_icb Reference information for ICBs.
 #' @param ref_la Reference information for LAs.
 #' @param ref_pcn Reference information for PCNs.
+#' @param pcn_to_icb Map between PCNs and ICBs.
 #' @param board The pins board.
 #'
 #' @returns The name of the pin.
-pin_ref_geography <- function(ref_icb, ref_la, ref_pcn, board) {
+pin_ref_geography <- function(ref_icb, ref_la, ref_pcn, pcn_to_icb, board) {
   
   wrangled <- rbind(ref_icb, ref_la, ref_pcn) |>
     dplyr::arrange(geography, name) |>
     dplyr::mutate(shortname = name |>
                     stringr::str_replace_all(c("NHS " = "",
                                                " Integrated Care Board" = "",
-                                               " PCN" = "")))
+                                               " PCN" = ""))) |>
+    dplyr::left_join(pcn_to_icb, by = c("code" = "pcn"))
   
   pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-ref-geography")
   
@@ -126,5 +128,5 @@ pin_ref_geography <- function(ref_icb, ref_la, ref_pcn, board) {
     versioned = TRUE
   )
   
-  return(pin_name)
+  return(wrangled)
 }

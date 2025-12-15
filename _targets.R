@@ -1773,8 +1773,29 @@ list(
   tar_target(ref_pcn,
              get_ref_by_geography(pcn_lookup, "pcn")),
   tar_target(
+    pcn_to_icb,
+    gp_to_pcn |>
+      dplyr::mutate(
+        parent_icb = pcn_parent_sub_icb_location_name |>
+          stringr::str_remove_all("NHS ") |>
+          stringr::str_sub(start = 1, end = -7) |>
+          stringr::str_remove_all(" -") |>
+          stringr::str_to_title() |>
+          stringr::str_remove_all(" Icb") |>
+          stringr::str_replace_all(" And ", " and "),
+        parent_icb = ifelse(parent_icb == "Swa", 
+                            "Kent And Medway", 
+                            parent_icb), # Swale CCG
+        parent_icb = ifelse(parent_icb == "Bre", 
+                            "North West London", 
+                            parent_icb) # Brent CCG
+        ) |>
+      dplyr::select(pcn = pcn_code, parent_icb) |>
+      unique()
+    ),
+  tar_target(
     ref_geography,
-    pin_ref_geography(ref_icb, ref_la, ref_pcn, board)
+    pin_ref_geography(ref_icb, ref_la, ref_pcn, pcn_to_icb, board)
     ),
   
   ## Indicators ----------------------------------------------------------------
