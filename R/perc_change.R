@@ -17,6 +17,7 @@ get_perc_change <- function(data, geography) {
     dplyr::select(indicator, 
                   code,
                   name, 
+                  latest_date = date,
                   latest_value = value)
   
   data_twelve_months_ago <- data |>
