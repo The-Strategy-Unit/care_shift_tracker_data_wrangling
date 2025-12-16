@@ -1764,6 +1764,19 @@ list(
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(pcn_lookup, "pcn", board) 
   ),
+  
+  # Percentage change ----------------------------------------------------------
+  tar_target(perc_change_icb,
+             get_perc_change(indicators_icb, "icb")),
+  tar_target(perc_change_la,
+             get_perc_change(indicators_la, "la")),
+  tar_target(perc_change_pcn,
+             get_perc_change(indicators_pcn, "pcn")),
+  tar_target(perc_change,
+             rbind(perc_change_icb, perc_change_la, perc_change_pcn) |>
+               pin_perc_change(board)
+             ),
+  
   # Reference ------------------------------------------------------------------
   ## Geography -----------------------------------------------------------------
   tar_target(ref_icb,
