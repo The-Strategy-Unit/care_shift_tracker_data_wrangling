@@ -1773,7 +1773,8 @@ list(
   tar_target(perc_change_pcn,
              get_perc_change(indicators_pcn, "pcn")),
   tar_target(perc_change,
-             rbind(perc_change_icb, perc_change_la, perc_change_pcn)
+             rbind(perc_change_icb, perc_change_la, perc_change_pcn) |>
+               pin_perc_change(board)
              ),
   
   # Reference ------------------------------------------------------------------

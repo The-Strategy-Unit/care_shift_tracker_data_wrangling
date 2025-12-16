@@ -38,6 +38,21 @@ pin_indicators <- function(data, lookup, geography, board) {
   return(wrangled)
 }
 
+pin_perc_change <- function(data, board) {
+  
+  pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-perc_change")
+  
+  pins::pin_write(
+    board,
+    x = data,
+    name = pin_name,
+    type = "parquet",
+    versioned = TRUE
+  )
+  
+  return(data)
+}
+
 #' Pins reference data for indicators.
 #'
 #' @param data The object `indicators_icb`.
