@@ -1417,7 +1417,7 @@ list(
                       )
   ),
   tar_target(
-    bed_split_lad,
+    bed_split_la,
     assign_kh03_beds_lad(beds_available_data, prov_site_type, prov_act_dist_lad) |>
       group_by(lad24cd, der_financial_year) |>
       mutate(year_tot = sum(beds),
@@ -1679,6 +1679,49 @@ list(
     get_epi_bedday_data_prac(con)
   ),
   
+  # icb
+  tar_target(
+    beddays_split_icb,
+    beddays_to_icb(bedday_split_data_lsoa,prov_site_type,lsoa11_to_lsoa_21,lsoa_to_higher_geographies) |>
+      mutate(indicator = 'beddays_nonacute_percent') |>
+      select(6,1:5) |>
+      dplyr::rename(icb = icb24cdh,
+                    date = der_activity_month,
+                    numerator = nonacute_los,
+                    denominator = acute_los,
+                    value = perc_nonacute) |>
+      dplyr::mutate(frequency = "monthly") |>
+      arrange(icb, date)
+    ),
+  # lad
+  tar_target(
+    beddays_split_la,
+    beddays_to_lad(bedday_split_data_lsoa,prov_site_type,lsoa11_to_lsoa_21,lsoa_to_higher_geographies) |>
+      mutate(indicator = 'beddays_nonacute_percent') |>
+      select(6,1:5) |>
+      dplyr::rename(la = lad24cd,
+                    date = der_activity_month,
+                    numerator = nonacute_los,
+                    denominator = acute_los,
+                    value = perc_nonacute) |>
+      dplyr::mutate(frequency = "monthly") |>
+      arrange(la, date)
+  ),
+  # pcn
+  tar_target(
+    beddays_split_pcn,
+    beddays_to_pcn(bedday_split_data_prac,prov_site_type,gp_to_pcn) |>
+      mutate(indicator = 'beddays_nonacute_percent') |>
+      select(6,1:5) |>
+      dplyr::rename(pcn = pcn_code,
+                    date = der_activity_month,
+                    numerator = nonacute_los,
+                    denominator = acute_los,
+                    value = perc_nonacute) |>
+      dplyr::mutate(frequency = "monthly") |>
+      arrange(pcn, date)
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -1703,7 +1746,8 @@ list(
       delayed_discharge_percent_icb_beddays,
       bed_split_icb,
       workforce_acute_icb,
-      costs_community_ratio_icb
+      costs_community_ratio_icb,
+      beddays_split_icb
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(icb_lookup, "icb", board)
@@ -1729,9 +1773,10 @@ list(
       #redirection_indicator_la_admissions,
       redirection_indicator_la_beddays,
       delayed_discharge_percent_la_beddays,
-      bed_split_lad,
+      bed_split_la,
       workforce_acute_lad,
-      costs_community_ratio_la
+      costs_community_ratio_la,
+      beddays_split_la
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(la_lookup, "la", board) 
@@ -1759,7 +1804,8 @@ list(
       delayed_discharge_percent_pcn_beddays,
       bed_split_pcn,
       workforce_acute_pcn,
-      costs_community_ratio_pcn
+      costs_community_ratio_pcn,
+      beddays_split_pcn
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(pcn_lookup, "pcn", board) 

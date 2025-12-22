@@ -109,10 +109,26 @@ final AS (
     CASE WHEN Org_Class = 'Community' AND Site_Type IN ('SHORT TERM NON-ACUTE HOSPITAL','LONG STAY HOSPITAL','SPECIALIST HOSPITAL') THEN 'Community'
          ELSE Site_Class END AS Site_Class2
   FROM src
+),
+
+part AS (
+  Select Organisation_Code, Organisation_Type, Org_Class, [Status], Site_Code, Site_Type, Site_Class, Tenure, Non_Inpatient_Type, Type_Of_Lease, Measure_Category,
+  Measure_Name, Measure_Value, Measure_Value_Str, Effective_Snapshot_Date,
+  CASE WHEN der_fin_year = '2024-2025' then '2025-2026' end as der_fin_year, DataSourceFileForThisSnapshot_Version, Report_Period_Length, Unique_ID, AuditKey,
+    CASE WHEN Org_Class = 'Community' AND Site_Type IN ('SHORT TERM NON-ACUTE HOSPITAL','LONG STAY HOSPITAL','SPECIALIST HOSPITAL') THEN 'Community'
+         ELSE Site_Class END AS Site_Class2
+  FROM src
+  where der_fin_year = '2024-2025'
 )
+
 SELECT DISTINCT
   Organisation_Code, Organisation_Type, Org_Class, Site_Code, Site_Type, Site_Class2 AS Site_Class, der_fin_year
 FROM final
+WHERE LEFT(Site_Code,3) != 'AGG'
+union all
+SELECT DISTINCT
+  Organisation_Code, Organisation_Type, Org_Class, Site_Code, Site_Type, Site_Class2 AS Site_Class, der_fin_year
+FROM part
 WHERE LEFT(Site_Code,3) != 'AGG'
 ORDER BY Organisation_Code, Site_Code, der_fin_year
   "

@@ -80,7 +80,8 @@ pin_ref_indicator <- function(data, board) {
         ) ~ "System flows and pathways",
         indicator %in% c("acute_bedshare_percent",
                          "workforce_acute_perc",
-                         "costs_community_ratio"
+                         "costs_community_ratio",
+                         "beddays_nonacute_percent"
         ) ~ "Balancing resources",
         .default = "Other"
       ),
