@@ -93,6 +93,49 @@ get_end_of_life_episodes <- function(age,
   return(wrangled)
 }
 
+#' Get the IMD decile by date and LSOA.
+#'
+#' @param data A dataframe with columns for date and LSOA.
+#' @param lookup The IMD to LSOA lookup.
+#' @param earliest_imd_year The earliest IMD year from the IMD to LSOA lookup.
+#' @param latest_available_imd A dataframe of the latest available IMD decile for each LSOA.
+#'
+#' @returns The dataframe with a column added for the IMD decile.
+get_imd_from_lsoa <- function(data, 
+                              lookup, 
+                              earliest_imd_year, 
+                              latest_available_imd) {
+  wrangled <- data |>
+    dplyr::mutate(
+      imd_year = lubridate::ymd(date, truncated = 1),
+      imd_year = dplyr::case_when(
+        imd_year >= as.Date("2025-04-01") ~ "2025-12-31",
+        imd_year >= as.Date("2019-04-01") ~ "2019-12-31",
+        imd_year >= as.Date("2015-04-01") ~ "2015-12-31",
+        imd_year >= as.Date("2010-04-01") ~ "2010-12-31",
+        imd_year >= as.Date("2007-04-01") ~ "2007-12-31",
+        .default = "Other"
+      ),
+      # If IMD year is not in the imd lookup, use earliest available IMD year:
+      imd_year = ifelse(imd_year < earliest_imd_year,
+                        as.character(earliest_imd_year),
+                        imd_year) |>
+        as.Date()
+    ) |>
+    dplyr::left_join(lookup,
+                     by = c("imd_year" = "effective_snapshot_date",
+                            "der_postcode_lsoa_2011_code" = "lsoa_code")) |>
+    # If IMD decile is missing, use the latest available IMD decile:
+    dplyr::left_join(latest_available_imd,
+                     by = c("der_postcode_lsoa_2011_code" = "lsoa_code")) |>
+    dplyr::mutate(imd_decile = ifelse(is.na(imd_decile),
+                                      latest_imd_decile,
+                                      imd_decile)) |>
+    dplyr::select(-latest_imd_decile)
+  
+  return(wrangled)
+}
+
 #' Turn episode level indicator data into sub-geography level.
 #'
 #' @param data Data for an indicator at episode level.

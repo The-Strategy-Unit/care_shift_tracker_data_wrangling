@@ -109,6 +109,13 @@ list(
   ),
   
   tar_target(
+    prov_site_type,
+    get_eric_site_classifications(con) |>
+      dplyr::mutate(der_financial_year = stringr::str_replace(der_fin_year, "^(\\d{4})\\-(\\d{2})(\\d{2})$", "\\1/\\3"))
+  ),
+  
+  ## IMD -----------------------------------------------------------------------
+  tar_target(
     imd_lsoa_lookup,
     DBI::dbGetQuery(
       con,
@@ -125,11 +132,18 @@ list(
       unique() |>
       na.omit()
   ),
-  
   tar_target(
-    prov_site_type,
-    get_eric_site_classifications(con) |>
-      dplyr::mutate(der_financial_year = stringr::str_replace(der_fin_year, "^(\\d{4})\\-(\\d{2})(\\d{2})$", "\\1/\\3"))
+    earliest_imd_year,
+    imd_lsoa_lookup |>
+      dplyr::summarise(min(effective_snapshot_date)) |>
+      dplyr::pull()
+  ),
+  tar_target(
+    latest_available_imd,
+    imd_lsoa_lookup |>
+      dplyr::filter(effective_snapshot_date == max(effective_snapshot_date),
+                    .by = lsoa_code) |>
+      dplyr::select(lsoa_code, latest_imd_decile = imd_decile)
   ),
   
   ## Geography codes to names --------------------------------------------------
@@ -1339,7 +1353,10 @@ list(
     redirection_episodes |>
       get_indicator_at_sub_geography_level_by_age_sex("lsoa") |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies) |>
+      get_imd_from_lsoa(imd_lsoa_lookup, 
+                        earliest_imd_year, 
+                        latest_available_imd)
   ),
   tar_target(
     redirection_gp,
