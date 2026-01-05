@@ -337,6 +337,20 @@ list(
       dplyr::summarise(pop = sum(pop),
                        .by = c(age_range, sex))
   ),
+  tar_target(
+    standard_pop,
+    read.csv("data/esp13_imd_alt.csv") |>
+      janitor::clean_names() |>
+      dplyr::mutate(sex = ifelse(stringr::str_detect(gender, "Female"),
+                                 "2", 
+                                 "1"),
+                    age_range = stringr::str_remove(age, " years"),
+                    age_range = ifelse(age_range %in% c("80-84", "85-89", "90plus"),
+                                       "80+",
+                                       age_range)) |>
+      dplyr::summarise(pop = sum(esp13_pop_part_2, na.rm = TRUE),
+                       .by = c(age_range, sex, imd_quintile))
+  ),
   
   ## Distribution of SUS provider activity by ICB, LAD and PCN for bed data ----
   tar_target(
