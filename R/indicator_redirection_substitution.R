@@ -230,6 +230,39 @@ get_indicators_age_sex_standardised_rates <- function(data,
   return(wrangled)
 }
 
+#' Get ICB / LA populations from LSOA populations.
+#'
+#' @param data A dataframe of LSOA populations.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe of ICB / LA populations by year.
+get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geography) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      population_size = sum(population_size_amended),
+      .by = c(effective_snapshot_date, 
+              age_range,
+              sex,
+              imd_decile,
+              {{geography_column}})
+    ) |>
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::mutate(population_year = as.character(
+      lubridate::year(effective_snapshot_date))) |>
+    dplyr::select(
+      population_year,
+      !!rlang::sym(geography) := !!rlang::sym(geography_column),
+      age_range,
+      sex,
+      imd_decile,
+      population_size
+    )
+  
+  return(wrangled)
+}
+
 #' Join a dataframe at geography level to its population data.
 #'
 #' @param data A dataframe at geography level.

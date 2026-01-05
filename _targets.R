@@ -266,7 +266,7 @@ list(
     get_population_lsoa_by_age_sex(age_cutoff, start_date, con)
   ),
   tar_target(
-    population_lsoa_mapped_to_higher_geographies_by_age_sex,
+    population_lsoa_mapped_to_higher_geographies_by_age_sex_imd,
     population_lsoa_by_age_sex |>
       dplyr::rename(lsoa11cd = area_code) |>
       dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
@@ -276,14 +276,21 @@ list(
         number = dplyr::n(),
         .by = c(lsoa11cd, effective_snapshot_date),
         population_size_amended = population_size / number
-      )
+      ) |>
+      # Adding IMD decile:
+      dplyr::mutate(date = stringr::str_sub(effective_snapshot_date, start = 1, end = 7),
+                    der_postcode_lsoa_2011_code = lsoa11cd) |>
+      get_imd_from_lsoa(imd_lsoa_lookup, 
+                        targets::tar_read(earliest_imd_year), 
+                        targets::tar_read(latest_available_imd)) |>
+      dplyr::select(-date, -der_postcode_lsoa_2011_code)
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       population_by_age_sex,
-      get_population_higher_geography_from_lsoa_by_age_sex(
-        population_lsoa_mapped_to_higher_geographies_by_age_sex, 
+      get_population_higher_geography_from_lsoa_by_age_sex_imd(
+        population_lsoa_mapped_to_higher_geographies_by_age_sex_imd, 
         geography)
     )
   ),
