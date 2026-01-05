@@ -1370,9 +1370,9 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       redirection,
-      aggregate_indicator_to_geography_level_by_age_sex(redirection_lsoa,
-                                                        geography,
-                                                        "redirection")
+      aggregate_indicator_to_geography_level_by_age_sex_imd(redirection_lsoa,
+                                                            geography,
+                                                            "redirection")
     )
   ),
   tarchetypes::tar_map(

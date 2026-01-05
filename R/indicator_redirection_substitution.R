@@ -10,9 +10,27 @@
 #'
 #' @returns A dataframe with the data aggregated to geography level and also by
 #' age range and sex.
-aggregate_indicator_to_geography_level_by_age_sex <- function(data,
+aggregate_indicator_to_geography_level_by_age_sex_imd <- function(data,
                                                               geography, 
                                                               indicator_name) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      admissions = sum(admissions, na.rm = TRUE),
+      beddays = sum(beddays, na.rm = TRUE),
+      .by = c(date, age_range, sex, imd_decile, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(indicator = indicator_name) |>
+    tidy_data_for_indicator_wrangling(geography)
+  
+  return(wrangled)
+}
+
+# KEEPING BELOW TEMPORARILY FOR PCN:
+aggregate_indicator_to_geography_level_by_age_sex <- function(data,
+                                                                  geography, 
+                                                                  indicator_name) {
   geography_column <- get_geography_column(geography)
   
   wrangled <- data |>
