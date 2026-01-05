@@ -109,6 +109,24 @@ list(
   ),
   
   tar_target(
+    imd_lsoa_lookup,
+    DBI::dbGetQuery(
+      con,
+      "
+      SELECT
+        LSOA_Code,
+        IMD_Decile,
+        Effective_Snapshot_Date
+
+      FROM [UKHF_Demography].[Index_Of_Multiple_Deprivation_By_LSOA1_1]
+      "
+    ) |>
+      janitor::clean_names() |>
+      unique() |>
+      na.omit()
+  ),
+  
+  tar_target(
     prov_site_type,
     get_eric_site_classifications(con) |>
       dplyr::mutate(der_financial_year = stringr::str_replace(der_fin_year, "^(\\d{4})\\-(\\d{2})(\\d{2})$", "\\1/\\3"))
