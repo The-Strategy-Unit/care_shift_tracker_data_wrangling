@@ -6,18 +6,13 @@
 # Load packages required to define the pipeline:
 library(targets)
 library(tarchetypes)
-library(tidyverse)
-library(stringr)
-library(PHEindicatormethods)
-library(arrow)
-library(glue)
-library(pins)
-library(rsconnect)
-library(nanoparquet)# Load other packages as needed.
 
 # Set target options:
 tar_option_set(
-  packages = c("tibble") # Packages that your targets need for their tasks.
+  packages = c("tidyverse","stringr","PHEindicatormethods","arrow","glue","pins",
+               "rsconnect","nanoparquet","tibble"
+  ) # List other packages as needed.
+  ##, error = "null" # produce null result even if target errors out(i.e. continue pipeline)
 )
 
 # Run the R scripts in the R/ folder with your custom functions:
@@ -68,7 +63,7 @@ list(
       "https://services1.arcgis.com/ESMARspQHYMw9BZ9/arcgis/rest/services/LSOA21_SICBL24_ICB24_CAL24_LAD24_EN_LU/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson"
     ) |>
       janitor::clean_names() |>
-      dplyr::select(-geometry)
+      sf::st_drop_geometry()
   ),
   tar_target(
     gp_to_pcn,
@@ -145,8 +140,7 @@ list(
     population_lsoa |>
       dplyr::rename(lsoa11cd = area_code) |>
       dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
-      dplyr::left_join(lsoa_to_higher_geographies |>
-                         dplyr::select(-geometry), by = "lsoa21cd") |>
+      dplyr::left_join(lsoa_to_higher_geographies, by = "lsoa21cd") |>
       dplyr::mutate(
         number = dplyr::n(),
         .by = c(lsoa11cd, effective_snapshot_date),
@@ -195,8 +189,7 @@ list(
     population_75_plus_lsoa |>
       dplyr::rename(lsoa11cd = area_code) |>
       dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
-      dplyr::left_join(lsoa_to_higher_geographies |>
-                         dplyr::select(-geometry), by = "lsoa21cd") |>
+      dplyr::left_join(lsoa_to_higher_geographies, by = "lsoa21cd") |>
       dplyr::mutate(
         number = dplyr::n(),
         .by = c(lsoa11cd, effective_snapshot_date),
@@ -238,8 +231,7 @@ list(
     population_lsoa_by_age_sex |>
       dplyr::rename(lsoa11cd = area_code) |>
       dplyr::left_join(lsoa11_to_lsoa_21, by = "lsoa11cd") |>
-      dplyr::left_join(lsoa_to_higher_geographies |>
-                         dplyr::select(-geometry), by = "lsoa21cd") |>
+      dplyr::left_join(lsoa_to_higher_geographies, by = "lsoa21cd") |>
       dplyr::mutate(
         number = dplyr::n(),
         .by = c(lsoa11cd, effective_snapshot_date),
@@ -1826,7 +1818,7 @@ list(
   # Reference ------------------------------------------------------------------
   ## Geography -----------------------------------------------------------------
   tar_target(ref_icb,
-             get_ref_by_geography(icb_lookup, "icb")),
+             get_ref_by_geography(icb_lookup, "icb")), ##remove unnecessary geometry field
   tar_target(ref_la,
              get_ref_by_geography(la_lookup, "la")),
   tar_target(ref_pcn,
