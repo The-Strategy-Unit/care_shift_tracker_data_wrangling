@@ -67,13 +67,15 @@ For analyses, LSOA codes were transformed into 2021 LSOA codes before aggregatin
 
 | Dates of activity | Year of IMD |
 | --- | --- |
-| 2008-04-01 - 2010-03-31 | 2007* |
-| 2010-04-01 - 2015-03-31 | 2010* |
+| 2008-04-01 - 2010-03-31 | 2007 |
+| 2010-04-01 - 2015-03-31 | 2010 |
 | 2015-04-01 - 2019-03-31 | 2015 |
 | 2019-04-01 - 2015-03-31 | 2019 |
 | 2025-04-01 - current | 2025 |
 
-*This is the ideal and still working on it, but currently using 2015 since not got IMD quintile data yet for these years.
+For IMD 2015, 2019 and 2025 provided IMD deciles were converted to IMD quintiles. For IMD 2007 and 2010, IMD quintiles were calculated using the provided IMD ranks. Quintile 1 represents the most deprived 20% of neighbourhoods nationally and quintile 5 the least deprived 20% of neighbourhoods nationally.
+
+IMD 2007 data was downloaded from <https://webarchive.nationalarchives.gov.uk/ukgwa/20100411141238/http://www.communities.gov.uk/communities/neighbourhoodrenewal/deprivation/deprivation07/>.
 
 In less than 0.2% of cases there was no IMD quintile information available and so the latest available IMD year was used instead for that LSOA.
 
