@@ -10,9 +10,27 @@
 #'
 #' @returns A dataframe with the data aggregated to geography level and also by
 #' age range and sex.
-aggregate_indicator_to_geography_level_by_age_sex <- function(data,
+aggregate_indicator_to_geography_level_by_age_sex_imd <- function(data,
                                                               geography, 
                                                               indicator_name) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      admissions = sum(admissions, na.rm = TRUE),
+      beddays = sum(beddays, na.rm = TRUE),
+      .by = c(date, age_range, sex, imd_quintile, !!rlang::sym(geography_column))
+    ) |>
+    dplyr::mutate(indicator = indicator_name) |>
+    tidy_data_for_indicator_wrangling(geography)
+  
+  return(wrangled)
+}
+
+# KEEPING BELOW TEMPORARILY FOR PCN:
+aggregate_indicator_to_geography_level_by_age_sex <- function(data,
+                                                                  geography, 
+                                                                  indicator_name) {
   geography_column <- get_geography_column(geography)
   
   wrangled <- data |>
@@ -93,6 +111,49 @@ get_end_of_life_episodes <- function(age,
   return(wrangled)
 }
 
+#' Get the IMD quintile by date and LSOA.
+#'
+#' @param data A dataframe with columns for date and LSOA.
+#' @param lookup The IMD to LSOA lookup.
+#' @param earliest_imd_year The earliest IMD year from the IMD to LSOA lookup.
+#' @param latest_available_imd A dataframe of the latest available IMD quintile for each LSOA.
+#'
+#' @returns The dataframe with a column added for the IMD quintile.
+get_imd_from_lsoa <- function(data, 
+                              lookup, 
+                              earliest_imd_year, 
+                              latest_available_imd) {
+  wrangled <- data |>
+    dplyr::mutate(
+      imd_year = lubridate::ymd(date, truncated = 1),
+      imd_year = dplyr::case_when(
+        imd_year >= as.Date("2025-04-01") ~ "2025-12-31",
+        imd_year >= as.Date("2019-04-01") ~ "2019-12-31",
+        imd_year >= as.Date("2015-04-01") ~ "2015-12-31",
+        imd_year >= as.Date("2010-04-01") ~ "2010-12-31",
+        imd_year >= as.Date("2007-04-01") ~ "2007-12-31",
+        .default = "Other"
+      ),
+      # If IMD year is not in the imd lookup, use earliest available IMD year:
+      imd_year = ifelse(imd_year < earliest_imd_year,
+                        as.character(earliest_imd_year),
+                        imd_year) |>
+        as.Date()
+    ) |>
+    dplyr::left_join(lookup,
+                     by = c("imd_year" = "effective_snapshot_date",
+                            "der_postcode_lsoa_2011_code" = "lsoa_code")) |>
+    # If IMD quintile is missing, use the latest available IMD quintile:
+    dplyr::left_join(latest_available_imd,
+                     by = c("der_postcode_lsoa_2011_code" = "lsoa_code")) |>
+    dplyr::mutate(imd_quintile = ifelse(is.na(imd_quintile),
+                                      latest_imd_quintile,
+                                      imd_quintile)) |>
+    dplyr::select(-latest_imd_quintile)
+  
+  return(wrangled)
+}
+
 #' Turn episode level indicator data into sub-geography level.
 #'
 #' @param data Data for an indicator at episode level.
@@ -117,12 +178,12 @@ get_indicator_at_sub_geography_level_by_age_sex <- function(data,
   return(wrangled)
 }
 
-#' Get the redirection/substitution indicators standardised by age and sex for
-#' a geography.
+#' Get the redirection/substitution indicators standardised by age, sex and imd
+#' fora geography.
 #'
 #' @param data The redirection/substitution indicators at sub-geography level.
-#' @param population Population data at the geography of interest by age and 
-#' sex.
+#' @param population Population data at the geography of interest by age, sex 
+#' and imd.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #' @param latest_population_year The last year that population data is available
 #' for.
@@ -130,7 +191,48 @@ get_indicator_at_sub_geography_level_by_age_sex <- function(data,
 #' @param standard_pop England 2021 census population data.
 #'
 #' @returns A dataframe of the redirection/substitution indicators standardised 
-#' by age and sex for a geography.
+#' by age, sex and imd for a geography.
+get_indicators_age_sex_imd_standardised_rates <- function(data,
+                                                          population,
+                                                          geography,
+                                                          latest_population_year,
+                                                          activity_type,
+                                                          standard_pop) {
+  wrangled <- data |>
+    join_to_population_data_by_age_sex_imd(population, 
+                                           geography, 
+                                           latest_population_year) |>
+    dplyr::filter(!is.na(population_size),
+                  population_size > 0) |>
+    # There were <5 patients with a discharge date before their admission date
+    # in one indicator at GP level. So the line below is to exclude these rows:
+    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
+    dplyr::left_join(standard_pop, 
+                     by = c("age_range", "sex", "imd_quintile")) |>
+    dplyr::group_by(date, !!rlang::sym(geography)) |>
+    dplyr::rename(x = !!rlang::sym(activity_type)) |>
+    PHEindicatormethods::calculate_dsr(x = x,
+                                       n = population_size,
+                                       stdpop = pop) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
+                                ~janitor::round_half_up(.)),
+                  indicator = glue::glue("redirection_age_sex_imd_standardised_{activity_type}")) |>
+    dplyr::select(
+      indicator,
+      date,
+      !!rlang::sym(geography),
+      numerator = total_count,
+      denominator = total_pop,
+      value,
+      lowercl,
+      uppercl
+    )
+  
+  return(wrangled)
+}
+
+# KEEPING BELOW FOR PCN:
 get_indicators_age_sex_standardised_rates <- function(data,
                                                       population,
                                                       geography,
@@ -138,7 +240,7 @@ get_indicators_age_sex_standardised_rates <- function(data,
                                                       activity_type,
                                                       standard_pop) {
   wrangled <- data |>
-    join_to_population_data_by_age_sex(population, geography, latest_population_year) |>
+    join_to_population_data_by_age_sex_imd(population, geography, latest_population_year) |>
     dplyr::filter(!is.na(population_size),
                   population_size > 0) |>
     # There were <5 patients with a discharge date before their admission date
@@ -169,6 +271,39 @@ get_indicators_age_sex_standardised_rates <- function(data,
   return(wrangled)
 }
 
+#' Get ICB / LA populations from LSOA populations.
+#'
+#' @param data A dataframe of LSOA populations.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#'
+#' @returns A dataframe of ICB / LA populations by year.
+get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geography) {
+  geography_column <- get_geography_column(geography)
+  
+  wrangled <- data |>
+    dplyr::summarise(
+      population_size = sum(population_size_amended),
+      .by = c(effective_snapshot_date, 
+              age_range,
+              sex,
+              imd_quintile,
+              {{geography_column}})
+    ) |>
+    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::mutate(population_year = as.character(
+      lubridate::year(effective_snapshot_date))) |>
+    dplyr::select(
+      population_year,
+      !!rlang::sym(geography) := !!rlang::sym(geography_column),
+      age_range,
+      sex,
+      imd_quintile,
+      population_size
+    )
+  
+  return(wrangled)
+}
+
 #' Join a dataframe at geography level to its population data.
 #'
 #' @param data A dataframe at geography level.
@@ -178,13 +313,14 @@ get_indicators_age_sex_standardised_rates <- function(data,
 #' available for.
 #'
 #' @returns A dataframe containing `data` joined to the `population` data.
-join_to_population_data_by_age_sex <- function(data,
-                                               population,
-                                               geography,
-                                               latest_population_year) {
+join_to_population_data_by_age_sex_imd <- function(data,
+                                                   population,
+                                                   geography,
+                                                   latest_population_year) {
   wrangled <- if (geography == "pcn") {
     data  |>
-      dplyr::left_join(population, by = c(geography, "date", "age_range", "sex"))
+      dplyr::left_join(population, 
+                       by = c(geography, "date", "age_range", "sex"))
   } else {
     data |>
       dplyr::mutate(
@@ -195,7 +331,14 @@ join_to_population_data_by_age_sex <- function(data,
           as.character(year)
         )
       ) |>
-      dplyr::left_join(population, by = c(geography, "population_year", "age_range", "sex"))
+      dplyr::left_join(population, 
+                       by = c(geography, 
+                              "population_year", 
+                              "age_range", 
+                              "sex", 
+                              "imd_quintile"
+                              )
+                       )
   }
   
   return(wrangled)

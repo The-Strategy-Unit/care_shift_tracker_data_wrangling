@@ -72,7 +72,7 @@ pin_ref_indicator <- function(data, board) {
         indicator %in% c("ambulatory_care_conditions_acute_per_pop_beddays",
                          "ambulatory_care_conditions_chronic_per_pop_beddays",
                          "readmission_within_28_days_per_pop_beddays",
-                         "redirection_age_sex_standardised_beddays"
+                         "redirection_age_sex_imd_standardised_beddays"
         ) ~ "Avoidable or preventable hospital use",
         indicator %in% c("raid_ae_per_pop_beddays",
                          "elec_non_elec_ratio_beddays",
@@ -95,10 +95,15 @@ pin_ref_indicator <- function(data, board) {
             "elecelective_" = "elective_",
             "beddays" = "(beddays)",
             "elderly" = "older people",
+            "standardised" = "standardised_rate",
             "_" = " ")
         ) |>
         stringr::str_to_sentence() |>
-        stringr::str_replace("via ed", "via ED")
+        stringr::str_replace_all(
+          c("via ed" = "via ED",
+            " age " = " age range, ",
+            " imd " = " and IMD quintile "
+            ))
     ) |>
     dplyr::arrange(frequency, theme, indicator) 
   
