@@ -61,7 +61,7 @@ The {pheindicatormethods} R package was used to calculate standardised rates. Th
 
 - Numerator: counts of admissions by LSOA, 5-year age band, sex and IMD quintile grouped to ICB, LA or PCN level.
 - Denominator: LSOA population estimates from ONS (and UKHF) by 5-year age band, sex and IMD quintile grouped to ICB, LA or PCN level. 
-- Standard population: 2013 England population data from (???). As this is only factored by age and sex, we estimated the distribution of the notional ESP figures by IMD quintiles with 2015 IMD populations.
+- Standard population: The revised European Standard Population (ESP) 2013 from [ONS](httpswebarchive.nationalarchives.gov.ukukgwa20160106020035httpwww.ons.gov.ukonsguide-methoduser-guidancehealth-and-life-eventsrevised-european-standard-population-2013--2013-esp-index.html). As this is only factored by age and sex, we estimated the distribution of the notional ESP figures by IMD quintiles by splitting the population equally between the quintiles.
 
 For analyses, LSOA codes were transformed into 2021 LSOA codes before aggregating up to the latest ICB, LA and PCN groups. But since IMD can change over time, IMD quintiles were calculated by using recent IMDs according to the table below:
 
