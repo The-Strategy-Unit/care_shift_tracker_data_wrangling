@@ -339,7 +339,7 @@ list(
                        .by = c(age_range, sex))
   ),
   tar_target(
-    estimated_standard_pop_by_age_sex_imd,
+    standard_pop_by_age_sex_imd,
     read.csv("data/esp13_imd_alt.csv") |>
       janitor::clean_names() |>
       dplyr::mutate(sex = ifelse(stringr::str_detect(gender, "Female"),
@@ -1407,7 +1407,7 @@ list(
         geography = "icb",
         latest_population_year,
         activity_type,
-        estimated_standard_pop_by_age_sex_imd
+        standard_pop_by_age_sex_imd
         ) |>
         dplyr::mutate(frequency = "monthly")
     )
@@ -1422,7 +1422,7 @@ list(
         geography = "la",
         latest_population_year,
         activity_type,
-        estimated_standard_pop_by_age_sex_imd
+        standard_pop_by_age_sex_imd
         ) |>
         dplyr::mutate(frequency = "monthly")
     )
