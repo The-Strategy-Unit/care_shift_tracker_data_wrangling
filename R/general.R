@@ -1,6 +1,6 @@
 # General functions.
 
-#' Converts `imd_decile` into `imd_quintile`.
+#' Gets `imd_quintile` from `imd_decile`.
 #'
 #' @param data A dataframe with a `imd_decile` column.
 #'
@@ -16,6 +16,36 @@ get_quintile_from_decile <- function(data) {
       .default = NA
     )) |>
     dplyr::select(-imd_decile)
+  
+  return(wrangled)
+}
+
+
+#' Gets `imd_quintile` from IMD rank.
+#'
+#' @param data A dataframe with a `rank` column.
+#'
+#' @returns The dataframe with a `imd_quintile` column.
+get_quintile_from_rank <- function(data) {
+  
+  number_ranks <- nrow(data)
+  
+  fifth <- janitor::round_half_up(number_ranks / 5, 0)
+  wrangled <- data |>
+    dplyr::mutate(
+      # Because number_ranks may not be divisible by 5, the lowest 2 quantiles
+      # and highest 2 quantiles are assigned first. Then the middle ranks are 
+      # assigned to quantile 3. This means that quantile 3 can have 1-4 more 
+      # data points, but the other quantiles are equal.
+      imd_quintile = dplyr::case_when(
+        rank <= fifth ~ 1,
+        rank <= 2 * fifth ~ 2,
+        rank > number_ranks - fifth ~ 5,
+        rank > number_ranks - 2 * fifth ~ 4,
+        .default = 3 
+      )
+    ) |>
+    dplyr::select(lsoa_code, effective_snapshot_date, imd_quintile)
   
   return(wrangled)
 }
