@@ -61,19 +61,21 @@ The {pheindicatormethods} R package was used to calculate standardised rates. Th
 
 - Numerator: counts of admissions by LSOA, 5-year age band, sex and IMD quintile grouped to ICB, LA or PCN level.
 - Denominator: LSOA population estimates from ONS (and UKHF) by 5-year age band, sex and IMD quintile grouped to ICB, LA or PCN level. 
-- Standard population: 2013 England population data from (???). As this is only factored by age and sex, we estimated the distribution of the notional ESP figures by IMD quintiles with 2015 IMD populations.
+- Standard population: The revised European Standard Population (ESP) 2013 from [ONS](httpswebarchive.nationalarchives.gov.ukukgwa20160106020035httpwww.ons.gov.ukonsguide-methoduser-guidancehealth-and-life-eventsrevised-european-standard-population-2013--2013-esp-index.html). As this is only factored by age and sex, we estimated the distribution of the notional ESP figures by IMD quintiles by splitting the population equally between the quintiles.
 
 For analyses, LSOA codes were transformed into 2021 LSOA codes before aggregating up to the latest ICB, LA and PCN groups. But since IMD can change over time, IMD quintiles were calculated by using recent IMDs according to the table below:
 
 | Dates of activity | Year of IMD |
 | --- | --- |
-| 2008-04-01 - 2010-03-31 | 2007* |
-| 2010-04-01 - 2015-03-31 | 2010* |
+| 2008-04-01 - 2010-03-31 | 2007 |
+| 2010-04-01 - 2015-03-31 | 2010 |
 | 2015-04-01 - 2019-03-31 | 2015 |
 | 2019-04-01 - 2015-03-31 | 2019 |
 | 2025-04-01 - current | 2025 |
 
-*This is the ideal and still working on it, but currently using 2015 since not got IMD quintile data yet for these years.
+For IMD 2015, 2019 and 2025 provided IMD deciles were converted to IMD quintiles. For IMD 2007 and 2010, IMD quintiles were calculated using the provided IMD ranks. Quintile 1 represents the most deprived 20% of neighbourhoods nationally and quintile 5 the least deprived 20% of neighbourhoods nationally.
+
+IMD 2007 data was downloaded from <https://webarchive.nationalarchives.gov.uk/ukgwa/20100411141238/http://www.communities.gov.uk/communities/neighbourhoodrenewal/deprivation/deprivation07/>.
 
 In less than 0.2% of cases there was no IMD quintile information available and so the latest available IMD year was used instead for that LSOA.
 

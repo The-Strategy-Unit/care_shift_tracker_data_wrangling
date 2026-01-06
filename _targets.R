@@ -116,6 +116,23 @@ list(
   
   ## IMD -----------------------------------------------------------------------
   tar_target(
+    imd_2007,
+    readxl::read_excel("data/IMD 2007 for DCLG 4 dec.xls", sheet = 2) |>
+      janitor::clean_names() |>
+      dplyr::mutate(effective_snapshot_date = "2007-12-31") |>
+      dplyr::rename(rank = rank_of_imd_where_1_is_most_deprived,
+                    lsoa_code = lsoa) |>
+      get_quintile_from_rank()
+    ),
+  tar_target(
+    imd_2010,
+    scrape_xls("https://assets.publishing.service.gov.uk/media/5a79b8c6ed915d042206a8e2/1871524.xls",
+               sheet = 2) |>
+      dplyr::mutate(effective_snapshot_date = "2010-12-31") |>
+      dplyr::rename(rank = rank_of_imd_score_where_1_is_most_deprived) |>
+      get_quintile_from_rank()
+  ),
+  tar_target(
     imd_lsoa_lookup,
     DBI::dbGetQuery(
       con,
@@ -131,7 +148,8 @@ list(
       janitor::clean_names() |>
       unique() |>
       na.omit() |>
-      convert_decile_to_quintile()
+      get_quintile_from_decile() |>
+      rbind(imd_2010, imd_2007)
   ),
   tar_target(
     earliest_imd_year,
@@ -339,7 +357,7 @@ list(
                        .by = c(age_range, sex))
   ),
   tar_target(
-    estimated_standard_pop_by_age_sex_imd,
+    standard_pop_by_age_sex_imd,
     read.csv("data/esp13_imd_alt.csv") |>
       janitor::clean_names() |>
       dplyr::mutate(sex = ifelse(stringr::str_detect(gender, "Female"),
@@ -1407,7 +1425,7 @@ list(
         geography = "icb",
         latest_population_year,
         activity_type,
-        estimated_standard_pop_by_age_sex_imd
+        standard_pop_by_age_sex_imd
         ) |>
         dplyr::mutate(frequency = "monthly")
     )
@@ -1422,7 +1440,7 @@ list(
         geography = "la",
         latest_population_year,
         activity_type,
-        estimated_standard_pop_by_age_sex_imd
+        standard_pop_by_age_sex_imd
         ) |>
         dplyr::mutate(frequency = "monthly")
     )
