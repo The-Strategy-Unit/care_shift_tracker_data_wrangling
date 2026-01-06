@@ -130,7 +130,8 @@ list(
     ) |>
       janitor::clean_names() |>
       unique() |>
-      na.omit()
+      na.omit() |>
+      convert_decile_to_quintile()
   ),
   tar_target(
     earliest_imd_year,
@@ -143,7 +144,7 @@ list(
     imd_lsoa_lookup |>
       dplyr::filter(effective_snapshot_date == max(effective_snapshot_date),
                     .by = lsoa_code) |>
-      dplyr::select(lsoa_code, latest_imd_decile = imd_decile)
+      dplyr::select(lsoa_code, latest_imd_quintile = imd_quintile)
   ),
   
   ## Geography codes to names --------------------------------------------------
@@ -281,14 +282,14 @@ list(
       dplyr::mutate(date = stringr::str_sub(effective_snapshot_date, start = 1, end = 7),
                     der_postcode_lsoa_2011_code = lsoa11cd) |>
       get_imd_from_lsoa(imd_lsoa_lookup, 
-                        targets::tar_read(earliest_imd_year), 
-                        targets::tar_read(latest_available_imd)) |>
+                        earliest_imd_year, 
+                        latest_available_imd) |>
       dplyr::select(-date, -der_postcode_lsoa_2011_code)
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
-      population_by_age_sex,
+      population_by_age_sex_imd,
       get_population_higher_geography_from_lsoa_by_age_sex_imd(
         population_lsoa_mapped_to_higher_geographies_by_age_sex_imd, 
         geography)
@@ -338,7 +339,7 @@ list(
                        .by = c(age_range, sex))
   ),
   tar_target(
-    standard_pop,
+    estimated_standard_pop_by_age_sex_imd,
     read.csv("data/esp13_imd_alt.csv") |>
       janitor::clean_names() |>
       dplyr::mutate(sex = ifelse(stringr::str_detect(gender, "Female"),
@@ -1400,13 +1401,14 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       redirection_indicator_icb,
-      get_indicators_age_sex_standardised_rates(
+      get_indicators_age_sex_imd_standardised_rates(
         data = redirection_icb,
-        population = population_by_age_sex_icb,
+        population = population_by_age_sex_imd_icb,
         geography = "icb",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census) |>
+        estimated_standard_pop_by_age_sex_imd
+        ) |>
         dplyr::mutate(frequency = "monthly")
     )
   ),
@@ -1414,13 +1416,14 @@ list(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       redirection_indicator_la,
-      get_indicators_age_sex_standardised_rates(
+      get_indicators_age_sex_imd_standardised_rates(
         data = redirection_la,
-        population = population_by_age_sex_la,
+        population = population_by_age_sex_imd_la,
         geography = "la",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census) |>
+        estimated_standard_pop_by_age_sex_imd
+        ) |>
         dplyr::mutate(frequency = "monthly")
     )
   ),

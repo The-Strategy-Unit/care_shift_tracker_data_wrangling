@@ -265,7 +265,7 @@ tidy_data_for_indicator_wrangling <- function(data, geography){
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
-      dplyr::any_of(c("age_range", "sex", "imd_decile")),
+      dplyr::any_of(c("age_range", "sex", "imd_quintile")),
       admissions,
       beddays
     )

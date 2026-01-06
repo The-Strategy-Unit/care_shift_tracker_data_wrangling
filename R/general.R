@@ -1,5 +1,25 @@
 # General functions.
 
+#' Converts `imd_decile` into `imd_quintile`.
+#'
+#' @param data A dataframe with a `imd_decile` column.
+#'
+#' @returns The dataframe with a `imd_quintile` column.
+convert_decile_to_quintile <- function(data) {
+  wrangled <- data |>
+    dplyr::mutate(imd_quintile = dplyr::case_when(
+      imd_decile < 3 ~ 1,
+      imd_decile < 5 ~ 2,
+      imd_decile < 7 ~ 3,
+      imd_decile < 9 ~ 4,
+      imd_decile < 11 ~ 5,
+      .default = NA
+    )) |>
+    dplyr::select(-imd_decile)
+  
+  return(wrangled)
+}
+
 #' Gets reference data.
 #'
 #' @param lookup The ICB/LA/PCN lookup.

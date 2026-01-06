@@ -19,7 +19,7 @@ aggregate_indicator_to_geography_level_by_age_sex_imd <- function(data,
     dplyr::summarise(
       admissions = sum(admissions, na.rm = TRUE),
       beddays = sum(beddays, na.rm = TRUE),
-      .by = c(date, age_range, sex, imd_decile, !!rlang::sym(geography_column))
+      .by = c(date, age_range, sex, imd_quintile, !!rlang::sym(geography_column))
     ) |>
     dplyr::mutate(indicator = indicator_name) |>
     tidy_data_for_indicator_wrangling(geography)
@@ -111,14 +111,14 @@ get_end_of_life_episodes <- function(age,
   return(wrangled)
 }
 
-#' Get the IMD decile by date and LSOA.
+#' Get the IMD quintile by date and LSOA.
 #'
 #' @param data A dataframe with columns for date and LSOA.
 #' @param lookup The IMD to LSOA lookup.
 #' @param earliest_imd_year The earliest IMD year from the IMD to LSOA lookup.
-#' @param latest_available_imd A dataframe of the latest available IMD decile for each LSOA.
+#' @param latest_available_imd A dataframe of the latest available IMD quintile for each LSOA.
 #'
-#' @returns The dataframe with a column added for the IMD decile.
+#' @returns The dataframe with a column added for the IMD quintile.
 get_imd_from_lsoa <- function(data, 
                               lookup, 
                               earliest_imd_year, 
@@ -143,13 +143,13 @@ get_imd_from_lsoa <- function(data,
     dplyr::left_join(lookup,
                      by = c("imd_year" = "effective_snapshot_date",
                             "der_postcode_lsoa_2011_code" = "lsoa_code")) |>
-    # If IMD decile is missing, use the latest available IMD decile:
+    # If IMD quintile is missing, use the latest available IMD quintile:
     dplyr::left_join(latest_available_imd,
                      by = c("der_postcode_lsoa_2011_code" = "lsoa_code")) |>
-    dplyr::mutate(imd_decile = ifelse(is.na(imd_decile),
-                                      latest_imd_decile,
-                                      imd_decile)) |>
-    dplyr::select(-latest_imd_decile)
+    dplyr::mutate(imd_quintile = ifelse(is.na(imd_quintile),
+                                      latest_imd_quintile,
+                                      imd_quintile)) |>
+    dplyr::select(-latest_imd_quintile)
   
   return(wrangled)
 }
@@ -178,12 +178,12 @@ get_indicator_at_sub_geography_level_by_age_sex <- function(data,
   return(wrangled)
 }
 
-#' Get the redirection/substitution indicators standardised by age and sex for
-#' a geography.
+#' Get the redirection/substitution indicators standardised by age, sex and imd
+#' fora geography.
 #'
 #' @param data The redirection/substitution indicators at sub-geography level.
-#' @param population Population data at the geography of interest by age and 
-#' sex.
+#' @param population Population data at the geography of interest by age, sex 
+#' and imd.
 #' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
 #' @param latest_population_year The last year that population data is available
 #' for.
@@ -191,7 +191,48 @@ get_indicator_at_sub_geography_level_by_age_sex <- function(data,
 #' @param standard_pop England 2021 census population data.
 #'
 #' @returns A dataframe of the redirection/substitution indicators standardised 
-#' by age and sex for a geography.
+#' by age, sex and imd for a geography.
+get_indicators_age_sex_imd_standardised_rates <- function(data,
+                                                          population,
+                                                          geography,
+                                                          latest_population_year,
+                                                          activity_type,
+                                                          standard_pop) {
+  wrangled <- data |>
+    join_to_population_data_by_age_sex_imd(population, 
+                                           geography, 
+                                           latest_population_year) |>
+    dplyr::filter(!is.na(population_size),
+                  population_size > 0) |>
+    # There were <5 patients with a discharge date before their admission date
+    # in one indicator at GP level. So the line below is to exclude these rows:
+    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
+    dplyr::left_join(standard_pop, 
+                     by = c("age_range", "sex", "imd_quintile")) |>
+    dplyr::group_by(date, !!rlang::sym(geography)) |>
+    dplyr::rename(x = !!rlang::sym(activity_type)) |>
+    PHEindicatormethods::calculate_dsr(x = x,
+                                       n = population_size,
+                                       stdpop = pop) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
+                                ~janitor::round_half_up(.)),
+                  indicator = glue::glue("redirection_age_sex_imd_standardised_{activity_type}")) |>
+    dplyr::select(
+      indicator,
+      date,
+      !!rlang::sym(geography),
+      numerator = total_count,
+      denominator = total_pop,
+      value,
+      lowercl,
+      uppercl
+    )
+  
+  return(wrangled)
+}
+
+# KEEPING BELOW FOR PCN:
 get_indicators_age_sex_standardised_rates <- function(data,
                                                       population,
                                                       geography,
@@ -199,7 +240,7 @@ get_indicators_age_sex_standardised_rates <- function(data,
                                                       activity_type,
                                                       standard_pop) {
   wrangled <- data |>
-    join_to_population_data_by_age_sex(population, geography, latest_population_year) |>
+    join_to_population_data_by_age_sex_imd(population, geography, latest_population_year) |>
     dplyr::filter(!is.na(population_size),
                   population_size > 0) |>
     # There were <5 patients with a discharge date before their admission date
@@ -245,7 +286,7 @@ get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geogr
       .by = c(effective_snapshot_date, 
               age_range,
               sex,
-              imd_decile,
+              imd_quintile,
               {{geography_column}})
     ) |>
     dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
@@ -256,7 +297,7 @@ get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geogr
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       age_range,
       sex,
-      imd_decile,
+      imd_quintile,
       population_size
     )
   
@@ -272,13 +313,14 @@ get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geogr
 #' available for.
 #'
 #' @returns A dataframe containing `data` joined to the `population` data.
-join_to_population_data_by_age_sex <- function(data,
-                                               population,
-                                               geography,
-                                               latest_population_year) {
+join_to_population_data_by_age_sex_imd <- function(data,
+                                                   population,
+                                                   geography,
+                                                   latest_population_year) {
   wrangled <- if (geography == "pcn") {
     data  |>
-      dplyr::left_join(population, by = c(geography, "date", "age_range", "sex"))
+      dplyr::left_join(population, 
+                       by = c(geography, "date", "age_range", "sex"))
   } else {
     data |>
       dplyr::mutate(
@@ -289,7 +331,14 @@ join_to_population_data_by_age_sex <- function(data,
           as.character(year)
         )
       ) |>
-      dplyr::left_join(population, by = c(geography, "population_year", "age_range", "sex"))
+      dplyr::left_join(population, 
+                       by = c(geography, 
+                              "population_year", 
+                              "age_range", 
+                              "sex", 
+                              "imd_quintile"
+                              )
+                       )
   }
   
   return(wrangled)
