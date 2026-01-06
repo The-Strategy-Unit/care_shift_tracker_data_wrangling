@@ -131,7 +131,7 @@ list(
       janitor::clean_names() |>
       unique() |>
       na.omit() |>
-      convert_decile_to_quintile()
+      get_quintile_from_decile()
   ),
   tar_target(
     earliest_imd_year,

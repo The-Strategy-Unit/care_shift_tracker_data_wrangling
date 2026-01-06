@@ -5,7 +5,7 @@
 #' @param data A dataframe with a `imd_decile` column.
 #'
 #' @returns The dataframe with a `imd_quintile` column.
-convert_decile_to_quintile <- function(data) {
+get_quintile_from_decile <- function(data) {
   wrangled <- data |>
     dplyr::mutate(imd_quintile = dplyr::case_when(
       imd_decile < 3 ~ 1,
