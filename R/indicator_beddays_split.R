@@ -22,11 +22,12 @@ get_epi_bedday_data_lsoa <- function(connection) {
     der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
     case when [Patient_Classification] in ('3','4') then 0.5
 		    when [Der_Episode_LoS] = 0 then 0.5
+		    when [Der_Episode_LoS] is NULL then 0.5
 		    else [Der_Episode_LoS] end as los
 
     from [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]
     where 1=1
-      and [Episode_Start_Date] between @startdate and @enddate --total time series
+      and [Episode_End_Date] between @startdate and @enddate --total time series
       and [Age_on_Admission] >= 65 -- proxy for frail
       and left([Admission_Method],1) in ('1') --elective only
       and [Patient_Classification] in ('1','2','3') -- exclude regular night and mother & baby
@@ -63,11 +64,12 @@ get_epi_bedday_data_prac <- function(connection) {
     der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
     case when [Patient_Classification] in ('3','4') then 0.5
 		    when [Der_Episode_LoS] = 0 then 0.5
+		    when [Der_Episode_LoS] is NULL then 0.5
 		    else [Der_Episode_LoS] end as los
 
     from [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]
     where 1=1
-      and [Episode_Start_Date] between @startdate and @enddate --total time series
+      and [Episode_End_Date] between @startdate and @enddate --total time series
       and [Age_on_Admission] >= 65 -- proxy for frail
       and left([Admission_Method],1) in ('1') --elective only
       and [Patient_Classification] in ('1','2','3') -- exclude regular night and mother & baby
@@ -143,7 +145,11 @@ nonacute <- df |>
 wrangled <- all |>
   left_join(acute, by = c("icb24cdh" , "der_activity_month")) |>
   left_join(nonacute, by = c("icb24cdh" , "der_activity_month")) |>
-  mutate(perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
+  mutate(acute_los = case_when(is.na(acute_los) ~ 0,
+                               TRUE ~ acute_los),
+         nonacute_los = case_when(is.na(nonacute_los) ~ 0,
+                                  TRUE ~ nonacute_los),
+         perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
 
 return(wrangled)
 }
@@ -203,7 +209,11 @@ beddays_to_lad <- function(beddays,sites,geog1,geog2) {
   wrangled <- all |>
     left_join(acute, by = c("lad24cd" , "der_activity_month")) |>
     left_join(nonacute, by = c("lad24cd" , "der_activity_month")) |>
-    mutate(perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
+    mutate(acute_los = case_when(is.na(acute_los) ~ 0,
+                                 TRUE ~ acute_los),
+           nonacute_los = case_when(is.na(nonacute_los) ~ 0,
+                                    TRUE ~ nonacute_los),
+           perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
   
   return(wrangled)
 }
@@ -260,7 +270,11 @@ beddays_to_pcn <- function(beddays,sites,geog) {
   wrangled <- all |>
     left_join(acute, by = c("pcn_code" , "der_activity_month")) |>
     left_join(nonacute, by = c("pcn_code" , "der_activity_month")) |>
-    mutate(perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
+    mutate(acute_los = case_when(is.na(acute_los) ~ 0,
+                                    TRUE ~ acute_los),
+           nonacute_los = case_when(is.na(nonacute_los) ~ 0,
+                                    TRUE ~ nonacute_los),
+           perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
   
   return(wrangled)
 }

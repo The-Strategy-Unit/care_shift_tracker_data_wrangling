@@ -16,10 +16,23 @@ get_kh03_data <- function(connection) {
     cast(datepart(yyyy, effective_snapshot_date)-1 as varchar) + '/' + cast(right(datepart(yyyy, effective_snapshot_date),2) as varchar) as der_financial_year,
     sum(number_of_beds) as bed_total
     from [UKHF_Bed_Availability].[Provider_By_Sector_Available_Overnight_Beds1]
-    where datepart(mm, effective_snapshot_date) = 03
+    where effective_snapshot_date <= '2010-03-31'
+    and datepart(mm, effective_snapshot_date) = 03
     and sector in ('Acute','General & Acute','Geriatric')
     group by organisation_code,
     cast(datepart(yyyy, effective_snapshot_date)-1 as varchar) + '/' + cast(right(datepart(yyyy, effective_snapshot_date),2) as varchar)
+
+    union all
+
+    Select organisation_code,
+    cast(datepart(yyyy, effective_snapshot_date) as varchar) + '/' + cast(right(datepart(yyyy, effective_snapshot_date),2)+1 as varchar) as der_financial_year,
+    sum(number_of_beds) as bed_total
+    from [UKHF_Bed_Availability].[Provider_By_Sector_Available_Overnight_Beds1]
+    where effective_snapshot_date > '2010-03-31'
+    and datepart(mm, effective_snapshot_date) = 06
+    and sector in ('Acute','General & Acute','Geriatric')
+    group by organisation_code,
+    cast(datepart(yyyy, effective_snapshot_date) as varchar) + '/' + cast(right(datepart(yyyy, effective_snapshot_date),2)+1 as varchar)
     order by organisation_code, der_financial_year
   "
   
