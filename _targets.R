@@ -40,7 +40,7 @@ list(
   tar_target(age_cutoff, 65),
   tar_target(
     age_bands,
-    "('65-69', '70-74', '75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
+    "('65-69', '70-74', '75-79', '80+', '80-84', '85-89', '85+', '90-94', '95+')"),
   tar_target(
     age_bands_75_plus,
     "('75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
@@ -184,7 +184,7 @@ list(
   # LSOA to LA and ICB
   tar_target(
     population_lsoa,
-    get_population_lsoa(age_cutoff, start_date, con)
+    get_population_lsoa(age_bands, start_date, con)
   ),
   tar_target(
     population_lsoa_mapped_to_higher_geographies,
@@ -275,7 +275,7 @@ list(
   ## Population by age range and sex -------------------------------------------
   tar_target(
     population_lsoa_by_age_sex,
-    get_population_lsoa_by_age_sex(age_cutoff, start_date, con)
+    get_population_lsoa_by_age_sex(age_bands, start_date, con)
   ),
   tar_target(
     population_lsoa_mapped_to_higher_geographies_by_age_sex_imd,
@@ -289,12 +289,12 @@ list(
         population_size_amended = population_size / number
       ) |>
       # Adding IMD decile:
-      dplyr::mutate(date = effective_snapshot_date,
+      dplyr::mutate(imd_year = effective_snapshot_date,
                     der_postcode_lsoa_2011_code = lsoa11cd) |>
       get_imd_from_lsoa(imd_lsoa_lookup, 
                         earliest_imd_year, 
                         latest_available_imd) |>
-      dplyr::select(-date, -der_postcode_lsoa_2011_code)
+      dplyr::select(-imd_year, -der_postcode_lsoa_2011_code)
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
