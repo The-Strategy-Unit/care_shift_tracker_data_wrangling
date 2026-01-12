@@ -289,7 +289,7 @@ list(
         population_size_amended = population_size / number
       ) |>
       # Adding IMD decile:
-      dplyr::mutate(date = stringr::str_sub(effective_snapshot_date, start = 1, end = 7),
+      dplyr::mutate(date = effective_snapshot_date,
                     der_postcode_lsoa_2011_code = lsoa11cd) |>
       get_imd_from_lsoa(imd_lsoa_lookup, 
                         earliest_imd_year, 
@@ -1386,6 +1386,7 @@ list(
       get_indicator_at_sub_geography_level_by_age_sex("lsoa") |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies) |>
+      dplyr::mutate(imd_year = lubridate::ymd(date, truncated = 1)) |>
       get_imd_from_lsoa(imd_lsoa_lookup, 
                         earliest_imd_year, 
                         latest_available_imd)
