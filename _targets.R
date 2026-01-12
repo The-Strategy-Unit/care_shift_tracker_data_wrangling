@@ -275,6 +275,53 @@ list(
                                   population_gp_post_2017_04_01_by_age_sex,
                                   gp_to_pcn)
   ),
+  ## GP ------------------------------------------------------------------------
+  tar_target(
+    gp_to_lsoa_population,
+    DBI::dbGetQuery(
+      con,
+      "
+      SELECT
+        [GP_Practice_Code],
+        [LSOA_Code],
+        [Effective_Snapshot_Date],
+        SUM(Size) AS population_size
+
+      FROM [UKHF_Demography].[No_Of_Patients_Regd_At_GP_Practice_LSOA_Level1_1]
+      
+      WHERE Sex != 'ALL'
+      
+      GROUP BY
+        [GP_Practice_Code],
+        [LSOA_Code],
+        [Effective_Snapshot_Date]
+      "
+    ) |>
+      janitor::clean_names() |>
+      unique()
+  ),
+  tar_target(
+    gp_pop,
+    gp_to_lsoa_population |>
+      dplyr::filter(lubridate::month(effective_snapshot_date) == 7) |>
+      dplyr::left_join(population_lsoa |>
+                         dplyr::rename(lsoa_population_size = population_size),
+                       by = c("lsoa_code" = "area_code",
+                              "effective_snapshot_date")) |>
+      dplyr::mutate(proportion = population_size / lsoa_population_size) |>
+      dplyr::left_join(population_lsoa_mapped_to_higher_geographies_by_age_sex_imd,
+                       by = c("lsoa_code" = "lsoa11cd",
+                              "effective_snapshot_date")) |>
+      dplyr::mutate(population_size = proportion * population_size_amended) |>
+      dplyr::summarise(population_size = sum(population_size),
+                       .by = c(gp_practice_code,
+                               effective_snapshot_date,
+                               age_range,
+                               sex,
+                               imd_quintile)
+      )
+  ),
+  
   ## England census ------------------------------------------------------------
   tar_target(
     census_url,
