@@ -321,7 +321,22 @@ list(
                                   population_gp_post_2017_04_01_by_age_sex,
                                   gp_to_pcn)
   ),
-  ## GP ------------------------------------------------------------------------
+  targets::tar_target(
+    population_by_age_sex_imd_pcn,
+    population_by_age_sex_pcn |>
+      dplyr::mutate(
+        date_full = lubridate::ymd(date, truncated = 1),
+        pcn_prop_date = ifelse(lubridate::month(date_full) < 7,
+                               glue::glue("{lubridate::year(date_full) - 1}-07"),
+                               glue::glue("{lubridate::year(date_full)}-07"))
+      ) |>
+      dplyr::left_join(pcn_population_proportional_imd,
+                       by = c("pcn_prop_date",
+                              "pcn")) |>
+      dplyr::mutate(population_size = population_size * prop) |>
+      dplyr::select(date, pcn, age_range, sex, imd_quintile, population_size)
+  ),
+  ## GP and PCN proportinally by IMD -------------------------------------------
   tar_target(
     gp_to_lsoa_population,
     DBI::dbGetQuery(
@@ -347,25 +362,26 @@ list(
       unique()
   ),
   tar_target(
-    gp_pop,
+    pcn_population_proportional_imd,
     gp_to_lsoa_population |>
       dplyr::filter(lubridate::month(effective_snapshot_date) == 7) |>
-      dplyr::left_join(population_lsoa |>
-                         dplyr::rename(lsoa_population_size = population_size),
-                       by = c("lsoa_code" = "area_code",
-                              "effective_snapshot_date")) |>
-      dplyr::mutate(proportion = population_size / lsoa_population_size) |>
-      dplyr::left_join(population_lsoa_mapped_to_higher_geographies_by_age_sex_imd,
-                       by = c("lsoa_code" = "lsoa11cd",
-                              "effective_snapshot_date")) |>
-      dplyr::mutate(population_size = proportion * population_size_amended) |>
+      dplyr::mutate(imd_year = effective_snapshot_date,
+                    der_postcode_lsoa_2011_code = lsoa_code) |>
+      get_imd_from_lsoa(imd_lsoa_lookup, 
+                        earliest_imd_year, 
+                        latest_available_imd) |>
+      dplyr::left_join(gp_to_pcn, 
+                       by = c("gp_practice_code" = "partner_organisation_code")) |>
       dplyr::summarise(population_size = sum(population_size),
-                       .by = c(gp_practice_code,
-                               effective_snapshot_date,
-                               age_range,
-                               sex,
-                               imd_quintile)
-      )
+                       .by = c(pcn_code, effective_snapshot_date, imd_quintile)) |>
+      dplyr::filter(!is.na(imd_quintile)) |>
+      dplyr::mutate(prop = population_size / sum(population_size),
+                    .by = c(pcn_code, effective_snapshot_date)) |>
+      dplyr::mutate(pcn_prop_date = stringr::str_sub(effective_snapshot_date, 1, 7)) |>
+      dplyr::select(pcn = pcn_code,
+                    pcn_prop_date,
+                    imd_quintile,
+                    prop)
   ),
   
   ## England census ------------------------------------------------------------
@@ -1442,7 +1458,19 @@ list(
   tar_target(
     redirection_gp,
     redirection_episodes |>
-      get_indicator_at_sub_geography_level_by_age_sex("gp") |>
+      redirection_episodes |>
+      unique() |>
+      dplyr::mutate(imd_year = lubridate::ymd(date, truncated = 1)) |>
+      get_imd_from_lsoa(imd_lsoa_lookup, 
+                        earliest_imd_year, 
+                        latest_available_imd) |>
+      dplyr::summarise(admissions = dplyr::n(),
+                       beddays = sum(spelldur, na.rm = TRUE),
+                       .by = c(date, 
+                               age_range, 
+                               sex, 
+                               imd_quintile,
+                               gp_practice_sus)) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
 
@@ -1490,8 +1518,8 @@ list(
   tar_target(
     redirection_pcn,
     aggregate_indicator_to_geography_level_by_age_sex_imd(redirection_gp,
-                                                      "pcn",
-                                                      "redirection")
+                                                          "pcn",
+                                                          "redirection")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -1499,11 +1527,11 @@ list(
       redirection_indicator_pcn,
       get_indicators_age_sex_imd_standardised_rates(
         data = redirection_pcn,
-        population = population_by_age_sex_pcn,
+        population = population_by_age_sex_imd_pcn,
         geography = "pcn",
         latest_population_year,
-        activity_type,
-        standard_england_pop_2021_census) |>
+        "admissions",
+        standard_pop_by_age_sex_imd) |>
         dplyr::mutate(frequency = "monthly")
     )
   ),
