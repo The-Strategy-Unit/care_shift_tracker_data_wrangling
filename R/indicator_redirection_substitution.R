@@ -27,24 +27,6 @@ aggregate_indicator_to_geography_level_by_age_sex_imd <- function(data,
   return(wrangled)
 }
 
-# KEEPING BELOW TEMPORARILY FOR PCN:
-aggregate_indicator_to_geography_level_by_age_sex <- function(data,
-                                                                  geography, 
-                                                                  indicator_name) {
-  geography_column <- get_geography_column(geography)
-  
-  wrangled <- data |>
-    dplyr::summarise(
-      admissions = sum(admissions, na.rm = TRUE),
-      beddays = sum(beddays, na.rm = TRUE),
-      .by = c(date, age_range, sex, !!rlang::sym(geography_column))
-    ) |>
-    dplyr::mutate(indicator = indicator_name) |>
-    tidy_data_for_indicator_wrangling(geography)
-  
-  return(wrangled)
-}
-
 #' The number of end of life admissions/beddays by LSOA/GP and month.
 #'
 #' @param age The minimum age cutoff.
@@ -125,7 +107,6 @@ get_imd_from_lsoa <- function(data,
                               latest_available_imd) {
   wrangled <- data |>
     dplyr::mutate(
-      imd_year = lubridate::ymd(date, truncated = 1),
       imd_year = dplyr::case_when(
         imd_year >= as.Date("2025-04-01") ~ "2025-12-31",
         imd_year >= as.Date("2019-04-01") ~ "2019-12-31",
@@ -232,45 +213,6 @@ get_indicators_age_sex_imd_standardised_rates <- function(data,
   return(wrangled)
 }
 
-# KEEPING BELOW FOR PCN:
-get_indicators_age_sex_standardised_rates <- function(data,
-                                                      population,
-                                                      geography,
-                                                      latest_population_year,
-                                                      activity_type,
-                                                      standard_pop) {
-  wrangled <- data |>
-    join_to_population_data_by_age_sex_imd(population, geography, latest_population_year) |>
-    dplyr::filter(!is.na(population_size),
-                  population_size > 0) |>
-    # There were <5 patients with a discharge date before their admission date
-    # in one indicator at GP level. So the line below is to exclude these rows:
-    dplyr::filter(!!rlang::sym(activity_type) >= 0) |> 
-    dplyr::left_join(standard_pop, 
-                     by = c("age_range", "sex")) |>
-    dplyr::group_by(date, !!rlang::sym(geography)) |>
-    dplyr::rename(x = !!rlang::sym(activity_type)) |>
-    PHEindicatormethods::calculate_dsr(x = x,
-                                       n = population_size,
-                                       stdpop = pop) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl), 
-                                ~janitor::round_half_up(.)),
-                  indicator = glue::glue("redirection_age_sex_standardised_{activity_type}")) |>
-    dplyr::select(
-      indicator,
-      date,
-      !!rlang::sym(geography),
-      numerator = total_count,
-      denominator = total_pop,
-      value,
-      lowercl,
-      uppercl
-    )
-  
-  return(wrangled)
-}
-
 #' Get ICB / LA populations from LSOA populations.
 #'
 #' @param data A dataframe of LSOA populations.
@@ -318,9 +260,13 @@ join_to_population_data_by_age_sex_imd <- function(data,
                                                    geography,
                                                    latest_population_year) {
   wrangled <- if (geography == "pcn") {
-    data  |>
+    data |>
       dplyr::left_join(population, 
-                       by = c(geography, "date", "age_range", "sex"))
+                       by = c(geography, 
+                              "date", 
+                              "age_range", 
+                              "sex", 
+                              "imd_quintile"))
   } else {
     data |>
       dplyr::mutate(

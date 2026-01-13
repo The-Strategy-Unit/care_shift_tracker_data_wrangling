@@ -9,10 +9,19 @@ library(tarchetypes)
 
 # Set target options:
 tar_option_set(
-  packages = c("tidyverse","stringr","PHEindicatormethods","arrow","glue","pins",
-               "rsconnect","nanoparquet","tibble"
+  packages = c(
+    "tidyverse",
+    "stringr",
+    "PHEindicatormethods",
+    "arrow",
+    "glue",
+    "pins",
+    "rsconnect",
+    "nanoparquet",
+    "tibble"
   ) # List other packages as needed.
-  ##, error = "null" # produce null result even if target errors out(i.e. continue pipeline)
+  ##, error = "null" # produce null result even if target errors out
+  ##(i.e. continue pipeline)
 )
 
 # Run the R scripts in the R/ folder with your custom functions:
@@ -40,19 +49,22 @@ list(
   tar_target(age_cutoff, 65),
   tar_target(
     age_bands,
-    "('65-69', '70-74', '75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
+    "('65-69', '70-74', '75-79', '80+', '80-84', '85-89', '85+', '90-94', '95+')"
+  ),
   tar_target(
     age_bands_75_plus,
-    "('75-79', '80-84', '85-89', '85+', '90-94', '95+')"),
+    "('75-79', '80-84', '85-89', '85+', '90-94', '95+')"
+  ),
   
-  ## Date ---------------------------------------------------------------------- 
+  ## Date ----------------------------------------------------------------------
   tar_target(start_date, "2008-04-01"),
-  tar_target(admissions_lag_date, 
-             (Sys.Date() |>
-               lubridate::floor_date("month") - months(1))|>
-               as.character()),
-  tar_target(next_month, 
-             Sys.Date() |>
+  tar_target(
+    admissions_lag_date,
+    (Sys.Date() |>
+       lubridate::floor_date("month") - months(1)) |>
+      as.character()
+  ),
+  tar_target(next_month, Sys.Date() |>
                lubridate::ceiling_date("month")),
   
   # Lookups --------------------------------------------------------------------
@@ -106,7 +118,12 @@ list(
   tar_target(
     prov_site_type,
     get_eric_site_classifications(con) |>
-      dplyr::mutate(der_financial_year = stringr::str_replace(der_fin_year, "^(\\d{4})\\-(\\d{2})(\\d{2})$", "\\1/\\3"))
+      dplyr::mutate(
+        der_financial_year = stringr::str_replace(
+          der_fin_year, 
+          "^(\\d{4})\\-(\\d{2})(\\d{2})$", 
+          "\\1/\\3")
+      )
   ),
   
   ## IMD -----------------------------------------------------------------------
@@ -115,14 +132,16 @@ list(
     readxl::read_excel("data/IMD 2007 for DCLG 4 dec.xls", sheet = 2) |>
       janitor::clean_names() |>
       dplyr::mutate(effective_snapshot_date = "2007-12-31") |>
-      dplyr::rename(rank = rank_of_imd_where_1_is_most_deprived,
+      dplyr::rename(rank = rank_of_imd_where_1_is_most_deprived, 
                     lsoa_code = lsoa) |>
       get_quintile_from_rank()
-    ),
+  ),
   tar_target(
     imd_2010,
-    scrape_xls("https://assets.publishing.service.gov.uk/media/5a79b8c6ed915d042206a8e2/1871524.xls",
-               sheet = 2) |>
+    scrape_xls(
+      "https://assets.publishing.service.gov.uk/media/5a79b8c6ed915d042206a8e2/1871524.xls",
+      sheet = 2
+    ) |>
       dplyr::mutate(effective_snapshot_date = "2010-12-31") |>
       dplyr::rename(rank = rank_of_imd_score_where_1_is_most_deprived) |>
       get_quintile_from_rank()
@@ -155,7 +174,7 @@ list(
   tar_target(
     latest_available_imd,
     imd_lsoa_lookup |>
-      dplyr::filter(effective_snapshot_date == max(effective_snapshot_date),
+      dplyr::filter(effective_snapshot_date == max(effective_snapshot_date), 
                     .by = lsoa_code) |>
       dplyr::select(lsoa_code, latest_imd_quintile = imd_quintile)
   ),
@@ -217,18 +236,21 @@ list(
   # GP to PCN
   targets::tar_target(
     population_gp_pre_2017_04_01,
-    get_population_gp_pre_2017_04_01(age_bands, start_date, con) 
+    get_population_gp_pre_2017_04_01(age_bands, start_date, con)
   ),
   targets::tar_target(
     population_gp_post_2017_04_01,
-    get_population_gp_post_2017_04_01(age_bands, start_date, con) 
+    get_population_gp_post_2017_04_01(age_bands, start_date, con)
   ),
   targets::tar_target(
     population_pcn,
-    get_population_pcn(population_gp_pre_2017_04_01, 
-                       population_gp_post_2017_04_01,
-                       gp_to_pcn)
+    get_population_pcn(
+      population_gp_pre_2017_04_01,
+      population_gp_post_2017_04_01,
+      gp_to_pcn
+    )
   ),
+  
   ## Over 75 population --------------------------------------------------------
   # LSOA to LA and ICB (75+)
   tar_target(
@@ -259,23 +281,25 @@ list(
   # GP to PCN (75+)
   targets::tar_target(
     population_75_plus_gp_pre_2017_04_01,
-    get_population_gp_pre_2017_04_01(age_bands_75_plus, start_date, con) 
+    get_population_gp_pre_2017_04_01(age_bands_75_plus, start_date, con)
   ),
   targets::tar_target(
     population_75_plus_gp_post_2017_04_01,
-    get_population_gp_post_2017_04_01(age_bands_75_plus, start_date, con) 
+    get_population_gp_post_2017_04_01(age_bands_75_plus, start_date, con)
   ),
   targets::tar_target(
     population_75_plus_pcn,
-    get_population_pcn(population_75_plus_gp_pre_2017_04_01, 
-                       population_75_plus_gp_post_2017_04_01,
-                       gp_to_pcn)
+    get_population_pcn(
+      population_75_plus_gp_pre_2017_04_01,
+      population_75_plus_gp_post_2017_04_01,
+      gp_to_pcn
+    )
   ),
   
   ## Population by age range and sex -------------------------------------------
   tar_target(
     population_lsoa_by_age_sex,
-    get_population_lsoa_by_age_sex(age_cutoff, start_date, con)
+    get_population_lsoa_by_age_sex(age_bands, start_date, con)
   ),
   tar_target(
     population_lsoa_mapped_to_higher_geographies_by_age_sex_imd,
@@ -289,135 +313,233 @@ list(
         population_size_amended = population_size / number
       ) |>
       # Adding IMD decile:
-      dplyr::mutate(date = stringr::str_sub(effective_snapshot_date, start = 1, end = 7),
+      dplyr::mutate(imd_year = effective_snapshot_date, 
                     der_postcode_lsoa_2011_code = lsoa11cd) |>
       get_imd_from_lsoa(imd_lsoa_lookup, 
                         earliest_imd_year, 
                         latest_available_imd) |>
-      dplyr::select(-date, -der_postcode_lsoa_2011_code)
+      dplyr::select(-imd_year, -der_postcode_lsoa_2011_code)
   ),
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       population_by_age_sex_imd,
       get_population_higher_geography_from_lsoa_by_age_sex_imd(
-        population_lsoa_mapped_to_higher_geographies_by_age_sex_imd, 
-        geography)
+        population_lsoa_mapped_to_higher_geographies_by_age_sex_imd,
+        geography
+      )
     )
   ),
   # GP to PCN
   targets::tar_target(
     population_gp_pre_2017_04_01_by_age_sex,
-    get_population_gp_pre_2017_04_01_by_age_sex(age_bands, start_date, con) 
+    get_population_gp_pre_2017_04_01_by_age_sex(age_bands, start_date, con)
   ),
   targets::tar_target(
     population_gp_post_2017_04_01_by_age_sex,
-    get_population_gp_post_2017_04_01_by_age_sex(age_bands, start_date, con) 
+    get_population_gp_post_2017_04_01_by_age_sex(age_bands, start_date, con)
   ),
   targets::tar_target(
     population_by_age_sex_pcn,
-    get_population_pcn_by_age_sex(population_gp_pre_2017_04_01_by_age_sex, 
-                                  population_gp_post_2017_04_01_by_age_sex,
-                                  gp_to_pcn)
+    get_population_pcn_by_age_sex(
+      population_gp_pre_2017_04_01_by_age_sex,
+      population_gp_post_2017_04_01_by_age_sex,
+      gp_to_pcn
+    )
   ),
+  targets::tar_target(
+    population_by_age_sex_imd_pcn,
+    population_by_age_sex_pcn |>
+      dplyr::mutate(
+        date_full = lubridate::ymd(date, truncated = 1),
+        pcn_prop_date = ifelse(
+          lubridate::month(date_full) < 7,
+          glue::glue("{lubridate::year(date_full) - 1}-07"),
+          glue::glue("{lubridate::year(date_full)}-07")
+        )
+      ) |>
+      dplyr::left_join(pcn_population_proportional_imd, 
+                       by = c("pcn_prop_date", "pcn")) |>
+      dplyr::mutate(population_size = population_size * prop) |>
+      dplyr::select(date, pcn, age_range, sex, imd_quintile, population_size)
+  ),
+  ## GP and PCN proportinally by IMD -------------------------------------------
+  tar_target(
+    gp_to_lsoa_population,
+    DBI::dbGetQuery(
+      con,
+      "
+      SELECT
+        [GP_Practice_Code],
+        [LSOA_Code],
+        [Effective_Snapshot_Date],
+        SUM(Size) AS population_size
+
+      FROM [UKHF_Demography].[No_Of_Patients_Regd_At_GP_Practice_LSOA_Level1_1]
+
+      WHERE Sex != 'ALL'
+
+      GROUP BY
+        [GP_Practice_Code],
+        [LSOA_Code],
+        [Effective_Snapshot_Date]
+      "
+    ) |>
+      janitor::clean_names() |>
+      unique()
+  ),
+  tar_target(
+    pcn_population_proportional_imd,
+    gp_to_lsoa_population |>
+      dplyr::filter(lubridate::month(effective_snapshot_date) == 7) |>
+      dplyr::mutate(imd_year = effective_snapshot_date, 
+                    der_postcode_lsoa_2011_code = lsoa_code) |>
+      get_imd_from_lsoa(imd_lsoa_lookup, earliest_imd_year, latest_available_imd) |>
+      dplyr::left_join(
+        gp_to_pcn,
+        by = c("gp_practice_code" = "partner_organisation_code")
+      ) |>
+      dplyr::summarise(
+        population_size = sum(population_size),
+        .by = c(pcn_code, effective_snapshot_date, imd_quintile)
+      ) |>
+      dplyr::filter(!is.na(imd_quintile)) |>
+      dplyr::mutate(
+        prop = population_size / sum(population_size),
+        .by = c(pcn_code, effective_snapshot_date)
+      ) |>
+      dplyr::mutate(
+        pcn_prop_date = stringr::str_sub(effective_snapshot_date, 1, 7)
+        ) |>
+      dplyr::select(pcn = pcn_code, pcn_prop_date, imd_quintile, prop)
+  ),
+  
   ## England census ------------------------------------------------------------
   tar_target(
     census_url,
     "https://www.ons.gov.uk/visualisations/dvc1914/fig4/datadownload.xlsx"
-    ),
+  ),
   tar_target(
     standard_england_pop_2021_census,
     scrape_xls(census_url, skip = 5) |>
       janitor::clean_names() |>
       dplyr::select(age, dplyr::contains("2021")) |>
-      tidyr::pivot_longer(dplyr::contains("2021"), 
-                          names_to = "sex", 
-                          values_to = "pop") |>
-      dplyr::mutate(sex = ifelse(stringr::str_detect(sex, "female"),
-                                 "2", 
-                                 "1"),
-                    age_range = age |>
-                      stringr::str_replace_all(c("Aged " = "",
-                                                 " to " = "-",
-                                                 " years" = "",
-                                                 "4 and under" = "0-4",
-                                                 "90 and over" = "80+",
-                                                 "80-84" = "80+",
-                                                 "85-89" = "80+"))) |>
+      tidyr::pivot_longer(
+        dplyr::contains("2021"),
+        names_to = "sex",
+        values_to = "pop"
+      ) |>
+      dplyr::mutate(
+        sex = ifelse(stringr::str_detect(sex, "female"), "2", "1"),
+        age_range = age |>
+          stringr::str_replace_all(
+            c(
+              "Aged " = "",
+              " to " = "-",
+              " years" = "",
+              "4 and under" = "0-4",
+              "90 and over" = "80+",
+              "80-84" = "80+",
+              "85-89" = "80+"
+            )
+          )
+      ) |>
       na.omit() |>
-      dplyr::summarise(pop = sum(pop),
-                       .by = c(age_range, sex))
+      dplyr::summarise(pop = sum(pop), .by = c(age_range, sex))
   ),
   tar_target(
     standard_pop_by_age_sex_imd,
     read.csv("data/esp13_imd_alt.csv") |>
       janitor::clean_names() |>
-      dplyr::mutate(sex = ifelse(stringr::str_detect(gender, "Female"),
-                                 "2", 
-                                 "1"),
-                    age_range = stringr::str_remove(age, " years"),
-                    age_range = ifelse(age_range %in% c("80-84", "85-89", "90plus"),
-                                       "80+",
-                                       age_range)) |>
-      dplyr::summarise(pop = sum(esp13_pop_part_2, na.rm = TRUE),
-                       .by = c(age_range, sex, imd_quintile))
+      dplyr::mutate(
+        sex = ifelse(stringr::str_detect(gender, "Female"), "2", "1"),
+        age_range = stringr::str_remove(age, " years"),
+        age_range = ifelse(age_range %in% c("80-84", "85-89", "90plus"), 
+                           "80+", 
+                           age_range)
+      ) |>
+      dplyr::summarise(
+        pop = sum(esp13_pop_part_2, na.rm = TRUE),
+        .by = c(age_range, sex, imd_quintile)
+      )
   ),
   
   ## Distribution of SUS provider activity by ICB, LAD and PCN for bed data ----
-  tar_target(
-    prov_act_dist_geog,
-    get_prov_dist_by_lsoa(con)
-  ),
+  tar_target(prov_act_dist_geog, get_prov_dist_by_lsoa(con)),
   tar_target(
     prov_act_dist_icb,
     prov_act_dist_geog |>
       dplyr::filter(prov_code != "", lsoa_2011 != "") |>
-      dplyr::left_join(lsoa11_to_lsoa_21 |>
-                         dplyr::select(1,2), by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
-      dplyr::left_join(lsoa_to_higher_geographies |>
-                         dplyr::select(1,6:8), by = "lsoa21cd", relationship = "many-to-many")|>
+      dplyr::left_join(
+        lsoa11_to_lsoa_21 |>
+          dplyr::select(1, 2),
+        by = c("lsoa_2011" = "lsoa11cd"),
+        relationship = "many-to-many"
+      ) |>
+      dplyr::left_join(
+        lsoa_to_higher_geographies |>
+          dplyr::select(1, 6:8),
+        by = "lsoa21cd",
+        relationship = "many-to-many"
+      ) |>
       dplyr::filter(!is.na(icb24cd)) |>
-      dplyr::group_by(prov_code, der_financial_year, icb24cd, icb24cdh, icb24nm) |>
-      dplyr::summarise(patients = sum(patients),
-                       beddays = sum(beddays)) |>
+      dplyr::group_by(prov_code,
+                      der_financial_year, 
+                      icb24cd, 
+                      icb24cdh, 
+                      icb24nm) |>
+      dplyr::summarise(patients = sum(patients), beddays = sum(beddays)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
-      dplyr::mutate(prop_pat = patients/sum(patients),
-                    prop_bed = beddays/sum(beddays))
+      dplyr::mutate(
+        prop_pat = patients / sum(patients),
+        prop_bed = beddays / sum(beddays)
+      )
   ),
   tar_target(
     prov_act_dist_lad,
     prov_act_dist_geog |>
       dplyr::filter(prov_code != "", lsoa_2011 != "") |>
-      dplyr::left_join(lsoa11_to_lsoa_21 |>
-                         dplyr::select(1,2), by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
-      dplyr::left_join(lsoa_to_higher_geographies |>
-                         dplyr::select(1,11:12), by = "lsoa21cd", relationship = "many-to-many")|>
+      dplyr::left_join(
+        lsoa11_to_lsoa_21 |>
+          dplyr::select(1, 2),
+        by = c("lsoa_2011" = "lsoa11cd"),
+        relationship = "many-to-many"
+      ) |>
+      dplyr::left_join(
+        lsoa_to_higher_geographies |>
+          dplyr::select(1, 11:12),
+        by = "lsoa21cd",
+        relationship = "many-to-many"
+      ) |>
       dplyr::filter(!is.na(lad24cd)) |>
       dplyr::group_by(prov_code, der_financial_year, lad24cd, lad24nm) |>
-      dplyr::summarise(patients = sum(patients),
-                       beddays = sum(beddays)) |>
+      dplyr::summarise(patients = sum(patients), beddays = sum(beddays)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
-      dplyr::mutate(prop_pat = patients/sum(patients),
-                    prop_bed = beddays/sum(beddays))
+      dplyr::mutate(
+        prop_pat = patients / sum(patients),
+        prop_bed = beddays / sum(beddays)
+      )
   ),
   
-  tar_target(
-    prov_act_dist_prac,
-    get_prov_dist_by_practice(con)
-  ),
+  tar_target(prov_act_dist_prac, get_prov_dist_by_practice(con)),
   tar_target(
     prov_act_dist_pcn,
     prov_act_dist_prac |>
       dplyr::filter(prov_code != "", gp_prac != "") |>
-      dplyr::left_join(gp_to_pcn |>
-                         dplyr::select(1:2,5:6), by = c("gp_prac" = "partner_organisation_code"), relationship = "many-to-many") |>
+      dplyr::left_join(
+        gp_to_pcn |>
+          dplyr::select(1:2, 5:6),
+        by = c("gp_prac" = "partner_organisation_code"),
+        relationship = "many-to-many"
+      ) |>
       dplyr::filter(!is.na(pcn_code)) |>
       dplyr::group_by(prov_code, der_financial_year, pcn_code, pcn_name) |>
-      dplyr::summarise(patients = sum(patients),
-                       beddays = sum(beddays)) |>
+      dplyr::summarise(patients = sum(patients), beddays = sum(beddays)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
-      dplyr::mutate(prop_pat = patients/sum(patients),
-                    prop_bed = beddays/sum(beddays))
+      dplyr::mutate(
+        prop_pat = patients / sum(patients),
+        prop_bed = beddays / sum(beddays)
+      )
   ),
   
   ## Distribution of provider patients (SUS,CSDS,MHSDS) for workforce and costs data -----
@@ -426,7 +548,7 @@ list(
     get_prov_pats_lsoa("data/prov_lsoa_pats.csv") |>
       dplyr::left_join(lsoa11_to_lsoa_21, by = c("lsoa_2011" = "lsoa11cd")) |>
       dplyr::left_join(lsoa_to_higher_geographies |>
-                         select(1,6:8,11:12), by = "lsoa21cd") |>
+                         select(1, 6:8, 11:12), by = "lsoa21cd") |>
       janitor::clean_names()
   ),
   tar_target(
@@ -435,7 +557,7 @@ list(
       dplyr::group_by(prov_code, icb24cdh, icb24nm, der_financial_year) |>
       dplyr::summarise(pats = sum(pats)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
-      dplyr::mutate(prop_pat = pats/sum(pats))
+      dplyr::mutate(prop_pat = pats / sum(pats))
   ),
   tar_target(
     prov_pat_dist_lad,
@@ -443,7 +565,7 @@ list(
       dplyr::group_by(prov_code, lad24cd, lad24nm, der_financial_year) |>
       dplyr::summarise(pats = sum(pats)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
-      dplyr::mutate(prop_pat = pats/sum(pats))
+      dplyr::mutate(prop_pat = pats / sum(pats))
   ),
   
   tar_target(
@@ -455,14 +577,18 @@ list(
     prov_pat_dist_pcn,
     prov_pat_dist_prac |>
       dplyr::filter(prov_code != "", gp_prac != "") |>
-      dplyr::left_join(gp_to_pcn |>
-                         dplyr::select(1:2,5:6), by = c("gp_prac" = "partner_organisation_code"), relationship = "many-to-many") |>
+      dplyr::left_join(
+        gp_to_pcn |>
+          dplyr::select(1:2, 5:6),
+        by = c("gp_prac" = "partner_organisation_code"),
+        relationship = "many-to-many"
+      ) |>
       dplyr::filter(!is.na(pcn_code)) |>
       dplyr::group_by(prov_code, der_financial_year, pcn_code, pcn_name) |>
       dplyr::summarise(patients = sum(pats)) |>
       ungroup() |>
       dplyr::group_by(prov_code, der_financial_year) |>
-      dplyr::mutate(prop_pat = patients/sum(patients))
+      dplyr::mutate(prop_pat = patients / sum(patients))
   ),
   
   # Indicators -----------------------------------------------------------------
@@ -470,34 +596,36 @@ list(
   # LSOA and GP
   tar_target(
     elective_non_elective_lsoa,
-    get_elective_non_elective_sub_geography("lsoa",
-                                            age_cutoff,
-                                            start_date,
-                                            admissions_lag_date,
+    get_elective_non_elective_sub_geography("lsoa", 
+                                            age_cutoff, 
+                                            start_date, 
+                                            admissions_lag_date, 
                                             con) |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     elective_non_elective_gp,
-    get_elective_non_elective_sub_geography("gp",
+    get_elective_non_elective_sub_geography("gp", 
                                             age_cutoff,
-                                            start_date,
-                                            admissions_lag_date,
+                                            start_date, 
+                                            admissions_lag_date, 
                                             con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   # ICB and LA
   tarchetypes::tar_map(
-    list(geography = rep(c("icb", "la"), 2),
-         activity_type = rep(c("admissions", "beddays"), each = 2)),
+    list(
+      geography = rep(c("icb", "la"), 2),
+      activity_type = rep(c("admissions", "beddays"), each = 2)
+    ),
     tar_target(
       elective_non_elective_ratio,
       get_elective_non_elective_ratio(elective_non_elective_lsoa,
-                                      geography,
+                                      geography, 
                                       activity_type) |>
         dplyr::mutate(frequency = "monthly")
-    ) 
+    )
   ),
   # PCN
   tarchetypes::tar_map(
@@ -528,14 +656,13 @@ list(
   # LSOA and GP
   tar_target(
     frailty_episodes_with_risk_scores,
-    get_frailty_with_risk_scores(frailty_episodes,
-                                 frailty_risk_scores)
+    get_frailty_with_risk_scores(frailty_episodes, frailty_risk_scores)
   ),
   tarchetypes::tar_map(
     list(sub_geography = c("gp", "lsoa")),
     tar_target(
       frailty,
-      get_frailty_sub_geography(frailty_episodes_with_risk_scores,
+      get_frailty_sub_geography(frailty_episodes_with_risk_scores, 
                                 sub_geography)
     )
   ),
@@ -550,7 +677,7 @@ list(
     tar_target(
       frailty,
       get_frailty_geography(frailty_lsoa_2021,
-                            geography,
+                            geography, 
                             lsoa_to_higher_geographies)
     )
   ),
@@ -566,7 +693,7 @@ list(
         activity_type
       ) |>
         dplyr::mutate(frequency = "monthly")
-    ) 
+    )
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -601,7 +728,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-
+  
   ## Emergency readmission within 28 days --------------------------------------
   tar_target(
     readmissions_where_clause,
@@ -610,49 +737,53 @@ list(
     (Treatment_Function_Code = '424') AND
     EXISTS (
     	SELECT 1
-    
+
     	FROM [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]  b
-    
+
     	WHERE
-    
+
     	 a.Der_Pseudo_NHS_Number = b.Der_Pseudo_NHS_Number AND
     	 DATEDIFF(DD, b.Discharge_Date, a.Admission_Date) BETWEEN 0 AND 28 AND
     	 (b.Admission_Date < a.Admission_Date OR
-    	  b.Discharge_Date < a.Discharge_Date) AND  
-    	  a.APCE_Ident != b.APCE_Ident 
+    	  b.Discharge_Date < a.Discharge_Date) AND
+    	  a.APCE_Ident != b.APCE_Ident
      )
     "
   ),
   # LSOA and GP
   tar_target(
     readmission_within_28_days_episodes,
-    get_emergency_indicator_episodes(age_cutoff, 
-                                     start_date, 
-                                     admissions_lag_date,
-                                     readmissions_where_clause,
-                                     con)
+    get_emergency_indicator_episodes(
+      age_cutoff,
+      start_date,
+      admissions_lag_date,
+      readmissions_where_clause,
+      con
+    )
   ),
   tar_target(
     readmission_within_28_days_lsoa,
     readmission_within_28_days_episodes |>
       get_indicator_at_sub_geography_level("lsoa") |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
-      join_to_geography_lookup("icb", lsoa_to_higher_geographies) 
+      join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     readmission_within_28_days_gp,
     readmission_within_28_days_episodes |>
-      get_indicator_at_sub_geography_level("gp") |> 
-      join_to_geography_lookup("pcn", gp_to_pcn) 
+      get_indicator_at_sub_geography_level("gp") |>
+      join_to_geography_lookup("pcn", gp_to_pcn)
   ),
   # ICB and LA
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       readmission_within_28_days,
-      aggregate_indicator_to_geography_level(readmission_within_28_days_lsoa, 
-                                             geography,
-                                             "readmission_within_28_days")
+      aggregate_indicator_to_geography_level(
+        readmission_within_28_days_lsoa,
+        geography,
+        "readmission_within_28_days"
+      )
     )
   ),
   tarchetypes::tar_map(
@@ -686,9 +817,11 @@ list(
   # PCN
   tar_target(
     readmission_within_28_days_pcn,
-    aggregate_indicator_to_geography_level(readmission_within_28_days_gp, 
-                                           "pcn",
-                                           "readmission_within_28_days")
+    aggregate_indicator_to_geography_level(
+      readmission_within_28_days_gp,
+      "pcn",
+      "readmission_within_28_days"
+    )
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -749,11 +882,13 @@ list(
   # LSOA and GP
   tar_target(
     ambulatory_care_conditions_acute_episodes,
-    get_emergency_indicator_episodes(age_cutoff,
-                                     start_date,
-                                     admissions_lag_date,
-                                     ambulatory_care_acute_where_clause,
-                                     con)
+    get_emergency_indicator_episodes(
+      age_cutoff,
+      start_date,
+      admissions_lag_date,
+      ambulatory_care_acute_where_clause,
+      con
+    )
   ),
   tar_target(
     ambulatory_care_conditions_acute_lsoa,
@@ -776,7 +911,8 @@ list(
       aggregate_indicator_to_geography_level(
         ambulatory_care_conditions_acute_lsoa,
         geography,
-        "ambulatory_care_conditions_acute")
+        "ambulatory_care_conditions_acute"
+      )
     )
   ),
   tarchetypes::tar_map(
@@ -813,7 +949,8 @@ list(
     aggregate_indicator_to_geography_level(
       ambulatory_care_conditions_acute_gp,
       "pcn",
-      "ambulatory_care_conditions_acute")
+      "ambulatory_care_conditions_acute"
+    )
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -829,7 +966,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-
+  
   ### Chronic ------------------------------------------------------------------
   tar_target(
     ambulatory_care_chronic_where_clause,
@@ -874,11 +1011,13 @@ list(
   # LSOA and GP
   tar_target(
     ambulatory_care_conditions_chronic_episodes,
-    get_emergency_indicator_episodes(age_cutoff,
-                                     start_date,
-                                     admissions_lag_date,
-                                     ambulatory_care_chronic_where_clause,
-                                     con)
+    get_emergency_indicator_episodes(
+      age_cutoff,
+      start_date,
+      admissions_lag_date,
+      ambulatory_care_chronic_where_clause,
+      con
+    )
   ),
   tar_target(
     ambulatory_care_conditions_chronic_lsoa,
@@ -901,7 +1040,8 @@ list(
       aggregate_indicator_to_geography_level(
         ambulatory_care_conditions_chronic_lsoa,
         geography,
-        "ambulatory_care_conditions_chronic")
+        "ambulatory_care_conditions_chronic"
+      )
     )
   ),
   tarchetypes::tar_map(
@@ -938,7 +1078,8 @@ list(
     aggregate_indicator_to_geography_level(
       ambulatory_care_conditions_chronic_gp,
       "pcn",
-      "ambulatory_care_conditions_chronic")
+      "ambulatory_care_conditions_chronic"
+    )
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -954,7 +1095,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-
+  
   ### Vaccine preventable ------------------------------------------------------
   tar_target(
     ambulatory_care_vaccine_preventable_where_clause,
@@ -984,7 +1125,8 @@ list(
       start_date,
       admissions_lag_date,
       ambulatory_care_vaccine_preventable_where_clause,
-      con)
+      con
+    )
   ),
   tar_target(
     ambulatory_care_conditions_vaccine_preventable_lsoa,
@@ -999,48 +1141,52 @@ list(
       get_indicator_at_sub_geography_level("gp") |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
-
+  
   ## A&E frequent attenders (adult, ambulance conveyed) ------------------------
   # LSOA and GP
   tar_target(
     frequent_attenders_adult_ambulance_lsoa_current,
-    get_frequent_attenders_adult_ambulance_sub_geography_current("lsoa",
-                                                                 age_cutoff,
-                                                                 lag_date,
+    get_frequent_attenders_adult_ambulance_sub_geography_current("lsoa", 
+                                                                 age_cutoff, 
+                                                                 lag_date, 
                                                                  con)
-    ),
+  ),
   tar_target(
     frequent_attenders_adult_ambulance_gp_current,
-    get_frequent_attenders_adult_ambulance_sub_geography_current("gp",
-                                                                 age_cutoff,
-                                                                 lag_date,
+    get_frequent_attenders_adult_ambulance_sub_geography_current("gp", 
+                                                                 age_cutoff, 
+                                                                 lag_date, 
                                                                  con)
   ),
   tar_target(
     frequent_attenders_adult_ambulance_lsoa_archived,
-    get_frequent_attenders_adult_ambulance_sub_geography_archived("lsoa",
-                                                                 age_cutoff,
-                                                                 start_date,
-                                                                 con)
+    get_frequent_attenders_adult_ambulance_sub_geography_archived("lsoa", 
+                                                                  age_cutoff,
+                                                                  start_date,
+                                                                  con)
   ),
   tar_target(
     frequent_attenders_adult_ambulance_gp_archived,
-    get_frequent_attenders_adult_ambulance_sub_geography_archived("gp",
-                                                                 age_cutoff,
-                                                                 start_date,
-                                                                 con)
+    get_frequent_attenders_adult_ambulance_sub_geography_archived("gp", 
+                                                                  age_cutoff, 
+                                                                  start_date, 
+                                                                  con)
   ),
   tar_target(
     frequent_attenders_adult_ambulance_lsoa,
-    rbind(frequent_attenders_adult_ambulance_lsoa_current,
-          frequent_attenders_adult_ambulance_lsoa_archived) |>
+    rbind(
+      frequent_attenders_adult_ambulance_lsoa_current,
+      frequent_attenders_adult_ambulance_lsoa_archived
+    ) |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "frequent_attenders") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
   ),
   tar_target(
     frequent_attenders_adult_ambulance_gp,
-    rbind(frequent_attenders_adult_ambulance_gp_current,
-          frequent_attenders_adult_ambulance_gp_archived) |>
+    rbind(
+      frequent_attenders_adult_ambulance_gp_current,
+      frequent_attenders_adult_ambulance_gp_archived
+    ) |>
       dplyr::rename(gp_practice_sus = gp_practice_code) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
@@ -1080,7 +1226,7 @@ list(
   tar_target(
     frequent_attenders_adult_ambulance_pcn,
     get_frequent_attenders_adult_ambulance_geography(
-      frequent_attenders_adult_ambulance_gp,
+      frequent_attenders_adult_ambulance_gp, 
       "pcn")
   ),
   tar_target(
@@ -1094,15 +1240,15 @@ list(
     ) |>
       dplyr::mutate(frequency = "monthly")
   ),
-
+  
   ## Mental Health Admissions via ED -------------------------------------------
   # LSOA and GP
   tar_target(
     raid_ae_lsoa,
-    get_raid_ae_sub_geography("lsoa",
-                              age_cutoff,
-                              start_date,
-                              admissions_lag_date,
+    get_raid_ae_sub_geography("lsoa", 
+                              age_cutoff, 
+                              start_date, 
+                              admissions_lag_date, 
                               con) |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies)
@@ -1110,9 +1256,9 @@ list(
   tar_target(
     raid_ae_gp,
     get_raid_ae_sub_geography("gp",
-                              age_cutoff,
-                              start_date,
-                              admissions_lag_date,
+                              age_cutoff, 
+                              start_date, 
+                              admissions_lag_date, 
                               con) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
@@ -1121,9 +1267,7 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       raid_ae,
-      aggregate_indicator_to_geography_level(raid_ae_lsoa,
-                                             geography,
-                                             "raid_ae")
+      aggregate_indicator_to_geography_level(raid_ae_lsoa, geography, "raid_ae")
     )
   ),
   tarchetypes::tar_map(
@@ -1157,9 +1301,7 @@ list(
   # PCN
   tar_target(
     raid_ae_pcn,
-    aggregate_indicator_to_geography_level(raid_ae_gp,
-                                           "pcn",
-                                           "raid_ae")
+    aggregate_indicator_to_geography_level(raid_ae_gp, "pcn", "raid_ae")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -1175,7 +1317,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-
+  
   ## Emergency hospital admissions due to falls in people over 65 --------------
   tar_target(
     falls_where_clause,
@@ -1201,11 +1343,13 @@ list(
   # LSOA and GP
   tar_target(
     falls_related_admissions_episodes,
-    get_emergency_indicator_episodes(age_cutoff,
-                                     start_date,
-                                     admissions_lag_date,
-                                     falls_where_clause,
-                                     con)
+    get_emergency_indicator_episodes(
+      age_cutoff,
+      start_date,
+      admissions_lag_date,
+      falls_where_clause,
+      con
+    )
   ),
   tar_target(
     falls_related_admissions_lsoa,
@@ -1225,9 +1369,11 @@ list(
     list(geography = c("icb", "la")),
     tar_target(
       falls_related_admissions,
-      aggregate_indicator_to_geography_level(falls_related_admissions_lsoa,
-                                             geography,
-                                             "falls_related_admissions")
+      aggregate_indicator_to_geography_level(
+        falls_related_admissions_lsoa,
+        geography,
+        "falls_related_admissions"
+      )
     )
   ),
   tarchetypes::tar_map(
@@ -1261,9 +1407,11 @@ list(
   # PCN
   tar_target(
     falls_related_admissions_pcn,
-    aggregate_indicator_to_geography_level(falls_related_admissions_gp,
-                                           "pcn",
-                                           "falls_related_admissions")
+    aggregate_indicator_to_geography_level(
+      falls_related_admissions_gp,
+      "pcn",
+      "falls_related_admissions"
+    )
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
@@ -1279,7 +1427,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-
+  
   ## Redirection / Substitution ------------------------------------------------
   tar_target(
     zero_los_no_procedure_where_clause,
@@ -1341,24 +1489,30 @@ list(
       Der_Diagnosis_All NOT LIKE '%Y5[0-7]%')) ---implicit - nsaids
     "
   ),
-  tar_target(redirection_where_clause,
-             paste(zero_los_no_procedure_where_clause,
-                   medicines_related_admissions_where_clause,
-                   sep = " AND ")),
+  tar_target(
+    redirection_where_clause,
+    paste(
+      zero_los_no_procedure_where_clause,
+      medicines_related_admissions_where_clause,
+      sep = " AND "
+    )
+  ),
   tar_target(
     zero_los_and_medicine_related_episodes,
-    get_emergency_indicator_episodes(age_cutoff,
-                                     start_date,
-                                     admissions_lag_date,
-                                     redirection_where_clause,
-                                     con)
+    get_emergency_indicator_episodes(
+      age_cutoff,
+      start_date,
+      admissions_lag_date,
+      redirection_where_clause,
+      con
+    )
   ),
-
+  
   tar_target(
     end_of_life_episodes,
     get_end_of_life_episodes(age_cutoff, start_date, admissions_lag_date, con)
   ),
-
+  
   # LSOA and GP
   tar_target(
     redirection_episodes,
@@ -1371,13 +1525,15 @@ list(
         ambulatory_care_conditions_chronic_episodes,
         frailty_episodes_with_risk_scores
       ) |>
-      dplyr::select(apce_ident,
-                    der_postcode_lsoa_2011_code,
-                    gp_practice_sus,
-                    date,
-                    sex,
-                    age_range,
-                    spelldur) |>
+      dplyr::select(
+        apce_ident,
+        der_postcode_lsoa_2011_code,
+        gp_practice_sus,
+        date,
+        sex,
+        age_range,
+        spelldur
+      ) |>
       unique() # To account for potential overlap between the subindicators
   ),
   tar_target(
@@ -1386,6 +1542,7 @@ list(
       get_indicator_at_sub_geography_level_by_age_sex("lsoa") |>
       recode_lsoa11_as_lsoa21(lsoa11_to_lsoa_21, "admissions") |>
       join_to_geography_lookup("icb", lsoa_to_higher_geographies) |>
+      dplyr::mutate(imd_year = lubridate::ymd(date, truncated = 1)) |>
       get_imd_from_lsoa(imd_lsoa_lookup, 
                         earliest_imd_year, 
                         latest_available_imd)
@@ -1393,18 +1550,28 @@ list(
   tar_target(
     redirection_gp,
     redirection_episodes |>
-      get_indicator_at_sub_geography_level_by_age_sex("gp") |>
+      unique() |>
+      dplyr::mutate(imd_year = lubridate::ymd(date, truncated = 1)) |>
+      get_imd_from_lsoa(imd_lsoa_lookup,
+                        earliest_imd_year, 
+                        latest_available_imd) |>
+      dplyr::summarise(
+        admissions = dplyr::n(),
+        beddays = sum(spelldur, na.rm = TRUE),
+        .by = c(date, age_range, sex, imd_quintile, gp_practice_sus)
+      ) |>
       join_to_geography_lookup("pcn", gp_to_pcn)
   ),
-
+  
   # ICB and LA
   tarchetypes::tar_map(
     list(geography = c("icb", "la")),
     tar_target(
       redirection,
-      aggregate_indicator_to_geography_level_by_age_sex_imd(redirection_lsoa,
-                                                            geography,
-                                                            "redirection")
+      aggregate_indicator_to_geography_level_by_age_sex_imd(
+        redirection_lsoa, 
+        geography, 
+        "redirection")
     )
   ),
   tarchetypes::tar_map(
@@ -1418,7 +1585,7 @@ list(
         latest_population_year,
         activity_type,
         standard_pop_by_age_sex_imd
-        ) |>
+      ) |>
         dplyr::mutate(frequency = "monthly")
     )
   ),
@@ -1433,228 +1600,295 @@ list(
         latest_population_year,
         activity_type,
         standard_pop_by_age_sex_imd
-        ) |>
+      ) |>
         dplyr::mutate(frequency = "monthly")
     )
   ),
   # PCN
   tar_target(
     redirection_pcn,
-    aggregate_indicator_to_geography_level_by_age_sex(redirection_gp,
-                                                      "pcn",
-                                                      "redirection")
+    aggregate_indicator_to_geography_level_by_age_sex_imd(redirection_gp, 
+                                                          "pcn", 
+                                                          "redirection")
   ),
   tarchetypes::tar_map(
     list(activity_type = c("admissions", "beddays")),
     tar_target(
       redirection_indicator_pcn,
-      get_indicators_age_sex_standardised_rates(
+      get_indicators_age_sex_imd_standardised_rates(
         data = redirection_pcn,
-        population = population_by_age_sex_pcn,
+        population = population_by_age_sex_imd_pcn,
         geography = "pcn",
         latest_population_year,
         activity_type,
-        standard_england_pop_2021_census) |>
+        standard_pop_by_age_sex_imd
+      ) |>
         dplyr::mutate(frequency = "monthly")
     )
   ),
   
   ## Available beds data, categorised and distributed --------------------------
-  tar_target(
-    beds_available_data,
-    get_kh03_data(con)
-  ),
+  tar_target(beds_available_data, get_kh03_data(con)),
   
   tar_target(
     bed_split_icb,
-    assign_kh03_beds_icb(beds_available_data, prov_site_type, prov_act_dist_icb) |>
+    assign_kh03_beds_icb(beds_available_data, 
+                         prov_site_type, 
+                         prov_act_dist_icb) |>
       group_by(icb24cd, der_financial_year) |>
-      mutate(year_tot = sum(beds),
-             perc = beds/year_tot*100) |>
+      mutate(year_tot = sum(beds), perc = beds / year_tot * 100) |>
       ungroup() |>
       filter(org_class == 'Acute') |>
       mutate(indicator = 'acute_bedshare_percent') |>
-      select(9,2,3,4,6:8) |>
-      dplyr::rename(icb = icb24cdh,
-                    date = der_financial_year,
-                    numerator = beds,
-                    denominator = year_tot,
-                    value = perc) |>
+      select(9, 2, 3, 4, 6:8) |>
+      dplyr::rename(
+        icb = icb24cdh,
+        date = der_financial_year,
+        numerator = beds,
+        denominator = year_tot,
+        value = perc
+      ) |>
       arrange(icb, date) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-                      )
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      )
   ),
   tar_target(
     bed_split_la,
-    assign_kh03_beds_lad(beds_available_data, prov_site_type, prov_act_dist_lad) |>
+    assign_kh03_beds_lad(beds_available_data, 
+                         prov_site_type, 
+                         prov_act_dist_lad) |>
       group_by(lad24cd, der_financial_year) |>
-      mutate(year_tot = sum(beds),
-             perc = beds/year_tot*100) |>
+      mutate(year_tot = sum(beds), perc = beds / year_tot * 100) |>
       ungroup() |>
       filter(org_class == 'Acute') |>
       mutate(indicator = 'acute_bedshare_percent') |>
-      select(8,1:3,5:7) |>
-      dplyr::rename(la = lad24cd,
-                    date = der_financial_year,
-                    numerator = beds,
-                    denominator = year_tot,
-                    value = perc) |>
+      select(8, 1:3, 5:7) |>
+      dplyr::rename(
+        la = lad24cd,
+        date = der_financial_year,
+        numerator = beds,
+        denominator = year_tot,
+        value = perc
+      ) |>
       arrange(la, date) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      )
   ),
   tar_target(
     bed_split_pcn,
-    assign_kh03_beds_pcn(beds_available_data, prov_site_type, prov_act_dist_pcn) |>
+    assign_kh03_beds_pcn(beds_available_data,
+                         prov_site_type, 
+                         prov_act_dist_pcn) |>
       group_by(pcn_code, der_financial_year) |>
-      mutate(year_tot = sum(beds),
-             perc = beds/year_tot*100) |>
+      mutate(year_tot = sum(beds), perc = beds / year_tot * 100) |>
       ungroup() |>
       filter(org_class == 'Acute') |>
       mutate(indicator = 'acute_bedshare_percent') |>
-      select(8,1,3,5:7) |>
-      dplyr::rename(pcn = pcn_code,
-                    date = der_financial_year,
-                    numerator = beds,
-                    denominator = year_tot,
-                    value = perc) |>
+      select(8, 1, 3, 5:7) |>
+      dplyr::rename(
+        pcn = pcn_code,
+        date = der_financial_year,
+        numerator = beds,
+        denominator = year_tot,
+        value = perc
+      ) |>
       arrange(pcn, date) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      )
   ),
   
   ## NHS workforce data, categorised and distributed ---------------------------
-  tar_target(
-    workforce_data,
-    get_workforce_data(con)
-  ),
+  tar_target(workforce_data, get_workforce_data(con)),
   
   # icb
   tar_target(
     workforce_acute_icb,
-    assign_workforce_icb(workforce_data,prov_pat_dist_icb) |>
+    assign_workforce_icb(workforce_data, prov_pat_dist_icb) |>
       group_by(icb24cdh, der_financial_year) |>
-      mutate(indicator = 'workforce_acute_perc',
-             year_tot = sum(pats),
-             perc = pats/year_tot*100) |>
+      mutate(
+        indicator = 'workforce_acute_perc',
+        year_tot = sum(pats),
+        perc = pats / year_tot * 100
+      ) |>
       ungroup() |>
       filter(cluster_group == 'Acute') |>
-      select(6,1:2,4:5,7:8) |>
-      dplyr::rename(icb = icb24cdh,
-                    date = der_financial_year,
-                    numerator = pats,
-                    denominator = year_tot,
-                    value = perc) |>
+      select(6, 1:2, 4:5, 7:8) |>
+      dplyr::rename(
+        icb = icb24cdh,
+        date = der_financial_year,
+        numerator = pats,
+        denominator = year_tot,
+        value = perc
+      ) |>
       arrange(icb, date) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      )
   ),
   
   # lad
   tar_target(
     workforce_acute_lad,
-    assign_workforce_lad(workforce_data,prov_pat_dist_lad) |>
+    assign_workforce_lad(workforce_data, prov_pat_dist_lad) |>
       group_by(lad24cd, der_financial_year) |>
-      mutate(indicator = 'workforce_acute_perc',
-             year_tot = sum(pats),
-             perc = pats/year_tot*100) |>
+      mutate(
+        indicator = 'workforce_acute_perc',
+        year_tot = sum(pats),
+        perc = pats / year_tot * 100
+      ) |>
       ungroup() |>
       filter(cluster_group == 'Acute') |>
-      select(6,1:2,4:5,7:8) |>
-      dplyr::rename(la = lad24cd,
-                    date = der_financial_year,
-                    numerator = pats,
-                    denominator = year_tot,
-                    value = perc) |>
+      select(6, 1:2, 4:5, 7:8) |>
+      dplyr::rename(
+        la = lad24cd,
+        date = der_financial_year,
+        numerator = pats,
+        denominator = year_tot,
+        value = perc
+      ) |>
       arrange(la, date) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      )
   ),
   
   # pcn
   tar_target(
     workforce_acute_pcn,
-    assign_workforce_pcn(workforce_data,prov_pat_dist_pcn) |>
+    assign_workforce_pcn(workforce_data, prov_pat_dist_pcn) |>
       group_by(pcn_code, der_financial_year) |>
-      mutate(indicator = 'workforce_acute_perc',
-             year_tot = sum(pats),
-             perc = pats/year_tot*100) |>
+      mutate(
+        indicator = 'workforce_acute_perc',
+        year_tot = sum(pats),
+        perc = pats / year_tot * 100
+      ) |>
       ungroup() |>
       filter(cluster_group == 'Acute') |>
-      select(6,4,1,5,7:8) |>
-      dplyr::rename(pcn = pcn_code,
-                    date = der_financial_year,
-                    numerator = pats,
-                    denominator = year_tot,
-                    value = perc) |>
+      select(6, 4, 1, 5, 7:8) |>
+      dplyr::rename(
+        pcn = pcn_code,
+        date = der_financial_year,
+        numerator = pats,
+        denominator = year_tot,
+        value = perc
+      ) |>
       arrange(pcn, date) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04"))
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      )
   ),
   
   ## Delayed discharge days as % of all bed days -------------------------------
-  tar_target(
-    del_dis_days,
-    get_delay_disch_data(con)
-  ),
+  tar_target(del_dis_days, get_delay_disch_data(con)),
   
   # ICB
   tar_target(
     delayed_discharge_percent_icb_beddays,
     del_dis_days |>
       filter(!is.na(lsoa_2011)) |>
-      left_join(lsoa11_to_lsoa_21 |>
-                  select(1:2), by = c("lsoa_2011" = "lsoa11cd"), relationship =
-                  "many-to-many") |>
-      left_join(lsoa_to_higher_geographies |>
-                  select(1,6:8), by = "lsoa21cd", relationship =
-                  "many-to-many") |>
+      left_join(
+        lsoa11_to_lsoa_21 |>
+          select(1:2),
+        by = c("lsoa_2011" = "lsoa11cd"),
+        relationship =
+          "many-to-many"
+      ) |>
+      left_join(
+        lsoa_to_higher_geographies |>
+          select(1, 6:8),
+        by = "lsoa21cd",
+        relationship =
+          "many-to-many"
+      ) |>
       group_by(icb24cd, icb24cdh, icb24nm, year_mon) |>
-      summarise(spells = sum(spells),
-                spell_los = sum(spell_los_tot),
-                ddd = sum(ddd_tot)) |>
+      summarise(
+        spells = sum(spells),
+        spell_los = sum(spell_los_tot),
+        ddd = sum(ddd_tot)
+      ) |>
       filter(!is.na(icb24cd)) |>
-      mutate(perc = round(ddd/spell_los*100,2),) |>
+      mutate(perc = round(ddd / spell_los * 100, 2), ) |>
       group_by(icb24cd, icb24cdh, icb24nm, year_mon, spells) |>
-      PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
+      PHEindicatormethods::phe_proportion(
+        x = ddd,
+        n = spell_los,
+        confidence = 0.95,
+        multiplier = 100
+      ) |>
       ungroup() |>
       mutate(indicator = 'delayed_discharge_percent_beddays') |>
-      select(14,2,4,6:10) |>
-      dplyr::rename(icb = icb24cdh,
-                    date = year_mon,
-                    numerator = ddd,
-                    denominator = spell_los) |>
+      select(14, 2, 4, 6:10) |>
+      dplyr::rename(
+        icb = icb24cdh,
+        date = year_mon,
+        numerator = ddd,
+        denominator = spell_los
+      ) |>
       arrange(icb, date) |>
       dplyr::mutate(frequency = "monthly")
-      ),
+  ),
   
   # LAD
   tar_target(
     delayed_discharge_percent_la_beddays,
     del_dis_days |>
       filter(!is.na(lsoa_2011)) |>
-      left_join(lsoa11_to_lsoa_21 |>
-                  select(1:2), by = c("lsoa_2011" = "lsoa11cd"), relationship =
-                  "many-to-many") |>
-      left_join(lsoa_to_higher_geographies |>
-                  select(1,11:12), by = "lsoa21cd", relationship =
-                  "many-to-many") |>
+      left_join(
+        lsoa11_to_lsoa_21 |>
+          select(1:2),
+        by = c("lsoa_2011" = "lsoa11cd"),
+        relationship =
+          "many-to-many"
+      ) |>
+      left_join(
+        lsoa_to_higher_geographies |>
+          select(1, 11:12),
+        by = "lsoa21cd",
+        relationship =
+          "many-to-many"
+      ) |>
       group_by(lad24cd, lad24nm, year_mon) |>
-      summarise(spells = sum(spells),
-                spell_los = sum(spell_los_tot),
-                ddd = sum(ddd_tot)) |>
+      summarise(
+        spells = sum(spells),
+        spell_los = sum(spell_los_tot),
+        ddd = sum(ddd_tot)
+      ) |>
       filter(!is.na(lad24cd)) |>
-      mutate(perc = round(ddd/spell_los*100,2),) |>
+      mutate(perc = round(ddd / spell_los * 100, 2), ) |>
       group_by(lad24cd, lad24nm, year_mon, spells) |>
-      PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
+      PHEindicatormethods::phe_proportion(
+        x = ddd,
+        n = spell_los,
+        confidence = 0.95,
+        multiplier = 100
+      ) |>
       ungroup() |>
       mutate(indicator = 'delayed_discharge_percent_beddays') |>
-      select(indicator,year_mon,lad24cd,ddd,spell_los,value,lowercl,uppercl) |>
-      dplyr::rename(la = lad24cd,
-                    date = year_mon,
-                    numerator = ddd,
-                    denominator = spell_los) |>
+      select(
+        indicator,
+        year_mon,
+        lad24cd,
+        ddd,
+        spell_los,
+        value,
+        lowercl,
+        uppercl
+      ) |>
+      dplyr::rename(
+        la = lad24cd,
+        date = year_mon,
+        numerator = ddd,
+        denominator = spell_los
+      ) |>
       arrange(la, date) |>
       dplyr::mutate(frequency = "monthly")
   ),
@@ -1664,129 +1898,170 @@ list(
     delayed_discharge_percent_pcn_beddays,
     del_dis_days |>
       filter(!is.na(gp_prac)) |>
-      left_join(gp_to_pcn |>
-                  select(1:2,5:6), by = c("gp_prac" = "partner_organisation_code"), relationship =
-                  "many-to-many") |>
+      left_join(
+        gp_to_pcn |>
+          select(1:2, 5:6),
+        by = c("gp_prac" = "partner_organisation_code"),
+        relationship =
+          "many-to-many"
+      ) |>
       group_by(pcn_code, pcn_name, year_mon) |>
-      summarise(spells = sum(spells),
-                spell_los = sum(spell_los_tot),
-                ddd = sum(ddd_tot)) |>
+      summarise(
+        spells = sum(spells),
+        spell_los = sum(spell_los_tot),
+        ddd = sum(ddd_tot)
+      ) |>
       filter(!is.na(pcn_code), spell_los > 0, ddd <= spell_los) |>
-      mutate(perc = round(ddd/spell_los*100,2),) |>
+      mutate(perc = round(ddd / spell_los * 100, 2), ) |>
       group_by(pcn_code, pcn_name, year_mon, spells) |>
-      PHEindicatormethods::phe_proportion(x=ddd, n=spell_los, confidence = 0.95, multiplier = 100) |>
+      PHEindicatormethods::phe_proportion(
+        x = ddd,
+        n = spell_los,
+        confidence = 0.95,
+        multiplier = 100
+      ) |>
       ungroup() |>
       mutate(indicator = 'delayed_discharge_percent_beddays') |>
-      select(indicator,year_mon,pcn_code,ddd,spell_los,value,lowercl,uppercl) |>
-      dplyr::rename(pcn = pcn_code,
-                    date = year_mon,
-                    numerator = ddd,
-                    denominator = spell_los) |>
+      select(
+        indicator,
+        year_mon,
+        pcn_code,
+        ddd,
+        spell_los,
+        value,
+        lowercl,
+        uppercl
+      ) |>
+      dplyr::rename(
+        pcn = pcn_code,
+        date = year_mon,
+        numerator = ddd,
+        denominator = spell_los
+      ) |>
       arrange(pcn, date) |>
       dplyr::mutate(frequency = "monthly")
   ),
- 
+  
   ## Cost data, community to acute ratio providers re-distributed --------------
-  tar_target(
-    ncc_cost_data,
-    get_cost_data(con)
-  ),
+  tar_target(ncc_cost_data, get_cost_data(con)),
   
   # icb
   tar_target(
     costs_community_ratio_icb,
-    assign_costs_icb(ncc_cost_data,prov_pat_dist_lsoa) |>
-    mutate(indicator = 'costs_community_ratio') |>
-      select(7,1,3,5,4,6) |>
-      dplyr::rename(icb = icb24cdh,
-                    date = der_financial_year,
-                    numerator = comm_cost,
-                    denominator = acute_cost,
-                    value = ratio) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")) |>
-    arrange(icb, date)
+    assign_costs_icb(ncc_cost_data, prov_pat_dist_lsoa) |>
+      mutate(indicator = 'costs_community_ratio') |>
+      select(7, 1, 3, 5, 4, 6) |>
+      dplyr::rename(
+        icb = icb24cdh,
+        date = der_financial_year,
+        numerator = comm_cost,
+        denominator = acute_cost,
+        value = ratio
+      ) |>
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      ) |>
+      arrange(icb, date)
   ),
   # lad
   tar_target(
     costs_community_ratio_la,
-    assign_costs_lad(ncc_cost_data,prov_pat_dist_lsoa) |>
+    assign_costs_lad(ncc_cost_data, prov_pat_dist_lsoa) |>
       mutate(indicator = 'costs_community_ratio') |>
-      select(7,1,3,5,4,6) |>
-      dplyr::rename(la = lad24cd,
-                    date = der_financial_year,
-                    numerator = comm_cost,
-                    denominator = acute_cost,
-                    value = ratio) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")) |>
+      select(7, 1, 3, 5, 4, 6) |>
+      dplyr::rename(
+        la = lad24cd,
+        date = der_financial_year,
+        numerator = comm_cost,
+        denominator = acute_cost,
+        value = ratio
+      ) |>
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      ) |>
       arrange(la, date)
   ),
   # pcn
   tar_target(
     costs_community_ratio_pcn,
-    assign_costs_pcn(ncc_cost_data,gp_to_pcn,prov_pat_dist_prac) |>
+    assign_costs_pcn(ncc_cost_data, gp_to_pcn, prov_pat_dist_prac) |>
       mutate(indicator = 'costs_community_ratio') |>
-      select(7,1,3,5,4,6) |>
-      dplyr::rename(pcn = pcn_code,
-                    date = der_financial_year,
-                    numerator = comm_cost,
-                    denominator = acute_cost,
-                    value = ratio) |>
-      dplyr::mutate(frequency = "fin_yearly",
-                    date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")) |>
+      select(7, 1, 3, 5, 4, 6) |>
+      dplyr::rename(
+        pcn = pcn_code,
+        date = der_financial_year,
+        numerator = comm_cost,
+        denominator = acute_cost,
+        value = ratio
+      ) |>
+      dplyr::mutate(
+        frequency = "fin_yearly",
+        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      ) |>
       arrange(pcn, date)
   ),
   
   ## Bed split between acute and community provider sites ----------------------
-  tar_target(
-    bedday_split_data_lsoa,
-    get_epi_bedday_data_lsoa(con)
-  ),
-  tar_target(
-    bedday_split_data_prac,
-    get_epi_bedday_data_prac(con)
-  ),
+  tar_target(bedday_split_data_lsoa, get_epi_bedday_data_lsoa(con)),
+  tar_target(bedday_split_data_prac, get_epi_bedday_data_prac(con)),
   
   # icb
   tar_target(
     beddays_split_icb,
-    beddays_to_icb(bedday_split_data_lsoa,prov_site_type,lsoa11_to_lsoa_21,lsoa_to_higher_geographies) |>
+    beddays_to_icb(
+      bedday_split_data_lsoa,
+      prov_site_type,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies
+    ) |>
       mutate(indicator = 'beddays_nonacute_percent') |>
-      select(6,1:5) |>
-      dplyr::rename(icb = icb24cdh,
-                    date = der_activity_month,
-                    numerator = nonacute_los,
-                    denominator = acute_los,
-                    value = perc_nonacute) |>
+      select(6, 1:5) |>
+      dplyr::rename(
+        icb = icb24cdh,
+        date = der_activity_month,
+        numerator = nonacute_los,
+        denominator = acute_los,
+        value = perc_nonacute
+      ) |>
       dplyr::mutate(frequency = "monthly") |>
       arrange(icb, date)
-    ),
+  ),
   # lad
   tar_target(
     beddays_split_la,
-    beddays_to_lad(bedday_split_data_lsoa,prov_site_type,lsoa11_to_lsoa_21,lsoa_to_higher_geographies) |>
+    beddays_to_lad(
+      bedday_split_data_lsoa,
+      prov_site_type,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies
+    ) |>
       mutate(indicator = 'beddays_nonacute_percent') |>
-      select(6,1:5) |>
-      dplyr::rename(la = lad24cd,
-                    date = der_activity_month,
-                    numerator = nonacute_los,
-                    denominator = acute_los,
-                    value = perc_nonacute) |>
+      select(6, 1:5) |>
+      dplyr::rename(
+        la = lad24cd,
+        date = der_activity_month,
+        numerator = nonacute_los,
+        denominator = acute_los,
+        value = perc_nonacute
+      ) |>
       dplyr::mutate(frequency = "monthly") |>
       arrange(la, date)
   ),
   # pcn
   tar_target(
     beddays_split_pcn,
-    beddays_to_pcn(bedday_split_data_prac,prov_site_type,gp_to_pcn) |>
+    beddays_to_pcn(bedday_split_data_prac, prov_site_type, gp_to_pcn) |>
       mutate(indicator = 'beddays_nonacute_percent') |>
-      select(6,1:5) |>
-      dplyr::rename(pcn = pcn_code,
-                    date = der_activity_month,
-                    numerator = nonacute_los,
-                    denominator = acute_los,
-                    value = perc_nonacute) |>
+      select(6, 1:5) |>
+      dplyr::rename(
+        pcn = pcn_code,
+        date = der_activity_month,
+        numerator = nonacute_los,
+        denominator = acute_los,
+        value = perc_nonacute
+      ) |>
       dplyr::mutate(frequency = "monthly") |>
       arrange(pcn, date)
   ),
@@ -1848,7 +2123,7 @@ list(
       beddays_split_la
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
-      pin_indicators(la_lookup, "la", board) 
+      pin_indicators(la_lookup, "la", board)
   ),
   tar_target(
     indicators_pcn,
@@ -1877,29 +2152,25 @@ list(
       beddays_split_pcn
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
-      pin_indicators(pcn_lookup, "pcn", board) 
+      pin_indicators(pcn_lookup, "pcn", board)
   ),
   
   # Percentage change ----------------------------------------------------------
-  tar_target(perc_change_icb,
-             get_perc_change(indicators_icb, "icb")),
-  tar_target(perc_change_la,
-             get_perc_change(indicators_la, "la")),
-  tar_target(perc_change_pcn,
-             get_perc_change(indicators_pcn, "pcn")),
-  tar_target(perc_change,
-             rbind(perc_change_icb, perc_change_la, perc_change_pcn) |>
-               pin_perc_change(board)
-             ),
+  tar_target(perc_change_icb, get_perc_change(indicators_icb, "icb")),
+  tar_target(perc_change_la, get_perc_change(indicators_la, "la")),
+  tar_target(perc_change_pcn, get_perc_change(indicators_pcn, "pcn")),
+  tar_target(
+    perc_change,
+    rbind(perc_change_icb, perc_change_la, perc_change_pcn) |>
+      pin_perc_change(board)
+  ),
   
   # Reference ------------------------------------------------------------------
   ## Geography -----------------------------------------------------------------
-  tar_target(ref_icb,
-             get_ref_by_geography(icb_lookup, "icb")), ##remove unnecessary geometry field
-  tar_target(ref_la,
-             get_ref_by_geography(la_lookup, "la")),
-  tar_target(ref_pcn,
-             get_ref_by_geography(pcn_lookup, "pcn")),
+  tar_target(ref_icb, get_ref_by_geography(icb_lookup, "icb")),
+  ##remove unnecessary geometry field
+  tar_target(ref_la, get_ref_by_geography(la_lookup, "la")),
+  tar_target(ref_pcn, get_ref_by_geography(pcn_lookup, "pcn")),
   tar_target(
     pcn_to_icb,
     gp_to_pcn |>
@@ -1917,18 +2188,15 @@ list(
         parent_icb = ifelse(parent_icb == "Bre", 
                             "North West London", 
                             parent_icb) # Brent CCG
-        ) |>
+      ) |>
       dplyr::select(pcn = pcn_code, parent_icb) |>
       unique()
-    ),
+  ),
   tar_target(
     ref_geography,
     pin_ref_geography(ref_icb, ref_la, ref_pcn, pcn_to_icb, board)
-    ),
+  ),
   
   ## Indicators ----------------------------------------------------------------
-  tar_target(
-    ref_indicator,
-    pin_ref_indicator(indicators_icb, board)
-  )
+  tar_target(ref_indicator, pin_ref_indicator(indicators_icb, board))
 )
