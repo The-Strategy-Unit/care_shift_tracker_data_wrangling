@@ -202,10 +202,9 @@ get_population_higher_geography_from_lsoa <- function(data, geography) {
 #' @param connection The ODBC connection.
 #'
 #' @returns A dataframe of LSOA populations by year.
-get_population_lsoa <- function(age_bands, start, connection) {
+get_population_lsoa <- function(age_cutoff, start, connection) {
   query <- "
-    SELECT * FROM
-      (SELECT
+      SELECT
         Area_code,
         Effective_Snapshot_Date,
         SUM(Size) AS population_size
@@ -219,9 +218,8 @@ get_population_lsoa <- function(age_bands, start, connection) {
       GROUP BY
         Area_code,
         Effective_Snapshot_Date
-      ) AS SUB
-      WHERE age_range IN age_bands" |>
-    stringr::str_replace_all(c("age_bands" = age_bands, 
+      " |>
+    stringr::str_replace_all(c("age_cutoff" = age_cutoff, 
                                "start_date" = start))
   
   data <- DBI::dbGetQuery(connection, query) |>
