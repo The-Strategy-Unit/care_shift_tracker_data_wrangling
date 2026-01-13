@@ -1620,7 +1620,7 @@ list(
         population = population_by_age_sex_imd_pcn,
         geography = "pcn",
         latest_population_year,
-        "admissions",
+        activity_type,
         standard_pop_by_age_sex_imd
       ) |>
         dplyr::mutate(frequency = "monthly")
