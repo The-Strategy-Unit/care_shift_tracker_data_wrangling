@@ -346,8 +346,13 @@ get_population_pcn_by_age_sex <- function(population_gp1,
                     stringr::str_to_lower(),
                   sex = ifelse(sex == "female", "2", "1"))
   
-  data <-  population_gp |>
+  data <- population_gp |>
     dplyr::left_join(lookup, by = c("gp" = "partner_organisation_code")) |>
+    dplyr::mutate(
+      age_range = stringr::str_replace_all(age_range, "_", "-"),
+      age_range = ifelse(age_range %in% c("80-84", "85-89", "90-94", "85+", "95+"), 
+                         "80+", 
+                         age_range)) |>
     dplyr::summarise(population_size = sum(population_size),
                      .by = c(date, pcn_code, age_range, sex)) |>
     dplyr::filter(!is.na(pcn_code)) |>
