@@ -53,8 +53,7 @@ current_financial_year_start <- ifelse(
                                       # data to come through
   glue::glue("{lubridate::year(today) - 1}-04-01"),
   glue::glue("{lubridate::year(today)}-04-01")
-  ) |>
-  lubridate::ymd()
+  ) 
 
 # Replace the target list below with your own:
 list(
