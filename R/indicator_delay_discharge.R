@@ -3,10 +3,10 @@
 #' The number of delayed discharge beddays and total spell days by month.
 #'
 #' @param connection The ODBC connection.
+#' @param lag The maximum date for the query.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
-
-get_delay_disch_data <- function(connection) {
+get_delay_disch_data <- function(connection, lag) {
   
   query <- "
   SET NOCOUNT ON;
@@ -14,7 +14,7 @@ get_delay_disch_data <- function(connection) {
     declare @startdate Datetime,
 		@enddate Datetime;
     set @startdate = '2008-04-01';
-    set @enddate = '2025-10-31';
+    set @enddate = 'lag_date';
 
     with cte as
     (
@@ -43,7 +43,10 @@ get_delay_disch_data <- function(connection) {
 
     Select * from cte
     order by lsoa_2011, gp_prac, year_mon
-  "
+  " |>
+    stringr::str_replace_all(
+      c("lag_date" = lag)
+    )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names() |>

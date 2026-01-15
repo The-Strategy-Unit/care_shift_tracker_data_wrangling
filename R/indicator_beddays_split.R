@@ -3,10 +3,10 @@
 #' The total beddays by provider site by month.
 #'
 #' @param connection The ODBC connection.
+#' @param lag The maximum date for the query.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
-
-get_epi_bedday_data_lsoa <- function(connection) {
+get_epi_bedday_data_lsoa <- function(connection, lag) {
   
   query <- "
   SET NOCOUNT ON;
@@ -14,7 +14,7 @@ get_epi_bedday_data_lsoa <- function(connection) {
     declare @startdate Datetime,
 		@enddate Datetime;
     set @startdate = '2008-04-01';
-    set @enddate = '2025-10-31';
+    set @enddate = 'lag_date';
 
     with cte as
     (
@@ -40,7 +40,10 @@ get_epi_bedday_data_lsoa <- function(connection) {
     from cte
     group by prov_code, prov_site_code, lsoa_2011, der_financial_year, [Der_Activity_Month]
     order by prov_code, prov_site_code, lsoa_2011, der_financial_year, [Der_Activity_Month]
-  "
+  " |>
+    stringr::str_replace_all(
+      c("lag_date" = lag)
+    )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
@@ -48,7 +51,7 @@ get_epi_bedday_data_lsoa <- function(connection) {
   return(wrangled)
 }
 
-get_epi_bedday_data_prac <- function(connection) {
+get_epi_bedday_data_prac <- function(connection, lag) {
   
   query <- "
   SET NOCOUNT ON;
@@ -56,7 +59,7 @@ get_epi_bedday_data_prac <- function(connection) {
     declare @startdate Datetime,
 		@enddate Datetime;
     set @startdate = '2008-04-01';
-    set @enddate = '2025-10-31';
+    set @enddate = 'lag_date';
 
     with cte as
     (
@@ -82,7 +85,10 @@ get_epi_bedday_data_prac <- function(connection) {
     from cte
     group by prov_code, prov_site_code, gp_prac, der_financial_year, [Der_Activity_Month]
     order by prov_code, prov_site_code, gp_prac, der_financial_year, [Der_Activity_Month]
-  "
+  " |>
+    stringr::str_replace_all(
+      c("lag_date" = lag)
+    )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
