@@ -49,7 +49,8 @@ current_month <- today |>
   lubridate::floor_date("month")
 
 current_financial_year_start <- ifelse(
-  lubridate::month(today) < 4,
+  lubridate::month(today) < (4 + 3),  # Have added a 3 month lag to allow for FY 
+                                      # data to come through
   glue::glue("{lubridate::year(today) - 1}-04-01"),
   glue::glue("{lubridate::year(today)}-04-01")
   ) |>
