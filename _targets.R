@@ -42,6 +42,12 @@ con <- DBI::dbConnect(
 # Pins connection --------------------------------------------------------------
 board <- pins::board_connect(server = "connect.strategyunitwm.nhs.uk")
 
+# Dates ------------------------------------------------------------------------
+today <- Sys.Date() 
+
+current_month <- today |>
+  lubridate::floor_date("month")
+
 # Replace the target list below with your own:
 list(
   # Variables ------------------------------------------------------------------
@@ -60,12 +66,13 @@ list(
   tar_target(start_date, "2008-04-01"),
   tar_target(
     admissions_lag_date,
-    (Sys.Date() |>
-       lubridate::floor_date("month") - months(1)) |>
+    (current_month - months(2)) |>
       as.character()
   ),
-  tar_target(next_month, Sys.Date() |>
-               lubridate::ceiling_date("month")),
+  tar_target(
+    next_month,
+    current_month |>
+      lubridate::ceiling_date("month")),
   
   # Lookups --------------------------------------------------------------------
   ## Sub-geographies (LSOA, GP) to higher geographies (ICB, LA, PCN) -----------
@@ -1146,17 +1153,21 @@ list(
   # LSOA and GP
   tar_target(
     frequent_attenders_adult_ambulance_lsoa_current,
-    get_frequent_attenders_adult_ambulance_sub_geography_current("lsoa", 
-                                                                 age_cutoff, 
-                                                                 lag_date, 
-                                                                 con)
+    get_frequent_attenders_adult_ambulance_sub_geography_current(
+      "lsoa", 
+      age_cutoff, 
+      admissions_lag_date, 
+      con
+      )
   ),
   tar_target(
     frequent_attenders_adult_ambulance_gp_current,
-    get_frequent_attenders_adult_ambulance_sub_geography_current("gp", 
-                                                                 age_cutoff, 
-                                                                 lag_date, 
-                                                                 con)
+    get_frequent_attenders_adult_ambulance_sub_geography_current(
+      "gp", 
+      age_cutoff, 
+      admissions_lag_date, 
+      con
+      )
   ),
   tar_target(
     frequent_attenders_adult_ambulance_lsoa_archived,
