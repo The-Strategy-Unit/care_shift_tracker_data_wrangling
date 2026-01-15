@@ -2066,6 +2066,17 @@ list(
       arrange(pcn, date)
   ),
   
+  ## Emergency admissions with zero length of stay and no procedures
+  tar_target(nostaynoproc_data_lsoa, get_nostaynoproc_data_lsoa(con)),
+  tar_target(nostaynoproc_data_prac, get_nostaynoproc_data_prac(con)),
+  
+  #icb
+  tar_target(
+    zerolos_noproc_icb,
+    zero_los_no_proc_icb(nostaynoproc_data_lsoa,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_by_age_sex_imd_icb)
+  ),
+  
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
