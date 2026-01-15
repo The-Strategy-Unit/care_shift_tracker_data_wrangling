@@ -1646,7 +1646,10 @@ list(
   ),
   
   ## Available beds data, categorised and distributed --------------------------
-  tar_target(beds_available_data, get_kh03_data(con)),
+  tar_target(
+    beds_available_data, 
+    get_kh03_data(con, current_financial_year_start)
+    ),
   
   tar_target(
     bed_split_icb,
@@ -1722,7 +1725,10 @@ list(
   ),
   
   ## NHS workforce data, categorised and distributed ---------------------------
-  tar_target(workforce_data, get_workforce_data(con)),
+  tar_target(
+    workforce_data, 
+    get_workforce_data(con, current_financial_year_start)
+    ),
   
   # icb
   tar_target(
@@ -1961,7 +1967,10 @@ list(
   ),
   
   ## Cost data, community to acute ratio providers re-distributed --------------
-  tar_target(ncc_cost_data, get_cost_data(con)),
+  tar_target(
+    ncc_cost_data, 
+    get_cost_data(con, current_financial_year_start)
+    ),
   
   # icb
   tar_target(
