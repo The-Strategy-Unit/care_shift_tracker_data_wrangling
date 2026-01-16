@@ -1802,7 +1802,7 @@ list(
   ),
   
   ## Delayed discharge days as % of all bed days -------------------------------
-  tar_target(del_dis_days, get_delay_disch_data(con)),
+  tar_target(del_dis_days, get_delay_disch_data(con, start_date, admissions_lag_date)),
   
   # ICB
   tar_target(
@@ -2018,8 +2018,8 @@ list(
   ),
   
   ## Bed split between acute and community provider sites ----------------------
-  tar_target(bedday_split_data_lsoa, get_epi_bedday_data_lsoa(con)),
-  tar_target(bedday_split_data_prac, get_epi_bedday_data_prac(con)),
+  tar_target(bedday_split_data_lsoa, get_epi_bedday_data_lsoa(con, start_date, admissions_lag_date)),
+  tar_target(bedday_split_data_prac, get_epi_bedday_data_prac(con, start_date, admissions_lag_date)),
   
   # icb
   tar_target(
