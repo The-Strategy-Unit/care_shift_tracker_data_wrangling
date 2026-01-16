@@ -72,7 +72,8 @@ pin_ref_indicator <- function(data, board) {
         ) ~ "Frailty and vulnerability",
         indicator %in% c("ambulatory_care_conditions_acute_per_pop_beddays",
                          "ambulatory_care_conditions_chronic_per_pop_beddays",
-                         "redirection_age_sex_imd_standardised_beddays"
+                         "redirection_age_sex_imd_standardised_beddays",
+                         "zero_los_no_procedures"
         ) ~ "Avoidable or preventable hospital use",
         indicator %in% c("raid_ae_per_pop_beddays",
                          "elec_non_elec_ratio_beddays",
