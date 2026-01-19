@@ -6,20 +6,16 @@
 #' @param lag The maximum date for the query.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
-get_epi_bedday_data_lsoa <- function(connection, lag) {
+get_epi_bedday_data_lsoa <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
   
-    declare @startdate Datetime,
-		@enddate Datetime;
-    set @startdate = '2008-04-01';
-    set @enddate = 'lag_date';
-
-    with cte as
+  with cte as
     (
     select left(Provider_Code,3) as prov_code, left([Der_Provider_Site_Code],5) as prov_site_code, [Der_Postcode_LSOA_2011_Code] as lsoa_2011,
     der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
+    convert(varchar(7), Episode_End_Date, 120) AS date,
     case when [Patient_Classification] in ('3','4') then 0.5
 		    when [Der_Episode_LoS] = 0 then 0.5
 		    when [Der_Episode_LoS] is NULL then 0.5
@@ -27,7 +23,8 @@ get_epi_bedday_data_lsoa <- function(connection, lag) {
 
     from [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]
     where 1=1
-      and [Episode_End_Date] between @startdate and @enddate --total time series
+      and [Episode_End_Date] >= 'start_date'
+      AND Episode_End_Date < 'lag_date' --total time series
       and [Age_on_Admission] >= 65 -- proxy for frail
       and left([Admission_Method],1) in ('1') --elective only
       and [Patient_Classification] in ('1','2','3') -- exclude regular night and mother & baby
@@ -42,7 +39,8 @@ get_epi_bedday_data_lsoa <- function(connection, lag) {
     order by prov_code, prov_site_code, lsoa_2011, der_financial_year, [Der_Activity_Month]
   " |>
     stringr::str_replace_all(
-      c("lag_date" = lag)
+      c("start_date" = start,
+        "lag_date" = lag)
     )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
@@ -51,20 +49,17 @@ get_epi_bedday_data_lsoa <- function(connection, lag) {
   return(wrangled)
 }
 
-get_epi_bedday_data_prac <- function(connection, lag) {
+
+get_epi_bedday_data_prac <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
   
-    declare @startdate Datetime,
-		@enddate Datetime;
-    set @startdate = '2008-04-01';
-    set @enddate = 'lag_date';
-
-    with cte as
+  with cte as
     (
     select left(Provider_Code,3) as prov_code, left([Der_Provider_Site_Code],5) as prov_site_code, [GP_Practice_Code] as gp_prac,
     der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
+    convert(varchar(7), Episode_End_Date, 120) AS date,
     case when [Patient_Classification] in ('3','4') then 0.5
 		    when [Der_Episode_LoS] = 0 then 0.5
 		    when [Der_Episode_LoS] is NULL then 0.5
@@ -72,7 +67,8 @@ get_epi_bedday_data_prac <- function(connection, lag) {
 
     from [Reporting_MESH_APC].[APCE_Core_Monthly_Snapshot]
     where 1=1
-      and [Episode_End_Date] between @startdate and @enddate --total time series
+      and [Episode_End_Date] >= 'start_date'
+      AND Episode_End_Date < 'lag_date' --total time series
       and [Age_on_Admission] >= 65 -- proxy for frail
       and left([Admission_Method],1) in ('1') --elective only
       and [Patient_Classification] in ('1','2','3') -- exclude regular night and mother & baby
@@ -87,7 +83,8 @@ get_epi_bedday_data_prac <- function(connection, lag) {
     order by prov_code, prov_site_code, gp_prac, der_financial_year, [Der_Activity_Month]
   " |>
     stringr::str_replace_all(
-      c("lag_date" = lag)
+      c("start_date" = start,
+        "lag_date" = lag)
     )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>

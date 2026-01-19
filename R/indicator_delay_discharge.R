@@ -10,11 +10,6 @@ get_delay_disch_data <- function(connection, lag) {
   
   query <- "
   SET NOCOUNT ON;
-  
-    declare @startdate Datetime,
-		@enddate Datetime;
-    set @startdate = '2008-04-01';
-    set @enddate = 'lag_date';
 
     with cte as
     (
@@ -23,7 +18,7 @@ get_delay_disch_data <- function(connection, lag) {
       count(distinct a.apcs_ident) as spells,
       sum([Der_Spell_LoS]) as spell_los_tot,
       sum(case when [Discharge_Ready_Date] is NULL then 0
-		    when [Discharge_Ready_Date] < @startdate then 0
+		    when [Discharge_Ready_Date] < 'start_date' then 0
 		    when [Discharge_Ready_Date] > [Discharge_Date] then 0
 	    	when [Discharge_Ready_Date] < [Discharge_Date] then datediff(dd, [Discharge_Ready_Date], [Discharge_Date]) else 0 end) as ddd_tot
 
@@ -35,7 +30,8 @@ get_delay_disch_data <- function(connection, lag) {
       and [Age_At_Start_of_Spell_SUS] >= 65 -- proxy for frail cohort
       and (a.[Der_Postcode_LSOA_2011_Code] is not NULL
       OR [GP_Practice_Code] is not NULL)
-      and [Discharge_Date] between @startdate and @enddate
+      and cast([Discharge_Date] as date) >= 'start_date' and
+          cast([Discharge_Date] as date) < 'lag_date'
 
       group by a.[Der_Postcode_LSOA_2011_Code], [GP_Practice_Code],
       cast(datepart(yyyy,[Discharge_Date]) as varchar) + case when datepart(mm,[Discharge_Date]) < 10 then '-0' else '-' end + cast(datepart(mm,[Discharge_Date]) as varchar)
@@ -45,7 +41,8 @@ get_delay_disch_data <- function(connection, lag) {
     order by lsoa_2011, gp_prac, year_mon
   " |>
     stringr::str_replace_all(
-      c("lag_date" = lag)
+      c("start_date" = start,
+        "lag_date" = lag)
     )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>

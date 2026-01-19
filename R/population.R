@@ -361,3 +361,73 @@ get_population_pcn_by_age_sex <- function(population_gp1,
   return(data)
   
 }
+
+## Get 65+ populations
+#icb
+get_65_pops_icb <- function(data) {
+  
+pops_base <- data |>
+  filter(age_range %in% c("65-69","70-74","75-79","80+")) |>
+  group_by(icb24cdh, effective_snapshot_date) |>
+  summarise(population_size = sum(population_size)) |>
+  ungroup() |>
+  mutate(
+    population_year = as.character(lubridate::year(effective_snapshot_date)),
+    pop_yr_plus = as.numeric(population_year)+1,
+    der_financial_year = paste0(population_year,'/',str_sub(as.character(pop_yr_plus), start = -2))) |>
+  select(icb24cdh,population_year,der_financial_year,population_size)
+
+pops_2526 <- pops_base |>
+  filter(population_year == "2024") |>
+  mutate(population_year = "2025",
+         der_financial_year = "2025/26")
+
+pops_final <- bind_rows(pops_base, pops_2526) |>
+  group_by(icb24cdh, der_financial_year) |>
+  summarise(population = sum(population_size)) |>
+  ungroup() |>
+  filter(!is.na(icb24cdh))
+
+return(pops_final)
+}
+
+#lad
+get_65_pops_la <- function(data) {
+  
+  pops_base <- data |>
+    filter(age_range %in% c("65-69","70-74","75-79","80+")) |>
+    group_by(lad24cd, effective_snapshot_date) |>
+    summarise(population_size = sum(population_size)) |>
+    ungroup() |>
+    mutate(
+      population_year = as.character(lubridate::year(effective_snapshot_date)),
+      pop_yr_plus = as.numeric(population_year)+1,
+      der_financial_year = paste0(population_year,'/',str_sub(as.character(pop_yr_plus), start = -2))) |>
+    select(lad24cd,population_year,der_financial_year,population_size)
+  
+  pops_2526 <- pops_base |>
+    filter(population_year == "2024") |>
+    mutate(population_year = "2025",
+           der_financial_year = "2025/26")
+  
+  pops_final <- bind_rows(pops_base, pops_2526) |>
+    group_by(lad24cd, der_financial_year) |>
+    summarise(population = sum(population_size)) |>
+    ungroup() |>
+    filter(!is.na(lad24cd))
+  
+  return(pops_final)
+}
+
+#pcn
+get_65_pops_pcn <- function(data) {
+  
+df <- data |>
+  filter(age_range %in% c("65-69","70-74","75-79","80+")) |>
+  group_by(pcn,date) |>
+  summarise(population = sum(population_size)) |>
+  ungroup() |>
+  arrange(pcn,date)
+
+return(df)
+}

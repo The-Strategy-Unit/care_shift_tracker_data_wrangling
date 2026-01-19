@@ -421,6 +421,20 @@ list(
       dplyr::select(pcn = pcn_code, pcn_prop_date, imd_quintile, prop)
   ),
   
+  ## Over 65s populations
+  tar_target(
+    population_65_plus_icb,
+    get_65_pops_icb(population_lsoa_mapped_to_higher_geographies_by_age_sex_imd)
+  ),
+  tar_target(
+    population_65_plus_la,
+    get_65_pops_la(population_lsoa_mapped_to_higher_geographies_by_age_sex_imd)
+  ),
+  tar_target(
+    population_65_plus_pcn,
+    get_65_pops_pcn(population_by_age_sex_pcn)
+  ),
+  
   ## England census ------------------------------------------------------------
   tar_target(
     census_url,
@@ -1799,7 +1813,9 @@ list(
   ),
   
   ## Delayed discharge days as % of all bed days -------------------------------
-  tar_target(del_dis_days, get_delay_disch_data(con, admissions_lag_date)),
+  tar_target(
+    del_dis_days, 
+    get_delay_disch_data(con, start_date, admissions_lag_date)),
   
   # ICB
   tar_target(
@@ -2015,10 +2031,12 @@ list(
   ),
   
   ## Bed split between acute and community provider sites ----------------------
-  tar_target(bedday_split_data_lsoa, 
-             get_epi_bedday_data_lsoa(con, admissions_lag_date)),
-  tar_target(bedday_split_data_prac, 
-             get_epi_bedday_data_prac(con, admissions_lag_date)),
+  tar_target(
+    bedday_split_data_lsoa, 
+    get_epi_bedday_data_lsoa(con, start_date, admissions_lag_date)),
+  tar_target(
+    bedday_split_data_prac, 
+    get_epi_bedday_data_prac(con, start_date, admissions_lag_date)),
   
   # icb
   tar_target(
@@ -2079,6 +2097,25 @@ list(
       arrange(pcn, date)
   ),
   
+  ## Emergency admissions with zero length of stay and no procedures
+  tar_target(nostaynoproc_data_lsoa, get_nostaynoproc_data_lsoa(con)),
+  tar_target(nostaynoproc_data_prac, get_nostaynoproc_data_prac(con)),
+  
+  #icb
+  tar_target(
+    zerolos_noproc_icb,
+    zero_los_no_proc_icb(nostaynoproc_data_lsoa,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_65_plus_icb)
+  ),
+  #lad
+  tar_target(
+    zerolos_noproc_la,
+    zero_los_no_proc_la(nostaynoproc_data_lsoa,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_65_plus_la)
+  ),
+  tar_target(
+    zerolos_noproc_pcn,
+    zero_los_no_proc_pcn(nostaynoproc_data_prac,gp_to_pcn,population_65_plus_pcn)
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -2104,7 +2141,8 @@ list(
       bed_split_icb,
       workforce_acute_icb,
       costs_community_ratio_icb,
-      beddays_split_icb
+      beddays_split_icb,
+      zerolos_noproc_icb
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(icb_lookup, "icb", board)
@@ -2133,7 +2171,8 @@ list(
       bed_split_la,
       workforce_acute_lad,
       costs_community_ratio_la,
-      beddays_split_la
+      beddays_split_la,
+      zerolos_noproc_la
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(la_lookup, "la", board)
@@ -2162,7 +2201,8 @@ list(
       bed_split_pcn,
       workforce_acute_pcn,
       costs_community_ratio_pcn,
-      beddays_split_pcn
+      beddays_split_pcn,
+      zerolos_noproc_pcn
     ) |>
       dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(pcn_lookup, "pcn", board)
