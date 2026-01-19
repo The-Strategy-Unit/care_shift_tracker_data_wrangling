@@ -43,6 +43,9 @@ con <- DBI::dbConnect(
 board <- pins::board_connect(server = "connect.strategyunitwm.nhs.uk")
 
 # Dates ------------------------------------------------------------------------
+# This section means that monthly indicators will be updated every month to get 
+# the latest data. Note: that this does not apply to financial yearly data. 
+# FY indicators will need to be manually refreshed when data becomes available.
 today <- Sys.Date() 
 
 current_month <- today |>
