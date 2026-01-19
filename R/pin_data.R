@@ -10,6 +10,7 @@
 #' @returns The data that was pinned.
 pin_indicators <- function(data, lookup, geography, board) {
   wrangled <- data |>
+    dplyr::arrange(frequency, indicator, date) |>
     dplyr::left_join(lookup |>
                        dplyr::select(-dplyr::any_of("geography")),
                      geography) |>
