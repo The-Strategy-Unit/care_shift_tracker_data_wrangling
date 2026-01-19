@@ -7,7 +7,7 @@
 #'
 #' @returns A dataframe with the number of beds (KH03) by provider and year.
 
-get_cost_data <- function(connection) {
+get_cost_data <- function(connection, financial_year) {
   
   query <- "
   SET NOCOUNT ON;
@@ -22,6 +22,8 @@ get_cost_data <- function(connection) {
       ,sum(case when Mapping_Pot = '07_COM' AND Department_Code in ('CHS','DC','Rehab','RP') then Actual_Cost
                 else 0 end) as comm_eqv_cost
     FROM [UKHF_National_Cost_Collection].[Unadjusted_Data_v21_1]
+    
+    WHERE effective_snapshot_date < 'fy_date'
 
     group by [Organisation_Code]
       ,cast(datepart(yyyy,[Effective_Snapshot_Date]) as varchar) + '/' + right(cast(datepart(yyyy,[Effective_Snapshot_Date])+1 as varchar),2)
@@ -31,7 +33,8 @@ get_cost_data <- function(connection) {
     where acute_eqv_cost > 0 OR comm_eqv_cost > 0
     order by [Organisation_Code]
       ,der_financial_year
-  "
+  " |>
+    stringr::str_replace_all(c("fy_date" = financial_year))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()

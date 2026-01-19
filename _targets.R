@@ -42,6 +42,22 @@ con <- DBI::dbConnect(
 # Pins connection --------------------------------------------------------------
 board <- pins::board_connect(server = "connect.strategyunitwm.nhs.uk")
 
+# Dates ------------------------------------------------------------------------
+# This section means that monthly indicators will be updated every month to get 
+# the latest data. Note: that this does not apply to financial yearly data. 
+# FY indicators will need to be manually refreshed when data becomes available.
+today <- Sys.Date() 
+
+current_month <- today |>
+  lubridate::floor_date("month")
+
+current_financial_year_start <- ifelse(
+  lubridate::month(today) < (4 + 3),  # Have added a 3 month lag to allow for FY 
+                                      # data to come through
+  glue::glue("{lubridate::year(today) - 1}-04-01"),
+  glue::glue("{lubridate::year(today)}-04-01")
+  ) 
+
 # Replace the target list below with your own:
 list(
   # Variables ------------------------------------------------------------------
@@ -60,12 +76,13 @@ list(
   tar_target(start_date, "2008-04-01"),
   tar_target(
     admissions_lag_date,
-    (Sys.Date() |>
-       lubridate::floor_date("month") - months(1)) |>
+    (current_month - months(2)) |>
       as.character()
   ),
-  tar_target(next_month, Sys.Date() |>
-               lubridate::ceiling_date("month")),
+  tar_target(
+    next_month,
+    current_month |>
+      lubridate::ceiling_date("month")),
   
   # Lookups --------------------------------------------------------------------
   ## Sub-geographies (LSOA, GP) to higher geographies (ICB, LA, PCN) -----------
@@ -1160,17 +1177,21 @@ list(
   # LSOA and GP
   tar_target(
     frequent_attenders_adult_ambulance_lsoa_current,
-    get_frequent_attenders_adult_ambulance_sub_geography_current("lsoa", 
-                                                                 age_cutoff, 
-                                                                 lag_date, 
-                                                                 con)
+    get_frequent_attenders_adult_ambulance_sub_geography_current(
+      "lsoa", 
+      age_cutoff, 
+      admissions_lag_date, 
+      con
+      )
   ),
   tar_target(
     frequent_attenders_adult_ambulance_gp_current,
-    get_frequent_attenders_adult_ambulance_sub_geography_current("gp", 
-                                                                 age_cutoff, 
-                                                                 lag_date, 
-                                                                 con)
+    get_frequent_attenders_adult_ambulance_sub_geography_current(
+      "gp", 
+      age_cutoff, 
+      admissions_lag_date, 
+      con
+      )
   ),
   tar_target(
     frequent_attenders_adult_ambulance_lsoa_archived,
@@ -1642,7 +1663,10 @@ list(
   ),
   
   ## Available beds data, categorised and distributed --------------------------
-  tar_target(beds_available_data, get_kh03_data(con)),
+  tar_target(
+    beds_available_data, 
+    get_kh03_data(con, current_financial_year_start)
+    ),
   
   tar_target(
     bed_split_icb,
@@ -1718,7 +1742,10 @@ list(
   ),
   
   ## NHS workforce data, categorised and distributed ---------------------------
-  tar_target(workforce_data, get_workforce_data(con)),
+  tar_target(
+    workforce_data, 
+    get_workforce_data(con, current_financial_year_start)
+    ),
   
   # icb
   tar_target(
@@ -1802,7 +1829,9 @@ list(
   ),
   
   ## Delayed discharge days as % of all bed days -------------------------------
-  tar_target(del_dis_days, get_delay_disch_data(con, start_date, admissions_lag_date)),
+  tar_target(
+    del_dis_days, 
+    get_delay_disch_data(con, start_date, admissions_lag_date)),
   
   # ICB
   tar_target(
@@ -1957,7 +1986,10 @@ list(
   ),
   
   ## Cost data, community to acute ratio providers re-distributed --------------
-  tar_target(ncc_cost_data, get_cost_data(con)),
+  tar_target(
+    ncc_cost_data, 
+    get_cost_data(con, current_financial_year_start)
+    ),
   
   # icb
   tar_target(
@@ -2018,8 +2050,12 @@ list(
   ),
   
   ## Bed split between acute and community provider sites ----------------------
-  tar_target(bedday_split_data_lsoa, get_epi_bedday_data_lsoa(con, start_date, admissions_lag_date)),
-  tar_target(bedday_split_data_prac, get_epi_bedday_data_prac(con, start_date, admissions_lag_date)),
+  tar_target(
+    bedday_split_data_lsoa, 
+    get_epi_bedday_data_lsoa(con, start_date, admissions_lag_date)),
+  tar_target(
+    bedday_split_data_prac, 
+    get_epi_bedday_data_prac(con, start_date, admissions_lag_date)),
   
   # icb
   tar_target(

@@ -3,15 +3,15 @@
 #' The total beddays by provider site by month.
 #'
 #' @param connection The ODBC connection.
+#' @param lag The maximum date for the query.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
-
 get_epi_bedday_data_lsoa <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
   
-    with cte as
+  with cte as
     (
     select left(Provider_Code,3) as prov_code, left([Der_Provider_Site_Code],5) as prov_site_code, [Der_Postcode_LSOA_2011_Code] as lsoa_2011,
     der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
@@ -49,12 +49,13 @@ get_epi_bedday_data_lsoa <- function(connection, start, lag) {
   return(wrangled)
 }
 
+
 get_epi_bedday_data_prac <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
   
-    with cte as
+  with cte as
     (
     select left(Provider_Code,3) as prov_code, left([Der_Provider_Site_Code],5) as prov_site_code, [GP_Practice_Code] as gp_prac,
     der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
