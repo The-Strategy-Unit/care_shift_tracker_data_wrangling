@@ -6,7 +6,7 @@
 #' @param lag The maximum date for the query.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
-get_delay_disch_data <- function(connection, lag) {
+get_delay_disch_data <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
