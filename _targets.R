@@ -51,6 +51,13 @@ today <- Sys.Date()
 current_month <- today |>
   lubridate::floor_date("month")
 
+current_financial_year_start <- ifelse(
+  lubridate::month(today) < (4 + 3),  # Have added a 3 month lag to allow for FY 
+                                      # data to come through
+  glue::glue("{lubridate::year(today) - 1}-04-01"),
+  glue::glue("{lubridate::year(today)}-04-01")
+  ) 
+
 # Replace the target list below with your own:
 list(
   # Variables ------------------------------------------------------------------
@@ -1656,7 +1663,10 @@ list(
   ),
   
   ## Available beds data, categorised and distributed --------------------------
-  tar_target(beds_available_data, get_kh03_data(con)),
+  tar_target(
+    beds_available_data, 
+    get_kh03_data(con, current_financial_year_start)
+    ),
   
   tar_target(
     bed_split_icb,
@@ -1732,7 +1742,10 @@ list(
   ),
   
   ## NHS workforce data, categorised and distributed ---------------------------
-  tar_target(workforce_data, get_workforce_data(con)),
+  tar_target(
+    workforce_data, 
+    get_workforce_data(con, current_financial_year_start)
+    ),
   
   # icb
   tar_target(
@@ -1973,7 +1986,10 @@ list(
   ),
   
   ## Cost data, community to acute ratio providers re-distributed --------------
-  tar_target(ncc_cost_data, get_cost_data(con)),
+  tar_target(
+    ncc_cost_data, 
+    get_cost_data(con, current_financial_year_start)
+    ),
   
   # icb
   tar_target(
