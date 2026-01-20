@@ -1831,7 +1831,7 @@ list(
   ## Delayed discharge days as % of all bed days -------------------------------
   tar_target(
     del_dis_days, 
-    get_delay_disch_data(con, start_date, admissions_lag_date)),
+    get_delay_disch_data(con, admissions_lag_date)),
   
   # ICB
   tar_target(

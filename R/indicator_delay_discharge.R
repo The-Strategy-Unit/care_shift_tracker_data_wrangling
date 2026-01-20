@@ -6,10 +6,13 @@
 #' @param lag The maximum date for the query.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
-get_delay_disch_data <- function(connection, start, lag) {
+get_delay_disch_data <- function(connection, lag) {
   
   query <- "
   SET NOCOUNT ON;
+  
+  DECLARE @start_date DATE
+  SET @start_date = '2022-04-01';
 
     with cte as
     (
@@ -18,7 +21,7 @@ get_delay_disch_data <- function(connection, start, lag) {
       count(distinct a.apcs_ident) as spells,
       sum([Der_Spell_LoS]) as spell_los_tot,
       sum(case when [Discharge_Ready_Date] is NULL then 0
-		    when [Discharge_Ready_Date] < 'start_date' then 0
+		    when [Discharge_Ready_Date] < @start_date then 0
 		    when [Discharge_Ready_Date] > [Discharge_Date] then 0
 	    	when [Discharge_Ready_Date] < [Discharge_Date] then datediff(dd, [Discharge_Ready_Date], [Discharge_Date]) else 0 end) as ddd_tot
 
@@ -30,7 +33,7 @@ get_delay_disch_data <- function(connection, start, lag) {
       and [Age_At_Start_of_Spell_SUS] >= 65 -- proxy for frail cohort
       and (a.[Der_Postcode_LSOA_2011_Code] is not NULL
       OR [GP_Practice_Code] is not NULL)
-      and cast([Discharge_Date] as date) >= 'start_date' and
+      and cast([Discharge_Date] as date) >= @start_date and
           cast([Discharge_Date] as date) < 'lag_date'
 
       group by a.[Der_Postcode_LSOA_2011_Code], [GP_Practice_Code],
@@ -41,8 +44,7 @@ get_delay_disch_data <- function(connection, start, lag) {
     order by lsoa_2011, gp_prac, year_mon
   " |>
     stringr::str_replace_all(
-      c("start_date" = start,
-        "lag_date" = lag)
+      c("lag_date" = lag)
     )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
