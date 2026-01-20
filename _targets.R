@@ -2163,7 +2163,6 @@ list(
       beddays_split_icb,
       zerolos_noproc_icb
     ) |>
-      dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(icb_lookup, "icb", board)
   ),
   tar_target(
@@ -2193,7 +2192,6 @@ list(
       beddays_split_la,
       zerolos_noproc_la
     ) |>
-      dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(la_lookup, "la", board)
   ),
   tar_target(
@@ -2223,7 +2221,6 @@ list(
       beddays_split_pcn,
       zerolos_noproc_pcn
     ) |>
-      dplyr::arrange(frequency, indicator, date) |>
       pin_indicators(pcn_lookup, "pcn", board)
   ),
   

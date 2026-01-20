@@ -86,7 +86,11 @@ get_elective_non_elective_ratio <- function(data, geography, activity_type) {
     ) |>
     dplyr::mutate(ratio = elective / non_elective,
                   indicator = glue::glue("elec_non_elec_ratio_{activity_type}")) |>
-    dplyr::filter(!is.na(!!rlang::sym(geography_column))) |>
+    dplyr::filter(
+      !is.na(!!rlang::sym(geography_column)),
+      non_elective > 0, # denominator cannot be 0
+      elective >= 0 # numbers should be positive
+      ) |>
     dplyr::select(
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
