@@ -10,9 +10,11 @@
 #' @returns The data that was pinned.
 pin_indicators <- function(data, lookup, geography, board) {
   wrangled <- data |>
+    dplyr::arrange(frequency, indicator, date) |>
     dplyr::left_join(lookup |>
                        dplyr::select(-dplyr::any_of("geography")),
                      geography) |>
+    transform_outliers() |>
     dplyr::select(indicator,
                   !!rlang::sym(geography),
                   !!rlang::sym(glue::glue("{geography}_name")),
@@ -22,7 +24,10 @@ pin_indicators <- function(data, lookup, geography, board) {
                   value,
                   lowercl,
                   uppercl,
-                  frequency) |>
+                  frequency,
+                  outlier,
+                  value_outliers_transformed
+                  ) |>
     dplyr::mutate(date = lubridate::ymd(date, truncated = 1)) 
   
   pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-indicators_{geography}")

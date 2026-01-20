@@ -14,28 +14,38 @@ get_perc_change <- function(data, geography) {
   data_latest <- data |>
     dplyr::filter(date == max(date, na.rm = TRUE), 
                   .by = indicator) |>
+    transform_outliers() |>
     dplyr::select(indicator, 
                   code,
                   name, 
                   latest_date = date,
-                  latest_value = value)
+                  latest_value = value,
+                  latest_value_outlier = outlier,
+                  latest_value_outliers_transformed = value_outliers_transformed
+                  )
   
   data_twelve_months_ago <- data |>
     dplyr::filter(date == (max(date, na.rm = TRUE) - lubridate::years(1)), 
                   .by = indicator) |>
-    dplyr::select(indicator, 
-                  code, 
-                  twelve_months_ago = value)
+    transform_outliers() |>
+    dplyr::select(
+      indicator, 
+      code, 
+      twelve_months_ago = value,
+      twelve_months_ago_outlier = outlier,
+      twelve_months_ago_outliers_transformed = value_outliers_transformed
+      )
   
   data_change <- data_latest |>
     dplyr::left_join(data_twelve_months_ago,
                      by = c("indicator", "code")) |>
     dplyr::mutate(
-      perc_change = ((latest_value - twelve_months_ago) * 100 / 
-                       twelve_months_ago) |>
+      perc_change = ((latest_value_outliers_transformed - 
+                        twelve_months_ago_outliers_transformed) * 100 / 
+                       twelve_months_ago_outliers_transformed) |>
         janitor::round_half_up(2),
       geography = geography
-    ) 
+    )
   
   return(data_change)
 }

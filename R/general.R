@@ -119,3 +119,30 @@ scrape_xls <- function(url, sheet = 1, skip = 0) {
   return(data)
   
 }
+
+#' Transform outliers.
+#'
+#' @param data A dataframe of indicators with a value column.
+#'
+#' @returns The dataframe with an extra column where outliers have been revalued
+#' to the mean +- 2 * IQR.
+transform_outliers <- function(data) {
+  limits <- data |>
+    dplyr::summarise(iqr = IQR(value, na.rm = TRUE),
+                     mean = mean(value, na.rm = TRUE), 
+                     .by = indicator) |>
+    dplyr::mutate(lower = mean - 2 * iqr,
+                  upper = mean + 2 * iqr)
+  
+  wrangled <- data |>
+    dplyr::left_join(limits, "indicator") |>
+    dplyr::mutate(
+      outlier = ifelse(value <= lower | value >= upper, 1, 0),
+      value_outliers_transformed = dplyr::case_when(
+        value <= lower ~ lower,
+        value >= upper ~ upper,
+        .default = value
+      ))
+  
+  return(wrangled)
+}
