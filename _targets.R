@@ -2141,6 +2141,18 @@ list(
     get_vir_ward_data(con,start_date,admissions_lag_date)
   ),
   
+  #icb
+  tar_target(
+    vir_ward_ari_beddays_icb,
+    vir_ward_ari_icb(vir_ward_ari_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_65_plus_icb)
+  ),
+  
+  #lad
+  tar_target(
+    vir_ward_ari_beddays_la,
+    vir_ward_ari_la(vir_ward_ari_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_65_plus_la)
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,

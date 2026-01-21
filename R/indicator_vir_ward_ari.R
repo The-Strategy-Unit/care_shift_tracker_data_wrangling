@@ -50,146 +50,123 @@ get_vir_ward_data <- function(connection, start, lag) {
   return(wrangled)
 }
 
+##' function to distribute by ICB
+#' @param data The data target object
+#' @param lookup The 2011 to 21 lsoa reference data
+#' @param geog The lsoa to higher geography lookup
+#' @param pop The 65 and over population target object
+#'
+#' @returns A dataframe with the rate of bed days per 100,000 population.
 
-#' ##' function to distribute by ICB
-#' #' @param beddays The beddays data by lsoa
-#' #' @param sites The ERIC reference data
-#' #' @param geog1 The lsoa matching file
-#' #' @param geog2 The lsoa21 to icb ref file 
-#' 
-#' beddays_to_icb <- function(beddays,sites,geog1,geog2) {
-#' 
-#' provs <- sites |>
-#'   group_by(organisation_code, org_class, der_financial_year) |>
-#'   summarise(freq = n())
-#' 
-#' df <- beddays |>
-#'   filter(!is.na(lsoa_2011)) |>
-#'   left_join(geog1 |> select(1,2),
-#'             by = c("lsoa_2011" = "lsoa11cd"),
-#'             relationship = "many-to-many") |>
-#'   filter(!is.na(lsoa21cd)) |>
-#'   left_join(geog2 |> select(1,6,7,8), by = "lsoa21cd",
-#'             relationship = "many-to-many") |>
-#'   filter(!is.na(icb24cd)) |>
-#'   group_by(prov_code, prov_site_code, der_financial_year, der_activity_month,
-#'            icb24cd, icb24cdh, icb24nm) |>
-#'   summarise(sum_los = sum(sum_los)) |>
-#'   ungroup() |>
-#'   left_join(sites |> select(4,6,8),
-#'             by = c("prov_site_code" = "site_code", "der_financial_year" = "der_financial_year")) |>
-#'   left_join(provs, by = c("prov_code" = "organisation_code", "der_financial_year" = "der_financial_year")) |>
-#'   mutate(final_class = case_when(is.na(site_class) ~ org_class,
-#'                                  site_class == 'Multi' & org_class != 'Acute' ~ org_class,
-#'                                  site_class == 'Other' & is.na(org_class) ~ 'Other',
-#'                                  site_class == 'Other' & org_class != 'Acute' ~ org_class,
-#'                                  TRUE ~ site_class))
-#' 
-#' all <- df |>
-#'   group_by(icb24cdh, der_activity_month) |>
-#'   summarise(count = n()) |>
-#'   ungroup() |>
-#'   select (1,2)
-#' 
-#' acute <- df |>
-#'   filter(final_class == 'Acute') |>
-#'   group_by(icb24cdh, der_activity_month) |>
-#'   summarise(acute_los = sum(sum_los)) |>
-#'   ungroup()
-#' 
-#' nonacute <- df |>
-#'   filter(final_class == 'Community' | final_class == 'MHLDA' | final_class == 'Other') |>
-#'   group_by(icb24cdh, der_activity_month) |>
-#'   summarise(nonacute_los = sum(sum_los)) |>
-#'   ungroup()
-#' 
-#' wrangled <- all |>
-#'   left_join(acute, by = c("icb24cdh" , "der_activity_month")) |>
-#'   left_join(nonacute, by = c("icb24cdh" , "der_activity_month")) |>
-#'   mutate(acute_los = case_when(is.na(acute_los) ~ 0,
-#'                                TRUE ~ acute_los),
-#'          nonacute_los = case_when(is.na(nonacute_los) ~ 0,
-#'                                   TRUE ~ nonacute_los),
-#'          perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
-#' 
-#' return(wrangled)
-#' }
-#' 
-#' ##' function to distribute by LAD
-#' #' @param beddays The beddays data by lsoa
-#' #' @param sites The ERIC reference data
-#' #' @param geog1 The lsoa matching file
-#' #' @param geog2 The lsoa21 to icb ref file 
-#' 
-#' beddays_to_lad <- function(beddays,sites,geog1,geog2) {
-#'   
-#'   provs <- sites |>
-#'     group_by(organisation_code, org_class, der_financial_year) |>
-#'     summarise(freq = n())
-#'   
-#'   df <- beddays |>
-#'     filter(!is.na(lsoa_2011)) |>
-#'     left_join(geog1 |> select(1,2),
-#'               by = c("lsoa_2011" = "lsoa11cd"),
-#'               relationship = "many-to-many") |>
-#'     filter(!is.na(lsoa21cd)) |>
-#'     left_join(geog2 |> select(1,11,12), by = "lsoa21cd",
-#'               relationship = "many-to-many") |>
-#'     filter(!is.na(lad24cd)) |>
-#'     group_by(prov_code, prov_site_code, der_financial_year, der_activity_month,
-#'              lad24cd, lad24nm) |>
-#'     summarise(sum_los = sum(sum_los)) |>
-#'     ungroup() |>
-#'     left_join(sites |> select(4,6,8),
-#'               by = c("prov_site_code" = "site_code", "der_financial_year" = "der_financial_year")) |>
-#'     left_join(provs, by = c("prov_code" = "organisation_code", "der_financial_year" = "der_financial_year")) |>
-#'     mutate(final_class = case_when(is.na(site_class) ~ org_class,
-#'                                    site_class == 'Multi' & org_class != 'Acute' ~ org_class,
-#'                                    site_class == 'Other' & is.na(org_class) ~ 'Other',
-#'                                    site_class == 'Other' & org_class != 'Acute' ~ org_class,
-#'                                    TRUE ~ site_class))
-#'   
-#'   all <- df |>
-#'     group_by(lad24cd, der_activity_month) |>
-#'     summarise(count = n()) |>
-#'     ungroup() |>
-#'     select (1,2)
-#'   
-#'   acute <- df |>
-#'     filter(final_class == 'Acute') |>
-#'     group_by(lad24cd, der_activity_month) |>
-#'     summarise(acute_los = sum(sum_los)) |>
-#'     ungroup()
-#'   
-#'   nonacute <- df |>
-#'     filter(final_class == 'Community' | final_class == 'MHLDA' | final_class == 'Other') |>
-#'     group_by(lad24cd, der_activity_month) |>
-#'     summarise(nonacute_los = sum(sum_los)) |>
-#'     ungroup()
-#'   
-#'   wrangled <- all |>
-#'     left_join(acute, by = c("lad24cd" , "der_activity_month")) |>
-#'     left_join(nonacute, by = c("lad24cd" , "der_activity_month")) |>
-#'     mutate(acute_los = case_when(is.na(acute_los) ~ 0,
-#'                                  TRUE ~ acute_los),
-#'            nonacute_los = case_when(is.na(nonacute_los) ~ 0,
-#'                                     TRUE ~ nonacute_los),
-#'            perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
-#'   
-#'   return(wrangled)
-#' }
-#' 
+vir_ward_ari_icb <- function(data,lookup,geog,pop) {
+
+grouped <- data |>
+  group_by(der_financial_year, der_activity_month, lsoa_11) |>
+  summarise(los = sum(los)) |>
+  ungroup()
+
+df <- grouped |>
+  filter(!is.na(lsoa_11)) |>
+  left_join(lookup |> select(1,2),
+            by = c("lsoa_11" = "lsoa11cd"),
+            relationship = "many-to-many") |>
+  filter(!is.na(lsoa21cd)) |>
+  left_join(geog |> select(1,6,7,8), by = "lsoa21cd",
+            relationship = "many-to-many") |>
+  filter(!is.na(icb24cd)) |>
+  group_by(der_financial_year, der_activity_month, icb24cd, icb24cdh, icb24nm) |>
+  summarise(sum_los = sum(los)) |>
+  ungroup() |>
+  left_join(pop,
+            by = c("icb24cdh" = "icb24cdh", "der_financial_year" = "der_financial_year")) |>
+  PHEindicatormethods::phe_rate(x = sum_los,
+                                n = population,
+                                multiplier = 100000) |>
+  
+  dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                              ~janitor::round_half_up(.)),
+                indicator = "virtual_ward_ari_bedday_rate") |>
+  dplyr::rename(
+    icb = icb24cdh,
+    date = der_activity_month) |>
+  dplyr::select(
+    indicator,
+    date,
+    icb,
+    numerator = sum_los,
+    denominator = population,
+    value,
+    lowercl,
+    uppercl)  |>
+  dplyr::mutate(frequency = "monthly") |>
+  arrange(icb, date)
+
+return(df)
+}
+
+#' @param data The data target object
+#' @param lookup The 2011 to 21 lsoa reference data
+#' @param geog The lsoa to higher geography lookup
+#' @param pop The 65 and over population target object
+#'
+#' @returns A dataframe with the rate of bed days per 100,000 population.
+
+vir_ward_ari_la <- function(data,lookup,geog,pop) {
+  
+  grouped <- data |>
+    group_by(der_financial_year, der_activity_month, lsoa_11) |>
+    summarise(los = sum(los)) |>
+    ungroup()
+
+  df <- grouped |>
+    filter(!is.na(lsoa_11)) |>
+    left_join(lookup |> select(1,2),
+              by = c("lsoa_11" = "lsoa11cd"),
+              relationship = "many-to-many") |>
+    filter(!is.na(lsoa21cd)) |>
+    left_join(geog |> select(1,11,12), by = "lsoa21cd",
+              relationship = "many-to-many") |>
+    filter(!is.na(lad24cd)) |>
+    group_by(der_financial_year, der_activity_month, lad24cd, lad24nm) |>
+    summarise(sum_los = sum(los)) |>
+    ungroup() |>
+    left_join(pop, by = c("lad24cd" = "lad24cd", "der_financial_year" = "der_financial_year")) |>
+    PHEindicatormethods::phe_rate(x = sum_los,
+                                  n = population,
+                                  multiplier = 100000) |>
+    
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                                ~janitor::round_half_up(.)),
+                  indicator = "virtual_ward_ari_bedday_rate") |>
+    dplyr::rename(
+      la = lad24cd,
+      date = der_activity_month) |>
+    dplyr::select(
+      indicator,
+      date,
+      la,
+      numerator = sum_los,
+      denominator = population,
+      value,
+      lowercl,
+      uppercl)  |>
+    dplyr::mutate(frequency = "monthly") |>
+    arrange(la, date)
+  
+  return(df)
+}
+
 #' ##' function to distribute by PCN
 #' #' @param beddays The beddays data by lsoa
 #' #' @param sites The ERIC reference data
-#' #' @param geog The practice to pcn mapping 
+#' #' @param geog The practice to pcn mapping
 #' 
 #' beddays_to_pcn <- function(beddays,sites,geog) {
-#'   
+#' 
 #'   provs <- sites |>
 #'     group_by(organisation_code, org_class, der_financial_year) |>
 #'     summarise(freq = n())
-#'   
+#' 
 #'   df <- beddays |>
 #'     filter(!is.na(gp_prac)) |>
 #'     left_join(geog |> select(1,2,5,6),
@@ -209,25 +186,25 @@ get_vir_ward_data <- function(connection, start, lag) {
 #'                                    site_class == 'Other' & is.na(org_class) ~ 'Other',
 #'                                    site_class == 'Other' & org_class != 'Acute' ~ org_class,
 #'                                    TRUE ~ site_class))
-#'   
+#' 
 #'   all <- df |>
 #'     group_by(pcn_code, der_activity_month) |>
 #'     summarise(count = n()) |>
 #'     ungroup() |>
 #'     select (1,2)
-#'   
+#' 
 #'   acute <- df |>
 #'     filter(final_class == 'Acute') |>
 #'     group_by(pcn_code, der_activity_month) |>
 #'     summarise(acute_los = sum(sum_los)) |>
 #'     ungroup()
-#'   
+#' 
 #'   nonacute <- df |>
 #'     filter(final_class == 'Community' | final_class == 'MHLDA' | final_class == 'Other') |>
 #'     group_by(pcn_code, der_activity_month) |>
 #'     summarise(nonacute_los = sum(sum_los)) |>
 #'     ungroup()
-#'   
+#' 
 #'   wrangled <- all |>
 #'     left_join(acute, by = c("pcn_code" , "der_activity_month")) |>
 #'     left_join(nonacute, by = c("pcn_code" , "der_activity_month")) |>
@@ -236,6 +213,6 @@ get_vir_ward_data <- function(connection, start, lag) {
 #'            nonacute_los = case_when(is.na(nonacute_los) ~ 0,
 #'                                     TRUE ~ nonacute_los),
 #'            perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
-#'   
+#' 
 #'   return(wrangled)
 #' }
