@@ -2135,6 +2135,12 @@ list(
     zero_los_no_proc_pcn(nostaynoproc_data_prac,gp_to_pcn,population_65_plus_pcn)
   ),
   
+  ## Virtual ward suitable (emergency) admissions for ARI
+  tar_target(
+    vir_ward_ari_data,
+    get_vir_ward_data(con,start_date,admissions_lag_date)
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,

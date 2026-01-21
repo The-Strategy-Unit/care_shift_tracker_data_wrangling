@@ -3,7 +3,8 @@
 #' The total beddays by provider site by month.
 #'
 #' @param connection The ODBC connection.
-#' @param lag The maximum date for the query.
+#' @param start minimum date for query from target pipeline.
+#' @param lag The maximum date for the query from target pipeline.
 #'
 #' @returns A dataframe with the number of bed days by lsoa and practice.
 get_epi_bedday_data_lsoa <- function(connection, start, lag) {
