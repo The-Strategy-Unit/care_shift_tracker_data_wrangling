@@ -84,20 +84,22 @@ get_elective_non_elective_ratio <- function(data, geography, activity_type) {
       non_elective = sum(non_elective, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
-    dplyr::mutate(ratio = elective / non_elective,
-                  indicator = glue::glue("elec_non_elec_ratio_{activity_type}")) |>
+    dplyr::mutate(indicator = glue::glue("elec_non_elec_ratio_{activity_type}")) |>
     dplyr::filter(
       !is.na(!!rlang::sym(geography_column)),
       non_elective > 0, # denominator cannot be 0
       elective >= 0 # numbers should be positive
       ) |>
+    PHEindicatormethods::phe_rate(x=elective, n=non_elective, multiplier = 1) |>
     dplyr::select(
       indicator,
       !!rlang::sym(geography) := !!rlang::sym(geography_column),
       date,
       numerator = elective,
       denominator = non_elective,
-      value = ratio
+      value,
+      lowercl,
+      uppercl
     )
   
   return(wrangled)
