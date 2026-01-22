@@ -14,7 +14,9 @@ get_vir_ward_data <- function(connection, start, lag) {
   
   with cte as
     (
-    select a.der_financial_year, left(a.[Der_Activity_Month],4)+'-'+right(a.[Der_Activity_Month],2) as der_activity_month, a.[Der_Postcode_LSOA_2011_Code] as lsoa_11, a.[GP_Practice_Code] as gp_prac,
+    select a.der_financial_year,
+    cast(datepart(yyyy,a.[discharge_date]) as varchar) +'-'+ right('00' + cast(datepart(mm,a.[discharge_date]) as varchar(2)),2) as der_activity_month,
+    a.[Der_Postcode_LSOA_2011_Code] as lsoa_11, a.[GP_Practice_Code] as gp_prac,
     count(*) as spells, sum([Der_Spell_LoS]) as los
     
     from [Reporting_MESH_APC].[APCS_Core_Monthly_Snapshot] a
@@ -22,7 +24,9 @@ get_vir_ward_data <- function(connection, start, lag) {
     on a.apcs_ident = b.apcs_ident
     
     where 1=1
-    and discharge_date between 'start_date' AND 'lag_date' --period of coverage
+    and discharge_date is not NULL -- completed spells only
+    and discharge_date >= 'start_date'
+    and discharge_date < 'lag_date' --period of coverage
     and left(admission_method,1) = '2' --unplanned
     and discharge_method in ('1','2','3') --exclude died and stillborn
     and [Age_At_Start_of_Spell_SUS] >= 65 --proxy for frailty
@@ -34,7 +38,9 @@ get_vir_ward_data <- function(connection, start, lag) {
 	    'J4','J5','J6','J7','J8','J9')
 	      ) -- acute respiratory infection codes
 
-    group by a.der_financial_year, a.[Der_Activity_Month], a.[Der_Postcode_LSOA_2011_Code], a.[GP_Practice_Code]
+    group by a.der_financial_year,
+    cast(datepart(yyyy,a.[discharge_date]) as varchar) +'-'+ right('00' + cast(datepart(mm,a.[discharge_date]) as varchar(2)),2),
+    a.[Der_Postcode_LSOA_2011_Code], a.[GP_Practice_Code]
     )
     
     select * from cte

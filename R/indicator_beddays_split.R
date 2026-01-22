@@ -153,7 +153,30 @@ wrangled <- all |>
                                TRUE ~ acute_los),
          nonacute_los = case_when(is.na(nonacute_los) ~ 0,
                                   TRUE ~ nonacute_los),
-         perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
+         total_los = acute_los + nonacute_los) |>
+  phe_proportion(x = nonacute_los,
+                 n = total_los,
+                 multiplier = 100) |>
+  
+  dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                              ~janitor::round_half_up(.)),
+                indicator = "beddays_nonacute_percent") |>
+  dplyr::rename(
+    icb = icb24cdh,
+    date = der_activity_month,
+    numerator = nonacute_los,
+    denominator = total_los,) |>
+  dplyr::select(
+    indicator,
+    date,
+    icb,
+    numerator,
+    denominator,
+    value,
+    lowercl,
+    uppercl)  |>
+  dplyr::mutate(frequency = "monthly") |>
+  arrange(icb, date)
 
 return(wrangled)
 }
@@ -217,7 +240,30 @@ beddays_to_lad <- function(beddays,sites,geog1,geog2) {
                                  TRUE ~ acute_los),
            nonacute_los = case_when(is.na(nonacute_los) ~ 0,
                                     TRUE ~ nonacute_los),
-           perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
+           total_los = acute_los + nonacute_los) |>
+    phe_proportion(x = nonacute_los,
+                   n = total_los,
+                   multiplier = 100) |>
+    
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                                ~janitor::round_half_up(.)),
+                  indicator = "beddays_nonacute_percent") |>
+    dplyr::rename(
+      la = lad24cd,
+      date = der_activity_month,
+      numerator = nonacute_los,
+      denominator = total_los,) |>
+    dplyr::select(
+      indicator,
+      date,
+      la,
+      numerator,
+      denominator,
+      value,
+      lowercl,
+      uppercl)  |>
+    dplyr::mutate(frequency = "monthly") |>
+    arrange(la, date)
   
   return(wrangled)
 }
@@ -278,7 +324,31 @@ beddays_to_pcn <- function(beddays,sites,geog) {
                                     TRUE ~ acute_los),
            nonacute_los = case_when(is.na(nonacute_los) ~ 0,
                                     TRUE ~ nonacute_los),
-           perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
+           total_los = acute_los + nonacute_los) |>
+    filter(total_los > 0) |>
+    phe_proportion(x = nonacute_los,
+                   n = total_los,
+                   multiplier = 100) |>
+    
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                                ~janitor::round_half_up(.)),
+                  indicator = "beddays_nonacute_percent") |>
+    dplyr::rename(
+      pcn = pcn_code,
+      date = der_activity_month,
+      numerator = nonacute_los,
+      denominator = total_los,) |>
+    dplyr::select(
+      indicator,
+      date,
+      pcn,
+      numerator,
+      denominator,
+      value,
+      lowercl,
+      uppercl)  |>
+    dplyr::mutate(frequency = "monthly") |>
+    arrange(pcn, date)
   
   return(wrangled)
 }

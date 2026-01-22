@@ -2060,60 +2060,17 @@ list(
   # icb
   tar_target(
     beddays_split_icb,
-    beddays_to_icb(
-      bedday_split_data_lsoa,
-      prov_site_type,
-      lsoa11_to_lsoa_21,
-      lsoa_to_higher_geographies
-    ) |>
-      mutate(indicator = 'beddays_nonacute_percent') |>
-      select(6, 1:5) |>
-      dplyr::rename(
-        icb = icb24cdh,
-        date = der_activity_month,
-        numerator = nonacute_los,
-        denominator = acute_los,
-        value = perc_nonacute
-      ) |>
-      dplyr::mutate(frequency = "monthly") |>
-      arrange(icb, date)
-  ),
+    beddays_to_icb(bedday_split_data_lsoa,prov_site_type,lsoa11_to_lsoa_21,lsoa_to_higher_geographies)
+    ),
   # lad
   tar_target(
     beddays_split_la,
-    beddays_to_lad(
-      bedday_split_data_lsoa,
-      prov_site_type,
-      lsoa11_to_lsoa_21,
-      lsoa_to_higher_geographies
-    ) |>
-      mutate(indicator = 'beddays_nonacute_percent') |>
-      select(6, 1:5) |>
-      dplyr::rename(
-        la = lad24cd,
-        date = der_activity_month,
-        numerator = nonacute_los,
-        denominator = acute_los,
-        value = perc_nonacute
-      ) |>
-      dplyr::mutate(frequency = "monthly") |>
-      arrange(la, date)
+    beddays_to_lad(bedday_split_data_lsoa, prov_site_type, lsoa11_to_lsoa_21, lsoa_to_higher_geographies)
   ),
   # pcn
   tar_target(
     beddays_split_pcn,
-    beddays_to_pcn(bedday_split_data_prac, prov_site_type, gp_to_pcn) |>
-      mutate(indicator = 'beddays_nonacute_percent') |>
-      select(6, 1:5) |>
-      dplyr::rename(
-        pcn = pcn_code,
-        date = der_activity_month,
-        numerator = nonacute_los,
-        denominator = acute_los,
-        value = perc_nonacute
-      ) |>
-      dplyr::mutate(frequency = "monthly") |>
-      arrange(pcn, date)
+    beddays_to_pcn(bedday_split_data_prac, prov_site_type, gp_to_pcn)
   ),
   
   ## Emergency admissions with zero length of stay and no procedures
