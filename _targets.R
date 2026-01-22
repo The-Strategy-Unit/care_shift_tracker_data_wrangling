@@ -2153,6 +2153,12 @@ list(
     vir_ward_ari_la(vir_ward_ari_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_65_plus_la)
   ),
   
+  #pcn
+  tar_target(
+    vir_ward_ari_beddays_pcn,
+    vir_ward_ari_pcn(vir_ward_ari_data,gp_to_pcn,population_65_plus_pcn)
+  ),
+  
   # All indicators -------------------------------------------------------------
   tar_target(
     indicators_icb,
@@ -2178,7 +2184,8 @@ list(
       workforce_acute_icb,
       costs_community_ratio_icb,
       beddays_split_icb,
-      zerolos_noproc_icb
+      zerolos_noproc_icb,
+      vir_ward_ari_beddays_icb
     ) |>
       pin_indicators(icb_lookup, "icb", board)
   ),
@@ -2206,7 +2213,8 @@ list(
       workforce_acute_lad,
       costs_community_ratio_la,
       beddays_split_la,
-      zerolos_noproc_la
+      zerolos_noproc_la,
+      vir_ward_ari_beddays_la
     ) |>
       pin_indicators(la_lookup, "la", board)
   ),
@@ -2234,7 +2242,8 @@ list(
       workforce_acute_pcn,
       costs_community_ratio_pcn,
       beddays_split_pcn,
-      zerolos_noproc_pcn
+      zerolos_noproc_pcn,
+      vir_ward_ari_beddays_pcn
     ) |>
       pin_indicators(pcn_lookup, "pcn", board)
   ),

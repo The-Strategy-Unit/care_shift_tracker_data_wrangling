@@ -82,7 +82,8 @@ pin_ref_indicator <- function(data, board) {
         ) ~ "Avoidable or preventable hospital use",
         indicator %in% c("raid_ae_per_pop_beddays",
                          "elec_non_elec_ratio_beddays",
-                         "delayed_discharge_percent_beddays"
+                         "delayed_discharge_percent_beddays",
+                         "virtual_ward_ari_bedday_rate"
         ) ~ "System flows and pathways",
         indicator %in% c("workforce_acute_perc",
                          "costs_community_ratio",

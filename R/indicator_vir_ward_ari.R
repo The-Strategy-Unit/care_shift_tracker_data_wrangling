@@ -156,63 +156,53 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
   return(df)
 }
 
-#' ##' function to distribute by PCN
-#' #' @param beddays The beddays data by lsoa
-#' #' @param sites The ERIC reference data
-#' #' @param geog The practice to pcn mapping
-#' 
-#' beddays_to_pcn <- function(beddays,sites,geog) {
-#' 
-#'   provs <- sites |>
-#'     group_by(organisation_code, org_class, der_financial_year) |>
-#'     summarise(freq = n())
-#' 
-#'   df <- beddays |>
-#'     filter(!is.na(gp_prac)) |>
-#'     left_join(geog |> select(1,2,5,6),
-#'               by = c("gp_prac" = "partner_organisation_code"),
-#'               relationship = "many-to-many") |>
-#'     filter(!is.na(gp_prac)) |>
-#'     filter(!is.na(pcn_code)) |>
-#'     group_by(prov_code, prov_site_code, der_financial_year, der_activity_month,
-#'              pcn_code, pcn_name) |>
-#'     summarise(sum_los = sum(sum_los)) |>
-#'     ungroup() |>
-#'     left_join(sites |> select(4,6,8),
-#'               by = c("prov_site_code" = "site_code", "der_financial_year" = "der_financial_year")) |>
-#'     left_join(provs, by = c("prov_code" = "organisation_code", "der_financial_year" = "der_financial_year")) |>
-#'     mutate(final_class = case_when(is.na(site_class) ~ org_class,
-#'                                    site_class == 'Multi' & org_class != 'Acute' ~ org_class,
-#'                                    site_class == 'Other' & is.na(org_class) ~ 'Other',
-#'                                    site_class == 'Other' & org_class != 'Acute' ~ org_class,
-#'                                    TRUE ~ site_class))
-#' 
-#'   all <- df |>
-#'     group_by(pcn_code, der_activity_month) |>
-#'     summarise(count = n()) |>
-#'     ungroup() |>
-#'     select (1,2)
-#' 
-#'   acute <- df |>
-#'     filter(final_class == 'Acute') |>
-#'     group_by(pcn_code, der_activity_month) |>
-#'     summarise(acute_los = sum(sum_los)) |>
-#'     ungroup()
-#' 
-#'   nonacute <- df |>
-#'     filter(final_class == 'Community' | final_class == 'MHLDA' | final_class == 'Other') |>
-#'     group_by(pcn_code, der_activity_month) |>
-#'     summarise(nonacute_los = sum(sum_los)) |>
-#'     ungroup()
-#' 
-#'   wrangled <- all |>
-#'     left_join(acute, by = c("pcn_code" , "der_activity_month")) |>
-#'     left_join(nonacute, by = c("pcn_code" , "der_activity_month")) |>
-#'     mutate(acute_los = case_when(is.na(acute_los) ~ 0,
-#'                                     TRUE ~ acute_los),
-#'            nonacute_los = case_when(is.na(nonacute_los) ~ 0,
-#'                                     TRUE ~ nonacute_los),
-#'            perc_nonacute = nonacute_los / (acute_los + nonacute_los) * 100)
-#' 
-#'   return(wrangled)
-#' }
+#' @param data The data target object
+#' @param geog The practice to pcn lookup
+#' @param pop The 65 and over population target object
+#'
+#' @returns A dataframe with the rate of bed days per 100,000 population.
+
+vir_ward_ari_pcn <- function(data,geog,pop) {
+
+  grouped <- data |>
+    group_by(der_financial_year, der_activity_month, gp_prac) |>
+    summarise(sum_los = sum(los)) |>
+    ungroup()
+
+  df <- grouped |>
+    filter(!is.na(gp_prac)) |>
+    left_join(geog |> select(1,2,5,6),
+              by = c("gp_prac" = "partner_organisation_code"),
+              relationship = "many-to-many") |>
+    filter(!is.na(gp_prac)) |>
+    filter(!is.na(pcn_code)) |>
+    group_by(der_financial_year, der_activity_month,
+             pcn_code, pcn_name) |>
+    summarise(sum_los = sum(sum_los)) |>
+    ungroup() |>
+    left_join(pop, by = c("pcn_code" = "pcn", "der_activity_month" = "date")) |>
+    filter(population > 0) |>
+    PHEindicatormethods::phe_rate(x = sum_los,
+                                  n = population,
+                                  multiplier = 100000) |>
+    
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                                ~janitor::round_half_up(.)),
+                  indicator = "virtual_ward_ari_bedday_rate") |>
+    dplyr::rename(
+      pcn = pcn_code,
+      date = der_activity_month) |>
+    dplyr::select(
+      indicator,
+      date,
+      pcn,
+      numerator = sum_los,
+      denominator = population,
+      value,
+      lowercl,
+      uppercl)  |>
+    dplyr::mutate(frequency = "monthly") |>
+    arrange(pcn, date)
+  
+  return(df)
+}
