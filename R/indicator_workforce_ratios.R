@@ -46,7 +46,34 @@ assign_workforce_icb <- function(data, dist_geog) {
     summarise(pats = round(sum(pats_adj),4)) |>
     ungroup() |>
     filter(!is.na(icb24cdh)) |>
-    arrange(icb24cdh, cluster_group, der_financial_year)
+    group_by(icb24cdh, der_financial_year) |>
+    mutate(
+      indicator = 'workforce_acute_perc',
+      year_tot = sum(pats)
+      ) |>
+    ungroup() |>
+    phe_proportion(x = pats, n = year_tot, multiplier = 100) |>
+    filter(cluster_group == 'Acute') |>
+    dplyr::rename(
+      icb = icb24cdh,
+      date = der_financial_year,
+      numerator = pats,
+      denominator = year_tot
+    ) |>
+    
+    select(indicator,
+           date,
+           icb,
+           numerator,
+           denominator,
+           value,
+           lowercl,
+           uppercl) |>
+    arrange(icb, date) |>
+    dplyr::mutate(
+      frequency = "fin_yearly",
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+    )
 
   return(wrangled)
 }
@@ -63,9 +90,34 @@ assign_workforce_lad <- function(data, dist_geog) {
     summarise(pats = round(sum(pats_adj),4)) |>
     ungroup() |>
     filter(!is.na(lad24cd)) |>
-    arrange(lad24cd, cluster_group, der_financial_year)
-  
-  return(wrangled)
+    group_by(lad24cd, der_financial_year) |>
+    mutate(
+      indicator = 'workforce_acute_perc',
+      year_tot = sum(pats)
+    ) |>
+    ungroup() |>
+    phe_proportion(x = pats, n = year_tot, multiplier = 100) |>
+    filter(cluster_group == 'Acute') |>
+    dplyr::rename(
+      la = lad24cd,
+      date = der_financial_year,
+      numerator = pats,
+      denominator = year_tot
+    ) |>
+    
+    select(indicator,
+           date,
+           la,
+           numerator,
+           denominator,
+           value,
+           lowercl,
+           uppercl) |>
+    arrange(la, date) |>
+    dplyr::mutate(
+      frequency = "fin_yearly",
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+    )
 }
 
 assign_workforce_pcn <- function(data, dist_geog) {
@@ -80,7 +132,32 @@ assign_workforce_pcn <- function(data, dist_geog) {
     summarise(pats = round(sum(pats_adj),4)) |>
     ungroup() |>
     filter(!is.na(pcn_code)) |>
-    arrange(pcn_code, cluster_group, der_financial_year)
-  
-  return(wrangled)
+    group_by(pcn_code, der_financial_year) |>
+    mutate(
+      indicator = 'workforce_acute_perc',
+      year_tot = sum(pats)
+    ) |>
+    ungroup() |>
+    phe_proportion(x = pats, n = year_tot, multiplier = 100) |>
+    filter(cluster_group == 'Acute') |>
+    dplyr::rename(
+      pcn = pcn_code,
+      date = der_financial_year,
+      numerator = pats,
+      denominator = year_tot
+    ) |>
+    
+    select(indicator,
+           date,
+           pcn,
+           numerator,
+           denominator,
+           value,
+           lowercl,
+           uppercl) |>
+    arrange(pcn, date) |>
+    dplyr::mutate(
+      frequency = "fin_yearly",
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+    )
 }

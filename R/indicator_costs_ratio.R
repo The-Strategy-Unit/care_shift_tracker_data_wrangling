@@ -51,7 +51,11 @@ assign_costs_icb <- function(data, dist_geog) {
     group_by(prov_code, der_financial_year) |>
     mutate(pat_tot = sum(pats),
           prop_pat = pats/pat_tot) |>
-    select(1,2,4,5,8)
+    select(prov_code,
+           der_financial_year,
+           icb24cdh,
+           icb24nm,
+           prop_pat)
 
   wrangled <- data |>
     # join results to activity distributions
@@ -60,11 +64,30 @@ assign_costs_icb <- function(data, dist_geog) {
           comm_cost_adj = comm_eqv_cost*prop_pat) |>
     group_by(icb24cdh, icb24nm, der_financial_year) |>
     summarise(acute_cost = round(sum(acute_cost_adj),4),
-          comm_cost = round(sum(comm_cost_adj),4),
-          ratio = comm_cost/acute_cost) |>
+          comm_cost = round(sum(comm_cost_adj),4)) |>
     ungroup() |>
-    filter(!is.na(icb24cdh)) |>
-    arrange(icb24cdh, der_financial_year)
+    phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
+    mutate(indicator = 'costs_community_ratio') |>
+    dplyr::rename(
+      icb = icb24cdh,
+      date = der_financial_year,
+      numerator = comm_cost,
+      denominator = acute_cost
+    ) |>
+    filter(!is.na(icb)) |>
+    select(indicator,
+           date,
+           icb,
+           numerator,
+           denominator,
+           value,
+           lowercl,
+           uppercl) |>
+    arrange(icb, date) |>
+    dplyr::mutate(
+      frequency = "fin_yearly",
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+    )
 
   return(wrangled)
 }
@@ -78,7 +101,11 @@ assign_costs_lad <- function(data, dist_geog) {
     group_by(prov_code, der_financial_year) |>
     mutate(pat_tot = sum(pats),
            prop_pat = pats/pat_tot) |>
-    select(1:4,7)
+    select(prov_code,
+           der_financial_year,
+           lad24cd,
+           lad24nm,
+           prop_pat)
 
   wrangled <- data |>
     # join results to activity distributions
@@ -88,11 +115,30 @@ assign_costs_lad <- function(data, dist_geog) {
            comm_cost_adj = comm_eqv_cost*prop_pat) |>
     group_by(lad24cd, lad24nm, der_financial_year) |>
     summarise(acute_cost = round(sum(acute_cost_adj),4),
-              comm_cost = round(sum(comm_cost_adj),4),
-              ratio = comm_cost/acute_cost) |>
+              comm_cost = round(sum(comm_cost_adj),4)) |>
     ungroup() |>
-    filter(!is.na(lad24cd)) |>
-    arrange(lad24cd, der_financial_year)
+    phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
+    mutate(indicator = 'costs_community_ratio') |>
+    dplyr::rename(
+      la = lad24cd,
+      date = der_financial_year,
+      numerator = comm_cost,
+      denominator = acute_cost
+    ) |>
+    filter(!is.na(la)) |>
+    select(indicator,
+           date,
+           la,
+           numerator,
+           denominator,
+           value,
+           lowercl,
+           uppercl) |>
+    arrange(la, date) |>
+    dplyr::mutate(
+      frequency = "fin_yearly",
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+    )
 
   return(wrangled)
 }
@@ -115,13 +161,34 @@ assign_costs_pcn <- function(data, lookup, dist_geog) {
               relationship = "many-to-many") |>
     mutate(acute_cost_adj = acute_eqv_cost*prop_pat,
            comm_cost_adj = comm_eqv_cost*prop_pat) |>
+    filter(!is.na(pcn_code)) |>
     group_by(pcn_code, pcn_name, der_financial_year) |>
     summarise(acute_cost = round(sum(acute_cost_adj),4),
-              comm_cost = round(sum(comm_cost_adj),4),
-              ratio = comm_cost/acute_cost) |>
+              comm_cost = round(sum(comm_cost_adj),4)) |>
     ungroup() |>
-    filter(!is.na(pcn_code)) |>
-    arrange(pcn_code, der_financial_year)
+    mutate(acute_cost = if_else(acute_cost == 0,1, acute_cost)) |>
+    phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
+    mutate(indicator = 'costs_community_ratio') |>
+    dplyr::rename(
+      pcn = pcn_code,
+      date = der_financial_year,
+      numerator = comm_cost,
+      denominator = acute_cost
+    ) |>
+    filter(!is.na(pcn)) |>
+    select(indicator,
+           date,
+           pcn,
+           numerator,
+           denominator,
+           value,
+           lowercl,
+           uppercl) |>
+    arrange(pcn, date) |>
+    dplyr::mutate(
+      frequency = "fin_yearly",
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+    )
 
   return(wrangled)
 }

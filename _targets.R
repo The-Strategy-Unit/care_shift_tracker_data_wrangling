@@ -1750,82 +1750,19 @@ list(
   # icb
   tar_target(
     workforce_acute_icb,
-    assign_workforce_icb(workforce_data, prov_pat_dist_icb) |>
-      group_by(icb24cdh, der_financial_year) |>
-      mutate(
-        indicator = 'workforce_acute_perc',
-        year_tot = sum(pats),
-        perc = pats / year_tot * 100
-      ) |>
-      ungroup() |>
-      filter(cluster_group == 'Acute') |>
-      select(6, 1:2, 4:5, 7:8) |>
-      dplyr::rename(
-        icb = icb24cdh,
-        date = der_financial_year,
-        numerator = pats,
-        denominator = year_tot,
-        value = perc
-      ) |>
-      arrange(icb, date) |>
-      dplyr::mutate(
-        frequency = "fin_yearly",
-        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-      )
+    assign_workforce_icb(workforce_data, prov_pat_dist_icb)
   ),
   
   # lad
   tar_target(
     workforce_acute_lad,
-    assign_workforce_lad(workforce_data, prov_pat_dist_lad) |>
-      group_by(lad24cd, der_financial_year) |>
-      mutate(
-        indicator = 'workforce_acute_perc',
-        year_tot = sum(pats),
-        perc = pats / year_tot * 100
-      ) |>
-      ungroup() |>
-      filter(cluster_group == 'Acute') |>
-      select(6, 1:2, 4:5, 7:8) |>
-      dplyr::rename(
-        la = lad24cd,
-        date = der_financial_year,
-        numerator = pats,
-        denominator = year_tot,
-        value = perc
-      ) |>
-      arrange(la, date) |>
-      dplyr::mutate(
-        frequency = "fin_yearly",
-        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-      )
+    assign_workforce_lad(workforce_data, prov_pat_dist_lad)
   ),
   
   # pcn
   tar_target(
     workforce_acute_pcn,
-    assign_workforce_pcn(workforce_data, prov_pat_dist_pcn) |>
-      group_by(pcn_code, der_financial_year) |>
-      mutate(
-        indicator = 'workforce_acute_perc',
-        year_tot = sum(pats),
-        perc = pats / year_tot * 100
-      ) |>
-      ungroup() |>
-      filter(cluster_group == 'Acute') |>
-      select(6, 4, 1, 5, 7:8) |>
-      dplyr::rename(
-        pcn = pcn_code,
-        date = der_financial_year,
-        numerator = pats,
-        denominator = year_tot,
-        value = perc
-      ) |>
-      arrange(pcn, date) |>
-      dplyr::mutate(
-        frequency = "fin_yearly",
-        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-      )
+    assign_workforce_pcn(workforce_data, prov_pat_dist_pcn)
   ),
   
   ## Delayed discharge days as % of all bed days -------------------------------
@@ -1994,59 +1931,17 @@ list(
   # icb
   tar_target(
     costs_community_ratio_icb,
-    assign_costs_icb(ncc_cost_data, prov_pat_dist_lsoa) |>
-      mutate(indicator = 'costs_community_ratio') |>
-      select(7, 1, 3, 5, 4, 6) |>
-      dplyr::rename(
-        icb = icb24cdh,
-        date = der_financial_year,
-        numerator = comm_cost,
-        denominator = acute_cost,
-        value = ratio
-      ) |>
-      dplyr::mutate(
-        frequency = "fin_yearly",
-        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-      ) |>
-      arrange(icb, date)
+    assign_costs_icb(ncc_cost_data, prov_pat_dist_lsoa)
   ),
   # lad
   tar_target(
     costs_community_ratio_la,
-    assign_costs_lad(ncc_cost_data, prov_pat_dist_lsoa) |>
-      mutate(indicator = 'costs_community_ratio') |>
-      select(7, 1, 3, 5, 4, 6) |>
-      dplyr::rename(
-        la = lad24cd,
-        date = der_financial_year,
-        numerator = comm_cost,
-        denominator = acute_cost,
-        value = ratio
-      ) |>
-      dplyr::mutate(
-        frequency = "fin_yearly",
-        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-      ) |>
-      arrange(la, date)
+    assign_costs_lad(ncc_cost_data, prov_pat_dist_lsoa)
   ),
   # pcn
   tar_target(
     costs_community_ratio_pcn,
-    assign_costs_pcn(ncc_cost_data, gp_to_pcn, prov_pat_dist_prac) |>
-      mutate(indicator = 'costs_community_ratio') |>
-      select(7, 1, 3, 5, 4, 6) |>
-      dplyr::rename(
-        pcn = pcn_code,
-        date = der_financial_year,
-        numerator = comm_cost,
-        denominator = acute_cost,
-        value = ratio
-      ) |>
-      dplyr::mutate(
-        frequency = "fin_yearly",
-        date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
-      ) |>
-      arrange(pcn, date)
+    assign_costs_pcn(ncc_cost_data, gp_to_pcn, prov_pat_dist_prac)
   ),
   
   ## Bed split between acute and community provider sites ----------------------
