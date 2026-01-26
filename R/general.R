@@ -128,8 +128,8 @@ scrape_xls <- function(url, sheet = 1, skip = 0) {
 #' to the mean +- 2 * IQR.
 transform_outliers <- function(data) {
   limits <- data |>
-    dplyr::summarise(iqr = IQR(value, na.rm = TRUE),
-                     mean = mean(value, na.rm = TRUE), 
+    dplyr::summarise(iqr = IQR(value[is.finite(value)], na.rm = TRUE),
+                     mean = mean(value[is.finite(value)], na.rm = TRUE), 
                      .by = indicator) |>
     dplyr::mutate(lower = mean - 2 * iqr,
                   upper = mean + 2 * iqr)
