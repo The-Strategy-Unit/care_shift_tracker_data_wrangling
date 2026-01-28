@@ -1969,8 +1969,14 @@ list(
   ),
   
   ## Emergency admissions with zero length of stay and no procedures
-  tar_target(nostaynoproc_data_lsoa, get_nostaynoproc_data_lsoa(con)),
-  tar_target(nostaynoproc_data_prac, get_nostaynoproc_data_prac(con)),
+  tar_target(nostaynoproc_data_lsoa,
+             get_nostaynoproc_data_lsoa(con, 
+                                        start_date, 
+                                        admissions_lag_date)),
+  tar_target(nostaynoproc_data_prac,
+             get_nostaynoproc_data_prac(con, 
+                                        start_date, 
+                                        admissions_lag_date)),
   
   #icb
   tar_target(

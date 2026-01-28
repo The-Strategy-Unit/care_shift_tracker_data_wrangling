@@ -1,37 +1,45 @@
 #' Functions for the inpatient admissions with zero LoS and no procedures indicator
 
-#' The admissions by either lsoa or practce by month.
+#' The admissions by either lsoa or practice by month.
 #'
 #' @param connection The ODBC connection.
+#' @param start beginning of time series cut-off as per targets settings.
+#' @param lag end of time series cut-off as per targets lag settings.
 #' @returns A dataframe with the number of bed days by lsoa and practice.
 
-get_nostaynoproc_data_lsoa <- function(connection) {
+get_nostaynoproc_data_lsoa <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
   
     with cte as
       (
-      select [Der_Postcode_LSOA_2011_Code] as lsoa_2011,
-      der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
+      select [Der_Postcode_LSOA_2011_Code] as lsoa_2011, der_financial_year,
+      cast(datepart(yyyy,[Discharge_Date]) as varchar) + case when datepart(mm,[Discharge_Date]) < 10 then '-0' else '-' end + cast(datepart(mm,[Discharge_Date]) as varchar) as der_activity_month,
       count(*) as adms
 
     from [Reporting_MESH_APC].[APCS_Core_Monthly_Snapshot]
       where 1=1
-      and Discharge_Date is not NULL --finished admissions only
+      and Discharge_Date >= 'start_date'
+      and Discharge_Date < 'lag_date' --finished admissions before lag date only
       and left([Admission_Method],1) = '2' --emergency admission
       and [Der_Spell_LoS] < 1 --no overnight stay
       and [Der_Procedure_Count] < 1 or Der_Procedure_Count is NULL --no procedures
       and [Der_Age_at_CDS_Activity_Date] >= 65 --proxy for frail
       and Der_Postcode_LSOA_2011_Code is not NULL --no missing geography
 
-    group by [Der_Postcode_LSOA_2011_Code],
-    der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2)
+    group by [Der_Postcode_LSOA_2011_Code], der_financial_year,
+      cast(datepart(yyyy,[Discharge_Date]) as varchar) + case when datepart(mm,[Discharge_Date]) < 10 then '-0' else '-' end + cast(datepart(mm,[Discharge_Date]) as varchar)
       )
 
     select * from cte
     order by lsoa_2011, der_financial_year, der_activity_month
-  "
+  " |>
+    stringr::str_replace_all(
+      c("start_date" = start,
+        "lag_date" = lag
+      )
+    )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()
@@ -39,33 +47,39 @@ get_nostaynoproc_data_lsoa <- function(connection) {
   return(wrangled)
 }
 
-get_nostaynoproc_data_prac <- function(connection) {
+get_nostaynoproc_data_prac <- function(connection, start, lag) {
   
   query <- "
   SET NOCOUNT ON;
   
     with cte as
       (
-      select [GP_Practice_Code] as gp_prac,
-      der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2) as der_activity_month,
+      select [GP_Practice_Code] as gp_prac, der_financial_year,
+      cast(datepart(yyyy,[Discharge_Date]) as varchar) + case when datepart(mm,[Discharge_Date]) < 10 then '-0' else '-' end + cast(datepart(mm,[Discharge_Date]) as varchar) as der_activity_month,
       count(*) as adms
 
     from [Reporting_MESH_APC].[APCS_Core_Monthly_Snapshot]
       where 1=1
-      and Discharge_Date is not NULL --finished admissions only
+      and Discharge_Date >= 'start_date'
+      and Discharge_Date < 'lag_date' --finished admissions before lag date only
       and left([Admission_Method],1) = '2' --emergency admission
       and [Der_Spell_LoS] < 1 --no overnight stay
       and [Der_Procedure_Count] < 1 or Der_Procedure_Count is NULL --no procedures
       and [Der_Age_at_CDS_Activity_Date] >= 65 --proxy for frail
       and GP_Practice_Code is not NULL --no missing practices
 
-    group by [GP_Practice_Code],
-    der_financial_year, left([Der_Activity_Month],4) + '-' + right([Der_Activity_Month],2)
+    group by [GP_Practice_Code], der_financial_year,
+      cast(datepart(yyyy,[Discharge_Date]) as varchar) + case when datepart(mm,[Discharge_Date]) < 10 then '-0' else '-' end + cast(datepart(mm,[Discharge_Date]) as varchar)
       )
 
     select * from cte
     order by gp_prac, der_financial_year, der_activity_month
-  "
+  " |>
+    stringr::str_replace_all(
+      c("start_date" = start,
+        "lag_date" = lag
+      )
+    )
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()

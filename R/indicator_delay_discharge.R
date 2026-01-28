@@ -12,7 +12,7 @@ get_delay_disch_data <- function(connection, lag) {
   SET NOCOUNT ON;
   
   DECLARE @start_date DATE
-  SET @start_date = '2022-04-01';
+  SET @start_date = '2023-04-01';
 
     with cte as
     (
