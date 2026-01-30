@@ -24,10 +24,13 @@ get_elective_non_elective_sub_geography <- function(sub_geography,
       sub_geography_column,
       admission_type,
       COUNT(DISTINCT apce_ident) As admissions,
-      SUM(spelldur) as beddays
+      SUM(case
+          when spelldur = 0 OR Patient_Classification in ('2','3','4') then 0.5
+          else spelldur end) as beddays
 
     FROM (SELECT
             apce_ident,
+            Patient_Classification,
             convert(varchar(7), Discharge_Date, 120) AS date,
             sub_geography_column,
             CASE  WHEN Admission_Method IN ('11', '12', '13') THEN 'elective'
