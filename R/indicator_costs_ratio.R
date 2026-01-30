@@ -67,7 +67,7 @@ assign_costs_icb <- function(data, dist_geog) {
           comm_cost = round(sum(comm_cost_adj),4)) |>
     ungroup() |>
     phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
-    mutate(indicator = 'costs_community_ratio') |>
+    mutate(indicator = 'community_to_acute_costs_ratio') |>
     dplyr::rename(
       icb = icb24cdh,
       date = der_financial_year,
@@ -118,7 +118,7 @@ assign_costs_lad <- function(data, dist_geog) {
               comm_cost = round(sum(comm_cost_adj),4)) |>
     ungroup() |>
     phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
-    mutate(indicator = 'costs_community_ratio') |>
+    mutate(indicator = 'community_to_acute_costs_ratio') |>
     dplyr::rename(
       la = lad24cd,
       date = der_financial_year,
@@ -168,7 +168,7 @@ assign_costs_pcn <- function(data, lookup, dist_geog) {
     ungroup() |>
     mutate(acute_cost = if_else(acute_cost == 0,1, acute_cost)) |>
     phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
-    mutate(indicator = 'costs_community_ratio') |>
+    mutate(indicator = 'community_to_acute_costs_ratio') |>
     dplyr::rename(
       pcn = pcn_code,
       date = der_financial_year,

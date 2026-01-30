@@ -160,7 +160,7 @@ wrangled <- all |>
   
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                               ~janitor::round_half_up(.)),
-                indicator = "beddays_nonacute_percent") |>
+                indicator = "bed_days_in_nonacute_beds_percent") |>
   dplyr::rename(
     icb = icb24cdh,
     date = der_activity_month,
@@ -247,7 +247,7 @@ beddays_to_lad <- function(beddays,sites,geog1,geog2) {
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
-                  indicator = "beddays_nonacute_percent") |>
+                  indicator = "bed_days_in_nonacute_beds_percent") |>
     dplyr::rename(
       la = lad24cd,
       date = der_activity_month,
@@ -332,7 +332,7 @@ beddays_to_pcn <- function(beddays,sites,geog) {
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
-                  indicator = "beddays_nonacute_percent") |>
+                  indicator = "bed_days_in_nonacute_beds_percent") |>
     dplyr::rename(
       pcn = pcn_code,
       date = der_activity_month,

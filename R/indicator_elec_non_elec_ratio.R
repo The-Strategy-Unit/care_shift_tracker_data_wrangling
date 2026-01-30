@@ -1,5 +1,5 @@
 # Functions for the elective to non elective ratio indicator:
-# `elec_non_elec_ratio_admissions` and `elec_non_elec_ratio_beddays`.
+# `elec_non_elec_ratio_admissions` and `elec_to_non_elec_admissions_ratio_beddays`.
 
 #' The number of elective and non elective admissions/beddays by LSOA/GP and 
 #' month.
@@ -84,7 +84,7 @@ get_elective_non_elective_ratio <- function(data, geography, activity_type) {
       non_elective = sum(non_elective, na.rm = TRUE),
       .by = c(date, !!rlang::sym(geography_column))
     ) |>
-    dplyr::mutate(indicator = glue::glue("elec_non_elec_ratio_{activity_type}")) |>
+    dplyr::mutate(indicator = glue::glue("elec_to_non_elec_admissions_ratio_{activity_type}")) |>
     dplyr::filter(
       !is.na(!!rlang::sym(geography_column)),
       non_elective > 0, # denominator cannot be 0

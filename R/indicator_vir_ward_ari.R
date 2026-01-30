@@ -91,7 +91,7 @@ df <- grouped |>
   
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                               ~janitor::round_half_up(.)),
-                indicator = "virtual_ward_ari_bedday_rate") |>
+                indicator = "virtual_ward_suitable_admissions_ari_per_pop_beddays") |>
   dplyr::rename(
     icb = icb24cdh,
     date = der_activity_month) |>
@@ -143,7 +143,7 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
-                  indicator = "virtual_ward_ari_bedday_rate") |>
+                  indicator = "virtual_ward_suitable_admissions_ari_per_pop_beddays") |>
     dplyr::rename(
       la = lad24cd,
       date = der_activity_month) |>
@@ -194,7 +194,7 @@ vir_ward_ari_pcn <- function(data,geog,pop) {
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
-                  indicator = "virtual_ward_ari_bedday_rate") |>
+                  indicator = "virtual_ward_suitable_admissions_ari_per_pop_beddays") |>
     dplyr::rename(
       pcn = pcn_code,
       date = der_activity_month) |>

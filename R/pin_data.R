@@ -78,16 +78,16 @@ pin_ref_indicator <- function(data, board) {
         indicator %in% c("ambulatory_care_conditions_acute_per_pop_beddays",
                          "ambulatory_care_conditions_chronic_per_pop_beddays",
                          "redirection_age_sex_imd_standardised_beddays",
-                         "zero_los_no_procedures"
+                         "zero_los_admissions_with_no_procedures_per_pop"
         ) ~ "Avoidable or preventable hospital use",
         indicator %in% c("raid_ae_per_pop_beddays",
-                         "elec_non_elec_ratio_beddays",
+                         "elec_to_non_elec_admissions_ratio_beddays",
                          "delayed_discharge_percent_beddays",
-                         "virtual_ward_ari_bedday_rate"
+                         "virtual_ward_suitable_admissions_ari_per_pop_beddays"
         ) ~ "System flows and pathways",
-        indicator %in% c("workforce_acute_perc",
-                         "costs_community_ratio",
-                         "beddays_nonacute_percent"
+        indicator %in% c("workforce_in_acute_setting_percent",
+                         "community_to_acute_costs_ratio",
+                         "bed_days_in_nonacute_beds_percent"
         ) ~ "Balancing resources",
         .default = "Other"
       ),
@@ -102,6 +102,8 @@ pin_ref_indicator <- function(data, board) {
             "beddays" = "(beddays)",
             "elderly" = "older people",
             "standardised" = "standardised_rate",
+            "nonacute" = "non-acute",
+            "ari" = "(ARI)",
             "_" = " ")
         ) |>
         stringr::str_to_sentence() |>

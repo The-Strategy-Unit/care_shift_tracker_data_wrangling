@@ -48,7 +48,7 @@ assign_workforce_icb <- function(data, dist_geog) {
     filter(!is.na(icb24cdh)) |>
     group_by(icb24cdh, der_financial_year) |>
     mutate(
-      indicator = 'workforce_acute_perc',
+      indicator = 'workforce_in_acute_setting_percent',
       year_tot = sum(pats)
       ) |>
     ungroup() |>
@@ -92,7 +92,7 @@ assign_workforce_lad <- function(data, dist_geog) {
     filter(!is.na(lad24cd)) |>
     group_by(lad24cd, der_financial_year) |>
     mutate(
-      indicator = 'workforce_acute_perc',
+      indicator = 'workforce_in_acute_setting_percent',
       year_tot = sum(pats)
     ) |>
     ungroup() |>
@@ -134,7 +134,7 @@ assign_workforce_pcn <- function(data, dist_geog) {
     filter(!is.na(pcn_code)) |>
     group_by(pcn_code, der_financial_year) |>
     mutate(
-      indicator = 'workforce_acute_perc',
+      indicator = 'workforce_in_acute_setting_percent',
       year_tot = sum(pats)
     ) |>
     ungroup() |>

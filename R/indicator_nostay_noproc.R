@@ -116,7 +116,7 @@ df <- data |>
 
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                               ~janitor::round_half_up(.)),
-                indicator = "zero_los_no_procedures") |>
+                indicator = "zero_los_admissions_with_no_procedures_per_pop") |>
   dplyr::rename(
     icb = icb24cdh,
     date = der_activity_month) |>
@@ -156,7 +156,7 @@ zero_los_no_proc_la <- function(data,lookup,geog,pop) {
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
-                  indicator = "zero_los_no_procedures") |>
+                  indicator = "zero_los_admissions_with_no_procedures_per_pop") |>
     dplyr::rename(
       la = lad24cd,
       date = der_activity_month) |>
@@ -196,7 +196,7 @@ zero_los_no_proc_pcn <- function(data,lookup,pop) {
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
-                  indicator = "zero_los_no_procedures") |>
+                  indicator = "zero_los_admissions_with_no_procedures_per_pop") |>
     dplyr::rename(
       pcn = pcn_code,
       date = der_activity_month) |>
