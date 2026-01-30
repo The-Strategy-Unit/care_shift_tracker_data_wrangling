@@ -185,9 +185,7 @@ GROUP BY
   " |>
     stringr::str_replace_all(
       c("age_cutoff" = age,
-        "lag_date" = Sys.Date() |>
-          lubridate::floor_date("month") |> 
-          as.character(),
+        "lag_date" = lag,
         "sub_geography_column" = sub_geography_column
       )
     )
