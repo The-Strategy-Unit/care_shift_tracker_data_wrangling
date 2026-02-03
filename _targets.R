@@ -2150,5 +2150,8 @@ list(
   ),
 
   ## Indicators ----------------------------------------------------------------
-  tar_target(ref_indicator, pin_ref_indicator(indicators_icb, board))
+  tar_target(ref_indicator, pin_ref_indicator(indicators_icb, board)),
+  
+  ## PCN to NH -----------------------------------------------------------------
+  tar_target(ref_pcn_to_nh, pin_ref_pcn_to_nh(pcn_to_nh, gp_to_pcn, board))
 )
