@@ -1,5 +1,20 @@
 # General functions.
 
+get_nh_from_pcn <- function(data, lookup) {
+  if("pcn" %in% names(data)) {
+    
+  } else {
+    data <- data |> 
+      dplyr::rename(pcn = pcn_code)
+  }
+  
+  wrangled <- data |>
+    dplyr::left_join(lookup, "pcn") |>
+    dplyr::filter(!is.na(nnhip_code)) 
+  
+  return(wrangled)
+}
+
 #' Gets `imd_quintile` from `imd_decile`.
 #'
 #' @param data A dataframe with a `imd_decile` column.
@@ -52,10 +67,10 @@ get_quintile_from_rank <- function(data) {
 
 #' Gets reference data.
 #'
-#' @param lookup The ICB/LA/PCN lookup.
-#' @param geo The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param lookup The ICB/LA/NH lookup.
+#' @param geo The column geography of interest: `"icb"`, `"la"` or `"nh"`.
 #'
-#' @returns A reference file of ICB/LA/PCN codes and names.
+#' @returns A reference file of ICB/LA/NH codes and names.
 get_ref_by_geography <- function(lookup, geo) {
   ref <- lookup |>
     dplyr::select(code = !!rlang::sym(geo), 
