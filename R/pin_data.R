@@ -2,13 +2,14 @@
 
 #' Pins indicator data as parquet files.
 #'
-#' @param data The indicator data for ICB/LA/PCN.
-#' @param lookup A lookup of ICB/LA/PCN codes and names.
-#' @param geography The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param data The indicator data for ICB/LA/NH.
+#' @param lookup A lookup of ICB/LA/NH codes and names.
+#' @param geography The column geography of interest: `"icb"`, `"la"` or `"nh"`.
 #' @param board The pins board.
 #'
 #' @returns The data that was pinned.
 pin_indicators <- function(data, lookup, geography, board) {
+  
   wrangled <- data |>
     dplyr::arrange(frequency, indicator, date) |>
     dplyr::left_join(lookup |>
@@ -125,27 +126,24 @@ pin_ref_indicator <- function(data, board) {
     versioned = TRUE
   )
   
-  return(pin_name)
+  return(wrangled)
 }
 
 #' Pins reference data for geographies.
 #'
 #' @param ref_icb Reference information for ICBs.
 #' @param ref_la Reference information for LAs.
-#' @param ref_pcn Reference information for PCNs.
-#' @param pcn_to_icb Map between PCNs and ICBs.
+#' @param ref_nh Reference information for NHs.
 #' @param board The pins board.
 #'
 #' @returns The name of the pin.
-pin_ref_geography <- function(ref_icb, ref_la, ref_pcn, pcn_to_icb, board) {
+pin_ref_geography <- function(ref_icb, ref_la, ref_nh, board) {
   
-  wrangled <- rbind(ref_icb, ref_la, ref_pcn) |>
+  wrangled <- rbind(ref_icb, ref_la, ref_nh) |>
     dplyr::arrange(geography, name) |>
     dplyr::mutate(shortname = name |>
                     stringr::str_replace_all(c("NHS " = "",
-                                               " Integrated Care Board" = "",
-                                               " PCN" = ""))) |>
-    dplyr::left_join(pcn_to_icb, by = c("code" = "pcn"))
+                                               " Integrated Care Board" = ""))) 
   
   pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-ref-geography")
   

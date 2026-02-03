@@ -92,7 +92,7 @@ assign_kh03_beds_lad <- function(data, lookup, dist_geog) {
   return(wrangled)
 }
 
-assign_kh03_beds_pcn <- function(data, lookup, dist_geog) {
+assign_kh03_beds_nh <- function(data, lookup, dist_geog) {
   lookup_trim <- lookup |>
     select(1,3,8) |>
     distinct() |>
@@ -103,12 +103,12 @@ assign_kh03_beds_pcn <- function(data, lookup, dist_geog) {
     left_join(lookup_trim, by = c("organisation_code", "der_financial_year")) |>
     # join results to activity distributions
     left_join(dist_geog |>
-                select(1:4,8), by = c("organisation_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
+                select(1:4,7), by = c("organisation_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
     mutate(beds_adj = bed_total*prop_bed) |>
-    group_by(pcn_code, pcn_name, der_financial_year, org_class) |>
+    group_by(nnhip_code, der_financial_year, org_class) |>
     summarise(beds = round(sum(beds_adj),4)) |>
-    filter(!is.na(pcn_code)) |>
-    arrange(pcn_code, org_class, der_financial_year)
+    filter(!is.na(nnhip_code)) |>
+    arrange(nnhip_code, org_class, der_financial_year)
   
   return(wrangled)
 }

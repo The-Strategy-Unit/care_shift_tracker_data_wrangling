@@ -2,7 +2,7 @@
 #' indicator.
 #'
 #' @param data A dataframe of indicator data over time for a geography. 
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"nh"`.
 #'
 #' @returns A dataframe of the latest value, value of 12 months ago and the 
 #' percentage change by indicator and geography.

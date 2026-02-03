@@ -1,5 +1,5 @@
 #' Functions to get the distribution of provider activity by geography and practice to support weighting of
-#' KH03 beds indicator data to ICB/LAD/PCN.
+#' KH03 beds indicator data to ICB/LAD/NH.
 
 #' @param connection The ODBC connection 
 #' @returns A dataframe with the provider activity over time distributed by either lsoa or gp practice
