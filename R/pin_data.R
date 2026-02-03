@@ -7,7 +7,7 @@
 #' @param geography The column geography of interest: `"icb"`, `"la"` or `"nh"`.
 #' @param board The pins board.
 #'
-#' @returns The data that was pinned.
+#' @returns The contents of the pin.
 pin_indicators <- function(data, lookup, geography, board) {
   
   wrangled <- data |>
@@ -64,7 +64,7 @@ pin_perc_change <- function(data, board) {
 #' @param data The object `indicators_icb`.
 #' @param board The pins board.
 #'
-#' @returns The name of the pin.
+#' @returns The contents of the pin.
 pin_ref_indicator <- function(data, board) {
   wrangled <- data |>
     dplyr::select(indicator, frequency) |>
@@ -136,7 +136,7 @@ pin_ref_indicator <- function(data, board) {
 #' @param ref_nh Reference information for NHs.
 #' @param board The pins board.
 #'
-#' @returns The name of the pin.
+#' @returns The contents of the pin.
 pin_ref_geography <- function(ref_icb, ref_la, ref_nh, board) {
   
   wrangled <- rbind(ref_icb, ref_la, ref_nh) |>
@@ -155,5 +155,37 @@ pin_ref_geography <- function(ref_icb, ref_la, ref_nh, board) {
     versioned = TRUE
   )
   
+  return(wrangled)
+}
+
+#' Pins a lookup between PCN and NH.
+#'
+#' @param pcn_to_nh_lookup A dataframe mapping PCNs to NHs.
+#' @param gp_to_pcn_lookup A dataframe with columns of PCN codes and names.
+#' @param board The pins board.
+#'
+#' @returns The contents of the pin.
+pin_ref_pcn_to_nh <- function(pcn_to_nh_lookup, gp_to_pcn_lookup, board) {
+  
+  pcns <- gp_to_pcn_lookup |> 
+    dplyr::select(pcn_code, pcn_name) |> 
+    unique()
+  
+  wrangled <- pcn_to_nh_lookup |>
+    dplyr::rename(pcn_code = pcn) |>
+    dplyr::left_join(pcns, "pcn_code") |>
+    dplyr::arrange(nnhip_site, pcn_name) |>
+    dplyr::select(pcn_code, pcn_name, nnhip_code, nnhip_site)
+  
+  pin_name <- glue::glue("{Sys.getenv('NHNIP_CARE_SHIFT_TRACKER_BOARD_OWNER')}/nhnip-care-shift-tracker-ref-pcn_to_nh")
+  
+  pins::pin_write(
+    board,
+    x = wrangled,
+    name = pin_name,
+    type = "parquet",
+    versioned = TRUE
+  )
+
   return(wrangled)
 }
