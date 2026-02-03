@@ -273,7 +273,7 @@ beddays_to_lad <- function(beddays,sites,geog1,geog2) {
 #' @param sites The ERIC reference data
 #' @param geog The practice to pcn mapping 
 
-beddays_to_pcn <- function(beddays,sites,geog) {
+beddays_to_nh <- function(beddays,sites,geog, pcn_to_nh_lookup) {
   
   provs <- sites |>
     group_by(organisation_code, org_class, der_financial_year) |>
@@ -285,9 +285,10 @@ beddays_to_pcn <- function(beddays,sites,geog) {
               by = c("gp_prac" = "partner_organisation_code"),
               relationship = "many-to-many") |>
     filter(!is.na(gp_prac)) |>
-    filter(!is.na(pcn_code)) |>
+    filter(!is.na(pcn_code))  |>
+    get_nh_from_pcn(pcn_to_nh_lookup) |>
     group_by(prov_code, prov_site_code, der_financial_year, der_activity_month,
-             pcn_code, pcn_name) |>
+             nnhip_code) |>
     summarise(sum_los = sum(sum_los)) |>
     ungroup() |>
     left_join(sites |> select(4,6,8),
@@ -300,26 +301,26 @@ beddays_to_pcn <- function(beddays,sites,geog) {
                                    TRUE ~ site_class))
   
   all <- df |>
-    group_by(pcn_code, der_activity_month) |>
+    group_by(nnhip_code, der_activity_month) |>
     summarise(count = n()) |>
     ungroup() |>
     select (1,2)
   
   acute <- df |>
     filter(final_class == 'Acute') |>
-    group_by(pcn_code, der_activity_month) |>
+    group_by(nnhip_code, der_activity_month) |>
     summarise(acute_los = sum(sum_los)) |>
     ungroup()
   
   nonacute <- df |>
     filter(final_class == 'Community' | final_class == 'MHLDA' | final_class == 'Other') |>
-    group_by(pcn_code, der_activity_month) |>
+    group_by(nnhip_code, der_activity_month) |>
     summarise(nonacute_los = sum(sum_los)) |>
     ungroup()
   
   wrangled <- all |>
-    left_join(acute, by = c("pcn_code" , "der_activity_month")) |>
-    left_join(nonacute, by = c("pcn_code" , "der_activity_month")) |>
+    left_join(acute, by = c("nnhip_code" , "der_activity_month")) |>
+    left_join(nonacute, by = c("nnhip_code" , "der_activity_month")) |>
     mutate(acute_los = case_when(is.na(acute_los) ~ 0,
                                     TRUE ~ acute_los),
            nonacute_los = case_when(is.na(nonacute_los) ~ 0,
@@ -334,21 +335,21 @@ beddays_to_pcn <- function(beddays,sites,geog) {
                                 ~janitor::round_half_up(.)),
                   indicator = "bed_days_in_nonacute_beds_percent") |>
     dplyr::rename(
-      pcn = pcn_code,
+      nh = nnhip_code,
       date = der_activity_month,
       numerator = nonacute_los,
       denominator = total_los,) |>
     dplyr::select(
       indicator,
       date,
-      pcn,
+      nh,
       numerator,
       denominator,
       value,
       lowercl,
       uppercl)  |>
     dplyr::mutate(frequency = "monthly") |>
-    arrange(pcn, date)
+    arrange(nh, date)
   
   return(wrangled)
 }

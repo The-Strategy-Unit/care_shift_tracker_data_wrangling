@@ -104,14 +104,14 @@ df <- data |>
   left_join(lookup |> select (1,2),
             by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
   left_join(geog |>
-              select(1,7,8), by = "lsoa21cd") |>
+              select(lsoa21cd, 7, 8), by = "lsoa21cd") |>
   group_by(icb24cdh, der_financial_year, der_activity_month) |>
   summarise(total = sum(adms)) |>
   ungroup() |>
-  left_join(pop, by = c("icb24cdh" = "icb24cdh","der_financial_year" = "der_financial_year")) |>
+  left_join(pop, by = c("icb24cdh" = "icb", "der_financial_year")) |>
 
   PHEindicatormethods::phe_rate(x = total,
-                                n = population,
+                                n = population_size,
                                 multiplier = 100000) |>
 
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
@@ -125,7 +125,7 @@ df <- data |>
     date,
     icb,
     numerator = total,
-    denominator = population,
+    denominator = population_size,
     value,
     lowercl,
     uppercl)  |>
@@ -148,10 +148,10 @@ zero_los_no_proc_la <- function(data,lookup,geog,pop) {
     group_by(lad24cd, der_financial_year, der_activity_month) |>
     summarise(total = sum(adms)) |>
     ungroup() |>
-    left_join(pop, by = c("lad24cd" = "lad24cd","der_financial_year" = "der_financial_year")) |>
+    left_join(pop, by = c("lad24cd" = "la", "der_financial_year")) |>
     
     PHEindicatormethods::phe_rate(x = total,
-                                  n = population,
+                                  n = population_size,
                                   multiplier = 100000) |>
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
@@ -165,7 +165,7 @@ zero_los_no_proc_la <- function(data,lookup,geog,pop) {
       date,
       la,
       numerator = total,
-      denominator = population,
+      denominator = population_size,
       value,
       lowercl,
       uppercl)  |>
@@ -175,42 +175,43 @@ zero_los_no_proc_la <- function(data,lookup,geog,pop) {
   return(df)
 }
 
-# pcn
-zero_los_no_proc_pcn <- function(data,lookup,pop) {
+# nh
+zero_los_no_proc_nh <- function(data,lookup,pop, lookup_pcn_nh) {
   
   #wrangle and calcs
   df <- data |>
     filter(!is.na(gp_prac), der_activity_month >= '2013-04') |>
     left_join(lookup |> select (partner_organisation_code,pcn_code),
               by = c("gp_prac" = "partner_organisation_code"), relationship = "many-to-many") |>
-    group_by(pcn_code, der_activity_month) |>
+    get_nh_from_pcn(lookup_pcn_nh) |>
+    group_by(nnhip_code, der_activity_month) |>
     summarise(total = sum(adms)) |>
     ungroup() |>
-    filter(!is.na(pcn_code)) |>
-    left_join(pop, by = c("pcn_code" = "pcn","der_activity_month" = "date")) |>
-    filter(total <= population, !is.na(population)) |>
+    filter(!is.na(nnhip_code)) |>
+    left_join(pop, by = c("nnhip_code","der_activity_month" = "date")) |>
+    filter(total <= population_size, !is.na(population_size)) |>
     
     PHEindicatormethods::phe_rate(x = total,
-                                  n = population,
+                                  n = population_size,
                                   multiplier = 100000) |>
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
                   indicator = "zero_los_admissions_with_no_procedures_per_pop") |>
     dplyr::rename(
-      pcn = pcn_code,
+      nh = nnhip_code,
       date = der_activity_month) |>
     dplyr::select(
       indicator,
       date,
-      pcn,
+      nh,
       numerator = total,
-      denominator = population,
+      denominator = population_size,
       value,
       lowercl,
       uppercl)  |>
     dplyr::mutate(frequency = "monthly") |>
-    arrange(pcn, date)
+    arrange(nh, date)
   
   return(df)
 }

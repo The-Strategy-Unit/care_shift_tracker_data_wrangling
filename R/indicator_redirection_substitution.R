@@ -6,7 +6,7 @@
 #'
 #' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
 #' an indicator.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"nh"`.
 #'
 #' @returns A dataframe with the data aggregated to geography level and also by
 #' age range and sex.
@@ -165,7 +165,7 @@ get_indicator_at_sub_geography_level_by_age_sex <- function(data,
 #' @param data The redirection/substitution indicators at sub-geography level.
 #' @param population Population data at the geography of interest by age, sex 
 #' and imd.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"nh"`.
 #' @param latest_population_year The last year that population data is available
 #' for.
 #' @param activity_type Either `"admissions"` or `"beddays"`.
@@ -216,7 +216,7 @@ get_indicators_age_sex_imd_standardised_rates <- function(data,
 #' Get ICB / LA populations from LSOA populations.
 #'
 #' @param data A dataframe of LSOA populations.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"nh"`.
 #'
 #' @returns A dataframe of ICB / LA populations by year.
 get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geography) {
@@ -250,7 +250,7 @@ get_population_higher_geography_from_lsoa_by_age_sex_imd <- function(data, geogr
 #'
 #' @param data A dataframe at geography level.
 #' @param population The population data by month and geography.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"nh"`.
 #' @param latest_population_year The latest year that population data is
 #' available for.
 #'
@@ -259,10 +259,10 @@ join_to_population_data_by_age_sex_imd <- function(data,
                                                    population,
                                                    geography,
                                                    latest_population_year) {
-  wrangled <- if (geography == "pcn") {
+  wrangled <- if (geography == "nh" ) {
     data |>
       dplyr::left_join(population, 
-                       by = c(geography, 
+                       by = c("nh", 
                               "date", 
                               "age_range", 
                               "sex", 

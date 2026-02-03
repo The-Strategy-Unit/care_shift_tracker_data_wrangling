@@ -143,7 +143,7 @@ assign_costs_lad <- function(data, dist_geog) {
   return(wrangled)
 }
 
-assign_costs_pcn <- function(data, lookup, dist_geog) {
+assign_costs_nh <- function(data, lookup, dist_geog, pcn_to_nh_lookup) {
   dist <- dist_geog |>
     filter(!is.na(gp_prac)) |>
     left_join(lookup |> select(1,5,6), by = c("gp_prac" = "partner_organisation_code")) |>
@@ -161,8 +161,9 @@ assign_costs_pcn <- function(data, lookup, dist_geog) {
               relationship = "many-to-many") |>
     mutate(acute_cost_adj = acute_eqv_cost*prop_pat,
            comm_cost_adj = comm_eqv_cost*prop_pat) |>
-    filter(!is.na(pcn_code)) |>
-    group_by(pcn_code, pcn_name, der_financial_year) |>
+    filter(!is.na(pcn_code))  |>
+    get_nh_from_pcn(pcn_to_nh_lookup) |>
+    group_by(nnhip_code, der_financial_year) |>
     summarise(acute_cost = round(sum(acute_cost_adj),4),
               comm_cost = round(sum(comm_cost_adj),4)) |>
     ungroup() |>
@@ -170,21 +171,21 @@ assign_costs_pcn <- function(data, lookup, dist_geog) {
     phe_rate(x = comm_cost, n = acute_cost, multiplier = 1) |>
     mutate(indicator = 'community_to_acute_costs_ratio') |>
     dplyr::rename(
-      pcn = pcn_code,
+      nh = nnhip_code,
       date = der_financial_year,
       numerator = comm_cost,
       denominator = acute_cost
     ) |>
-    filter(!is.na(pcn)) |>
+    filter(!is.na(nh)) |>
     select(indicator,
            date,
-           pcn,
+           nh,
            numerator,
            denominator,
            value,
            lowercl,
            uppercl) |>
-    arrange(pcn, date) |>
+    arrange(nh, date) |>
     dplyr::mutate(
       frequency = "fin_yearly",
       date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")

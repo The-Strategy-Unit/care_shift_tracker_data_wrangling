@@ -100,11 +100,19 @@ get_frailty_data <- function(start, lag, connection) {
 #'
 #' @returns A dataframe with the number of admissions/beddays for high and 
 #' intermediate frailty emergency admissions by month and geography.
-get_frailty_geography <- function(data, geography, lookup) {
+get_frailty_geography <- function(data, geography, lookup, pcn_to_nh_lookup) {
   geography_column <- get_geography_column(geography)
   
-  wrangled <- data |>
-    join_to_geography_lookup(geography, lookup) |>
+  data_joined <- if(geography == "nh") {
+    data |>
+      join_to_geography_lookup("pcn", lookup) |>
+      get_nh_from_pcn(pcn_to_nh_lookup) 
+  } else {
+    data |>
+      join_to_geography_lookup(geography, lookup)
+  }
+  
+  wrangled <- data_joined |>
     dplyr::summarise(
       admissions = sum(admissions, na.rm = TRUE),
       beddays = sum(beddays, na.rm = TRUE),

@@ -13,6 +13,8 @@ get_geography_column <- function(geography) {
     "lad24cd"
   } else if (geography == "pcn") {
     "pcn_code"
+  } else if (geography == "nh") {
+    "nnhip_code"
   } else {
     "ERROR - please choose a geography: icb, la, pcn"
   }
@@ -62,7 +64,7 @@ join_to_geography_lookup <- function(data, geography, lookup) {
 #'
 #' @param data A dataframe at geography level.
 #' @param population The population data by month and geography.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"`, `"nh"` or `"pcn"`.
 #' @param latest_population_year The latest year that population data is
 #' available for.
 #'
@@ -71,9 +73,9 @@ join_to_population_data <- function(data,
                                     population,
                                     geography,
                                     latest_population_year) {
-  wrangled <- if (geography == "pcn") {
-    data  |>
-      dplyr::left_join(population, by = c(geography, "date"))
+  wrangled <- if (geography == "nh") {
+    data |>
+      dplyr::left_join(population, by = c("nh" = "nnhip_code", "date"))
   } else {
     data |>
       dplyr::mutate(
@@ -95,7 +97,7 @@ join_to_population_data <- function(data,
 #'
 #' @param data A data frame of admissions/beddays by LSOA/GP code and month for 
 #' an indicator.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"`, `"nh"` or `"pcn"`.
 #'
 #' @returns A dataframe with the data aggregated to geography level.
 aggregate_indicator_to_geography_level <- function(data,
@@ -203,10 +205,10 @@ get_indicator_at_sub_geography_level <- function(data, sub_geography) {
 
 #' Weight the indicators by 100,000 population.
 #'
-#' @param data The number of admissions/beddays for an indicator by ICB/LA/PCN 
+#' @param data The number of admissions/beddays for an indicator by ICB/LA/NH 
 #' and month.
 #' @param population The population data by month and geography.
-#' @param geography The geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The geography of interest: `"icb"`, `"la"` or `"nh"`.
 #' @param latest_population_year The latest year that population data is
 #' available for.
 #' @param activity_type Either `"admissions"` or `"beddays"`.
@@ -253,7 +255,7 @@ get_indicators_per_pop <- function(data,
 #' Tidy data to use `get_indicators_per_pop()`.
 #'
 #' @param data A dataframe of data that will be used to create the indicator.
-#' @param geography The column geography of interest: `"icb"`, `"la"` or `"pcn"`.
+#' @param geography The column geography of interest: `"icb"`, `"la"` or `"nh"`.
 #'
 #' @returns A dataframe ready to feed into `get_indicators_per_pop()`.
 tidy_data_for_indicator_wrangling <- function(data, geography){

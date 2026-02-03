@@ -84,9 +84,9 @@ df <- grouped |>
   summarise(sum_los = sum(los)) |>
   ungroup() |>
   left_join(pop,
-            by = c("icb24cdh" = "icb24cdh", "der_financial_year" = "der_financial_year")) |>
+            by = c("icb24cdh" = "icb", "der_financial_year")) |>
   PHEindicatormethods::phe_rate(x = sum_los,
-                                n = population,
+                                n = population_size,
                                 multiplier = 100000) |>
   
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
@@ -100,7 +100,7 @@ df <- grouped |>
     date,
     icb,
     numerator = sum_los,
-    denominator = population,
+    denominator = population_size,
     value,
     lowercl,
     uppercl)  |>
@@ -136,9 +136,10 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
     group_by(der_financial_year, der_activity_month, lad24cd, lad24nm) |>
     summarise(sum_los = sum(los)) |>
     ungroup() |>
-    left_join(pop, by = c("lad24cd" = "lad24cd", "der_financial_year" = "der_financial_year")) |>
+    left_join(pop,
+              by = c("lad24cd" = "la", "der_financial_year")) |>
     PHEindicatormethods::phe_rate(x = sum_los,
-                                  n = population,
+                                  n = population_size,
                                   multiplier = 100000) |>
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
@@ -152,7 +153,7 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
       date,
       la,
       numerator = sum_los,
-      denominator = population,
+      denominator = population_size,
       value,
       lowercl,
       uppercl)  |>
@@ -165,10 +166,11 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
 #' @param data The data target object
 #' @param geog The practice to pcn lookup
 #' @param pop The 65 and over population target object
+#' @param lookup The pcn to NH lookup.
 #'
 #' @returns A dataframe with the rate of bed days per 100,000 population.
 
-vir_ward_ari_pcn <- function(data,geog,pop) {
+vir_ward_ari_nh <- function(data,geog,pop, lookup) {
 
   grouped <- data |>
     group_by(der_financial_year, der_activity_month, gp_prac) |>
@@ -182,33 +184,34 @@ vir_ward_ari_pcn <- function(data,geog,pop) {
               relationship = "many-to-many") |>
     filter(!is.na(gp_prac)) |>
     filter(!is.na(pcn_code)) |>
+    get_nh_from_pcn(lookup) |>
     group_by(der_financial_year, der_activity_month,
-             pcn_code, pcn_name) |>
+             nnhip_code) |>
     summarise(sum_los = sum(sum_los)) |>
     ungroup() |>
-    left_join(pop, by = c("pcn_code" = "pcn", "der_activity_month" = "date")) |>
-    filter(population > 0) |>
+    left_join(pop, by = c("nnhip_code", "der_activity_month" = "date")) |>
+    filter(population_size > 0) |>
     PHEindicatormethods::phe_rate(x = sum_los,
-                                  n = population,
+                                  n = population_size,
                                   multiplier = 100000) |>
     
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
                   indicator = "virtual_ward_suitable_admissions_ari_per_pop_beddays") |>
     dplyr::rename(
-      pcn = pcn_code,
+      nh = nnhip_code,
       date = der_activity_month) |>
     dplyr::select(
       indicator,
       date,
-      pcn,
+      nh,
       numerator = sum_los,
-      denominator = population,
+      denominator = population_size,
       value,
       lowercl,
       uppercl)  |>
     dplyr::mutate(frequency = "monthly") |>
-    arrange(pcn, date)
+    arrange(nh, date)
   
   return(df)
 }

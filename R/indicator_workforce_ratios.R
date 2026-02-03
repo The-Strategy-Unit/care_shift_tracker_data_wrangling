@@ -120,7 +120,7 @@ assign_workforce_lad <- function(data, dist_geog) {
     )
 }
 
-assign_workforce_pcn <- function(data, dist_geog) {
+assign_workforce_nh <- function(data, dist_geog, lookup) {
   
   wrangled <- data |>
     # only use combined clinical staff numbers
@@ -128,11 +128,11 @@ assign_workforce_pcn <- function(data, dist_geog) {
     # join results to activity distributions
     left_join(dist_geog, by = c("org_code" = "prov_code", "der_financial_year" = "der_financial_year")) |>
     mutate(pats_adj = total*prop_pat) |>
-    group_by(pcn_code, pcn_name, cluster_group, der_financial_year) |>
+    group_by(nnhip_code, cluster_group, der_financial_year) |>
     summarise(pats = round(sum(pats_adj),4)) |>
     ungroup() |>
-    filter(!is.na(pcn_code)) |>
-    group_by(pcn_code, der_financial_year) |>
+    filter(!is.na(nnhip_code)) |>
+    group_by(nnhip_code, der_financial_year) |>
     mutate(
       indicator = 'workforce_in_acute_setting_percent',
       year_tot = sum(pats)
@@ -141,21 +141,20 @@ assign_workforce_pcn <- function(data, dist_geog) {
     phe_proportion(x = pats, n = year_tot, multiplier = 100) |>
     filter(cluster_group == 'Acute') |>
     dplyr::rename(
-      pcn = pcn_code,
+      nh = nnhip_code,
       date = der_financial_year,
       numerator = pats,
       denominator = year_tot
     ) |>
-    
     select(indicator,
            date,
-           pcn,
+           nh,
            numerator,
            denominator,
            value,
            lowercl,
            uppercl) |>
-    arrange(pcn, date) |>
+    arrange(nh, date) |>
     dplyr::mutate(
       frequency = "fin_yearly",
       date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
