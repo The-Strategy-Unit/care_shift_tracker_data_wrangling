@@ -121,7 +121,7 @@ list(
                                            sheet = "PCNDetails") |>
       janitor::clean_names() |>
       dplyr::filter(!is.na(nnhip_site)) |>
-      dplyr::select(pcn = pcn_code, nnhip_site) |>  # Do we care about last column?
+      dplyr::select(pcn = pcn_code, pcn_name, nnhip_site) |>
       dplyr::mutate(
         nnhip_code = nnhip_site |>
           factor() |>
@@ -254,7 +254,7 @@ list(
     tar_target(
       population,
       get_population_higher_geography_from_lsoa(
-        population_lsoa_mapped_to_higher_geographies, 
+        population_lsoa_mapped_to_higher_geographies,
         geography)
     )
   ),
@@ -264,7 +264,7 @@ list(
       dplyr::summarise(population_year = max(as.numeric(population_year))) |>
       dplyr::pull(population_year)
   ),
-  
+
   # GP to PCN to NH
   targets::tar_target(
     population_gp_pre_2017_04_01,
@@ -285,7 +285,7 @@ list(
       dplyr::summarise(population_size = sum(population_size),
                        .by = c(date, nnhip_code))
   ),
-  
+
   ## Over 75 population --------------------------------------------------------
   # LSOA to LA and ICB (75+)
   tar_target(
@@ -309,7 +309,7 @@ list(
     tar_target(
       population_75_plus,
       get_population_higher_geography_from_lsoa(
-        population_lsoa_mapped_to_higher_geographies, 
+        population_lsoa_mapped_to_higher_geographies,
         geography)
     )
   ),
@@ -333,7 +333,7 @@ list(
       dplyr::summarise(population_size = sum(population_size),
                        .by = c(date, nnhip_code))
   ),
-  
+
   ## Population by age range and sex -------------------------------------------
   tar_target(
     population_lsoa_by_age_sex,
@@ -351,10 +351,10 @@ list(
         population_size_amended = population_size / number
       ) |>
       # Adding IMD decile:
-      dplyr::mutate(imd_year = effective_snapshot_date, 
+      dplyr::mutate(imd_year = effective_snapshot_date,
                     der_postcode_lsoa_2011_code = lsoa11cd) |>
-      get_imd_from_lsoa(imd_lsoa_lookup, 
-                        earliest_imd_year, 
+      get_imd_from_lsoa(imd_lsoa_lookup,
+                        earliest_imd_year,
                         latest_available_imd) |>
       dplyr::select(-imd_year, -der_postcode_lsoa_2011_code)
   ),
@@ -399,7 +399,7 @@ list(
           glue::glue("{lubridate::year(date_full)}-07")
         )
       ) |>
-      dplyr::left_join(nh_population_proportional_imd, 
+      dplyr::left_join(nh_population_proportional_imd,
                        by = c("nh_prop_date", "nnhip_code" = "nh")) |>
       dplyr::mutate(population_size = population_size * prop) |>
       dplyr::select(date, nh = nnhip_code, age_range, sex, imd_quintile, population_size)
@@ -433,7 +433,7 @@ list(
     nh_population_proportional_imd,
     gp_to_lsoa_population |>
       dplyr::filter(lubridate::month(effective_snapshot_date) == 7) |>
-      dplyr::mutate(imd_year = effective_snapshot_date, 
+      dplyr::mutate(imd_year = effective_snapshot_date,
                     der_postcode_lsoa_2011_code = lsoa_code) |>
       get_imd_from_lsoa(imd_lsoa_lookup, earliest_imd_year, latest_available_imd) |>
       dplyr::left_join(
@@ -455,7 +455,7 @@ list(
         ) |>
       dplyr::select(nh = nnhip_code, nh_prop_date, imd_quintile, prop)
   ),
-  
+
   ## England census ------------------------------------------------------------
   tar_target(
     census_url,
@@ -496,8 +496,8 @@ list(
       dplyr::mutate(
         sex = ifelse(stringr::str_detect(gender, "Female"), "2", "1"),
         age_range = stringr::str_remove(age, " years"),
-        age_range = ifelse(age_range %in% c("80-84", "85-89", "90plus"), 
-                           "80+", 
+        age_range = ifelse(age_range %in% c("80-84", "85-89", "90plus"),
+                           "80+",
                            age_range)
       ) |>
       dplyr::summarise(
@@ -505,7 +505,7 @@ list(
         .by = c(age_range, sex, imd_quintile)
       )
   ),
-  
+
   ## Distribution of SUS provider activity by ICB, LAD and NH for bed data -----
   tar_target(prov_act_dist_geog, get_prov_dist_by_lsoa(con)),
   tar_target(
@@ -526,9 +526,9 @@ list(
       ) |>
       dplyr::filter(!is.na(icb24cd)) |>
       dplyr::group_by(prov_code,
-                      der_financial_year, 
-                      icb24cd, 
-                      icb24cdh, 
+                      der_financial_year,
+                      icb24cd,
+                      icb24cdh,
                       icb24nm) |>
       dplyr::summarise(patients = sum(patients), beddays = sum(beddays)) |>
       dplyr::group_by(prov_code, der_financial_year) |>
@@ -562,7 +562,7 @@ list(
         prop_bed = beddays / sum(beddays)
       )
   ),
-  
+
   tar_target(prov_act_dist_prac, get_prov_dist_by_practice(con)),
   tar_target(
     prov_act_dist_nh,
@@ -584,7 +584,7 @@ list(
         prop_bed = beddays / sum(beddays)
       )
   ),
-  
+
   ## Distribution of provider patients (SUS,CSDS,MHSDS) for workforce and costs data -----
   tar_target(
     prov_pat_dist_lsoa,
@@ -610,7 +610,7 @@ list(
       dplyr::group_by(prov_code, der_financial_year) |>
       dplyr::mutate(prop_pat = pats / sum(pats))
   ),
-  
+
   tar_target(
     prov_pat_dist_prac,
     get_prov_pats_gpprac("data/prov_gpprac_pats.csv") |>
@@ -634,7 +634,7 @@ list(
       dplyr::group_by(prov_code, der_financial_year) |>
       dplyr::mutate(prop_pat = patients / sum(patients))
   ),
-  
+
   # Indicators -----------------------------------------------------------------
   ## Elective to non elective admissions ratio ---------------------------------
   # LSOA and GP
@@ -681,7 +681,7 @@ list(
                                       "nh",
                                       activity_type) |>
         dplyr::mutate(frequency = "monthly")
-    ) 
+    )
   ),
 
   ## Older people with frailty admissions --------------------------------------
@@ -2011,7 +2011,7 @@ list(
       population_icb,
       latest_population_year
     )
-  ), 
+  ),
   #lad
   tar_target(
     zerolos_noproc_la,
@@ -2022,7 +2022,7 @@ list(
       population_la,
       latest_population_year
     )
-  ), 
+  ),
   tar_target(
     zerolos_noproc_nh,
     zero_los_no_proc_nh(nostaynoproc_data_prac,gp_to_pcn,population_nh, pcn_to_nh)
@@ -2044,7 +2044,7 @@ list(
       population_icb,
       latest_population_year
     )
-  ), 
+  ),
 
   #lad
   tar_target(
@@ -2056,19 +2056,19 @@ list(
       population_la,
       latest_population_year
     )
-  ), 
+  ),
 
   #NH
   tar_target(
     vir_ward_ari_beddays_nh,
     vir_ward_ari_nh(vir_ward_ari_data,gp_to_pcn,population_nh, pcn_to_nh)
   ),
-  
+
   ## Community services contacts per 100,000 population ------------------------
   tar_target(csds_contacts_data,
              get_csds_contacts_data(con,start_date,admissions_lag_date)
              ),
-  
+
   #icb
   tar_target(
     comm_contacts_icb,
@@ -2079,7 +2079,7 @@ list(
       population_icb,
       latest_population_year
     )
-  ), 
+  ),
   #la
   tar_target(
     comm_contacts_la,
@@ -2090,7 +2090,7 @@ list(
       population_la,
       latest_population_year
     )
-  ), 
+  ),
   #pcn
   tar_target(
     comm_contacts_nh,
@@ -2213,5 +2213,5 @@ list(
   tar_target(ref_indicator, pin_ref_indicator(indicators_icb, board)),
   
   ## PCN to NH -----------------------------------------------------------------
-  tar_target(ref_pcn_to_nh, pin_ref_pcn_to_nh(pcn_to_nh, gp_to_pcn, board))
+  tar_target(ref_pcn_to_nh, pin_ref_pcn_to_nh(pcn_to_nh, board))
 )
