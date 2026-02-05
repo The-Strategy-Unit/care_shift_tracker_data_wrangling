@@ -73,7 +73,7 @@ list(
   ),
   
   ## Date ----------------------------------------------------------------------
-  tar_target(start_date, "2008-04-01"),
+  tar_target(start_date, "2018-04-01"),
   tar_target(
     admissions_lag_date,
     (current_month - months(2)) |>
