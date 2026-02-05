@@ -82,10 +82,12 @@ get_csds_contacts_data <- function(connection, start, lag) {
 #' @param lookup The 2011 to 21 lsoa reference data
 #' @param geog The lsoa to higher geography lookup
 #' @param pop The 65 and over population target object
+#' @param latest_population_year The latest year that population data is
+#' available for.
 #'
 #' @returns A dataframe with the rate of community contacts per 100,000 population.
 
-comm_contacts_assign_icb <- function(data,lookup,geog,pop) {
+comm_contacts_assign_icb <- function(data,lookup,geog,pop, latest_population_year) {
 
 grouped <- data |>
   group_by(der_financial_year, der_activity_month, lsoa_2011) |>
@@ -104,8 +106,8 @@ df <- grouped |>
   group_by(der_financial_year, der_activity_month, icb24cd, icb24cdh, icb24nm) |>
   summarise(sum_contacts = sum(contacts)) |>
   ungroup() |>
-  left_join(pop,
-            by = c("icb24cdh" = "icb", "der_financial_year")) |>
+  dplyr::rename(date = der_activity_month, icb = icb24cdh) |>
+  join_to_population_data(pop, "icb", latest_population_year) |>
   PHEindicatormethods::phe_rate(x = sum_contacts,
                                 n = population_size,
                                 multiplier = 100000) |>
@@ -113,9 +115,6 @@ df <- grouped |>
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                               ~janitor::round_half_up(.)),
                 indicator = "community_services_contacts_per_pop") |>
-  dplyr::rename(
-    icb = icb24cdh,
-    date = der_activity_month) |>
   dplyr::select(
     indicator,
     date,
@@ -135,10 +134,12 @@ return(df)
 #' @param lookup The 2011 to 21 lsoa reference data
 #' @param geog The lsoa to higher geography lookup
 #' @param pop The 65 and over population target object
+#' @param latest_population_year The latest year that population data is
+#' available for.
 #'
 #' @returns A dataframe with the rate of community contacts per 100,000 population.
 
-comm_contacts_assign_la <- function(data,lookup,geog,pop) {
+comm_contacts_assign_la <- function(data,lookup,geog,pop, latest_population_year) {
 
   grouped <- data |>
     group_by(der_financial_year, der_activity_month, lsoa_2011) |>
@@ -157,18 +158,16 @@ comm_contacts_assign_la <- function(data,lookup,geog,pop) {
     group_by(der_financial_year, der_activity_month, lad24cd, lad24nm) |>
     summarise(sum_contacts = sum(contacts)) |>
     ungroup() |>
-    left_join(pop,
-              by = c("lad24cd" = "la", "der_financial_year")) |>
-    PHEindicatormethods::phe_rate(x = sum_contacts,
-                                  n = population_size,
-                                  multiplier = 100000) |>
-
-    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
-                                ~janitor::round_half_up(.)),
-                  indicator = "community_services_contacts_per_pop") |>
     dplyr::rename(
       la = lad24cd,
       date = der_activity_month) |>
+    join_to_population_data(pop, "la", latest_population_year) |>
+    PHEindicatormethods::phe_rate(x = sum_contacts,
+                                  n = population_size,
+                                  multiplier = 100000) |>
+    dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
+                                ~janitor::round_half_up(.)),
+                  indicator = "community_services_contacts_per_pop") |>
     dplyr::select(
       indicator,
       date,

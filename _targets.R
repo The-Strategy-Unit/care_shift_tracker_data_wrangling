@@ -2064,7 +2064,7 @@ list(
     vir_ward_ari_nh(vir_ward_ari_data,gp_to_pcn,population_nh, pcn_to_nh)
   ),
   
-  ## Community services contacts per 100,000 population
+  ## Community services contacts per 100,000 population ------------------------
   tar_target(csds_contacts_data,
              get_csds_contacts_data(con,start_date,admissions_lag_date)
              ),
@@ -2072,13 +2072,25 @@ list(
   #icb
   tar_target(
     comm_contacts_icb,
-    comm_contacts_assign_icb(csds_contacts_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_icb)
-  ),
+    comm_contacts_assign_icb(
+      csds_contacts_data,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies,
+      population_icb,
+      latest_population_year
+    )
+  ), 
   #la
   tar_target(
     comm_contacts_la,
-    comm_contacts_assign_la(csds_contacts_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_la)
-  ),
+    comm_contacts_assign_la(
+      csds_contacts_data,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies,
+      population_la,
+      latest_population_year
+    )
+  ), 
   #pcn
   tar_target(
     comm_contacts_nh,
