@@ -12,7 +12,7 @@ get_csds_contacts_data <- function(connection, start, lag) {
   query <- "
   SET NOCOUNT ON;
   
-    with pre_dup as
+      with pre_dup as
       (
       select person_ID, carecontactID, contact_date, contact_time, [CareContact_Duration],
       cast(datepart(year,contact_date) as varchar) + '-' + 
@@ -32,7 +32,7 @@ get_csds_contacts_data <- function(connection, start, lag) {
       and [Contact_Date] >= 'start_date'
       AND [Contact_Date] < 'lag_date'
       and ageyr_contact_date >= 65 --proxy for frail
-      and contact_cancellationreason is NULL --attended
+      and attendancestatus in ('5','6') --attended and seen
       and carecontact_duration >= 15 --proxy for clinical contact
       and person_ID is not NULL
       ),
@@ -56,15 +56,63 @@ get_csds_contacts_data <- function(connection, start, lag) {
       and a.recordnumber = c.recordnumber
       ),
 
-    final as
-    (SELECT distinct *
-    from base)
+      pre_dup2 as
+      (
+      select person_ID, carecontactID, contact_date, contact_time, [CareContact_Duration],
+      cast(datepart(year,contact_date) as varchar) + '-' + 
+	    case when datepart(month,contact_date) < 10
+	    then ('0' + cast(datepart(month,contact_date) as varchar))
+	    else cast(datepart(month,contact_date) as varchar)
+	    end as der_activity_month,
+	    case when datepart(mm,contact_date) > 3
+	      then cast(datepart(year, contact_date) as varchar) + '/' + right(cast(datepart(year, contact_date)+1 as varchar),2)
+	      else cast(datepart(year, contact_date)-1 as varchar) + '/' + right(cast(datepart(year, contact_date) as varchar),2)
+	      end as der_financial_year,
+      recordnumber, servicerequestID, uniquesubmissionid,
+      row_number() OVER (partition by person_ID, servicerequestID, carecontactID order by uniquesubmissionid DESC) as rownum
+      FROM [MESH_CSDS].[CYP201CareContact_1]
 
-      Select lsoa_2011, gp_prac, der_financial_year, der_activity_month,
-      count(distinct carecontactID) as contacts
-      from final
-      group by lsoa_2011, gp_prac, der_financial_year, der_activity_month
-      order by lsoa_2011, gp_prac, der_financial_year, der_activity_month
+      where 1=1
+      and [Contact_Date] >= 'start_date'
+      AND [Contact_Date] < 'lag_date'
+      and ageyr_contact_date >= 65 --proxy for frail
+      and attendornot in ('5','6') --attended and seen
+      and carecontact_duration >= 15 --proxy for clinical contact
+      and person_ID is not NULL
+      ),
+
+      post_dup2 as
+      (select *
+      from pre_dup2
+      where rownum = 1
+      ),
+
+      base2 as
+     (select a.*,
+      b.[Der_Postcode_yr2011_LSOA] as lsoa_2011,
+      c.[OrgID_GP] as gp_prac
+      from post_dup2 a
+      left outer join [MESH_CSDS].[CYP001MPI_1] b
+      on a.person_id = b.person_ID
+      and a.recordnumber = b.recordnumber
+      left outer join [MESH_CSDS].[CYP002GP_2] c
+      on a.person_id = c.person_ID
+      and a.recordnumber = c.recordnumber
+      ),
+
+      final as
+      (SELECT distinct *
+      from base
+      union all
+      Select distinct *
+      from base2)
+
+
+    Select lsoa_2011, gp_prac, der_activity_month, der_financial_year,
+    count(distinct carecontactID) as contacts
+    from final
+    group by lsoa_2011, gp_prac, der_activity_month, der_financial_year
+    order by lsoa_2011, gp_prac, der_financial_year, der_activity_month
     " |>
     stringr::str_replace_all(
       c("start_date" = start,
