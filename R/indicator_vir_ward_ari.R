@@ -60,11 +60,13 @@ get_vir_ward_data <- function(connection, start, lag) {
 #' @param data The data target object
 #' @param lookup The 2011 to 21 lsoa reference data
 #' @param geog The lsoa to higher geography lookup
-#' @param pop The 65 and over population target object
+#' @param pop The 65 and over population target object 
+#' @param latest_population_year The latest year that population data is
+#' available for.
 #'
 #' @returns A dataframe with the rate of bed days per 100,000 population.
 
-vir_ward_ari_icb <- function(data,lookup,geog,pop) {
+vir_ward_ari_icb <- function(data,lookup,geog,pop, latest_population_year) {
 
 grouped <- data |>
   group_by(der_financial_year, der_activity_month, lsoa_11) |>
@@ -83,18 +85,14 @@ df <- grouped |>
   group_by(der_financial_year, der_activity_month, icb24cd, icb24cdh, icb24nm) |>
   summarise(sum_los = sum(los)) |>
   ungroup() |>
-  left_join(pop,
-            by = c("icb24cdh" = "icb", "der_financial_year")) |>
+  dplyr::rename(date = der_activity_month, icb = icb24cdh) |>
+  join_to_population_data(pop, "icb", latest_population_year) |>
   PHEindicatormethods::phe_rate(x = sum_los,
                                 n = population_size,
                                 multiplier = 100000) |>
-  
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                               ~janitor::round_half_up(.)),
                 indicator = "virtual_ward_suitable_admissions_ari_per_pop_beddays") |>
-  dplyr::rename(
-    icb = icb24cdh,
-    date = der_activity_month) |>
   dplyr::select(
     indicator,
     date,
@@ -111,13 +109,16 @@ return(df)
 }
 
 #' @param data The data target object
+#'
 #' @param lookup The 2011 to 21 lsoa reference data
 #' @param geog The lsoa to higher geography lookup
 #' @param pop The 65 and over population target object
+#' @param latest_population_year The latest year that population data is
+#' available for.
 #'
 #' @returns A dataframe with the rate of bed days per 100,000 population.
 
-vir_ward_ari_la <- function(data,lookup,geog,pop) {
+vir_ward_ari_la <- function(data,lookup,geog,pop, latest_population_year) {
   
   grouped <- data |>
     group_by(der_financial_year, der_activity_month, lsoa_11) |>
@@ -136,8 +137,10 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
     group_by(der_financial_year, der_activity_month, lad24cd, lad24nm) |>
     summarise(sum_los = sum(los)) |>
     ungroup() |>
-    left_join(pop,
-              by = c("lad24cd" = "la", "der_financial_year")) |>
+    dplyr::rename(
+      la = lad24cd,
+      date = der_activity_month) |>
+    join_to_population_data(pop, "la", latest_population_year)|>
     PHEindicatormethods::phe_rate(x = sum_los,
                                   n = population_size,
                                   multiplier = 100000) |>
@@ -145,9 +148,6 @@ vir_ward_ari_la <- function(data,lookup,geog,pop) {
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
                   indicator = "virtual_ward_suitable_admissions_ari_per_pop_beddays") |>
-    dplyr::rename(
-      la = lad24cd,
-      date = der_activity_month) |>
     dplyr::select(
       indicator,
       date,
