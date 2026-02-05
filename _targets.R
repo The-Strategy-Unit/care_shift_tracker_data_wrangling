@@ -2039,6 +2039,27 @@ list(
     vir_ward_ari_beddays_nh,
     vir_ward_ari_nh(vir_ward_ari_data,gp_to_pcn,population_nh, pcn_to_nh)
   ),
+  
+  ## Community services contacts per 100,000 population
+  tar_target(csds_contacts_data,
+             get_csds_contacts_data(con,start_date,admissions_lag_date)
+             ),
+  
+  #icb
+  tar_target(
+    comm_contacts_icb,
+    comm_contacts_assign_icb(csds_contacts_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_icb)
+  ),
+  #la
+  tar_target(
+    comm_contacts_la,
+    comm_contacts_assign_la(csds_contacts_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_la)
+  ),
+  #pcn
+  tar_target(
+    comm_contacts_nh,
+    comm_contacts_assign_nh(csds_contacts_data,gp_to_pcn,population_nh,pcn_to_nh)
+  ),
 
   # All indicators -------------------------------------------------------------
   tar_target(
@@ -2066,7 +2087,8 @@ list(
       costs_community_ratio_icb,
       beddays_split_icb,
       zerolos_noproc_icb,
-      vir_ward_ari_beddays_icb
+      vir_ward_ari_beddays_icb,
+      comm_contacts_icb
     ) |>
       pin_indicators(icb_lookup, "icb", board)
   ),
@@ -2095,7 +2117,8 @@ list(
       costs_community_ratio_la,
       beddays_split_la,
       zerolos_noproc_la,
-      vir_ward_ari_beddays_la
+      vir_ward_ari_beddays_la,
+      comm_contacts_la
     ) |>
       pin_indicators(la_lookup, "la", board)
   ),
@@ -2124,7 +2147,8 @@ list(
       costs_community_ratio_nh,
       beddays_split_nh,
       zerolos_noproc_nh,
-      vir_ward_ari_beddays_nh
+      vir_ward_ari_beddays_nh,
+      comm_contacts_nh
     ) |>
       pin_indicators(nh_lookup, "nh", board)
   ),
