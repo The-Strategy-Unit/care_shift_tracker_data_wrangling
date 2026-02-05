@@ -29,8 +29,8 @@ get_csds_contacts_data <- function(connection, start, lag) {
       FROM [MESH_CSDS].[CYP201CareContact_2]
 
       where 1=1
-      and [Contact_Date] >= 'start_date'
-      AND [Contact_Date] < 'lag_date'
+      and [Contact_Date] >= '2022-12-01'
+      AND [Contact_Date] < '2023-01-01'
       and ageyr_contact_date >= 65 --proxy for frail
       and attendancestatus in ('5','6') --attended and seen
       and carecontact_duration >= 15 --proxy for clinical contact
