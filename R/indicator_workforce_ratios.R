@@ -7,7 +7,7 @@
 #'
 #' @returns A dataframe with the number of beds (KH03) by provider and year.
 
-get_workforce_data <- function(connection, financial_year) {
+get_workforce_data <- function(connection, financial_year, start_date) {
   
   query <- "
   SET NOCOUNT ON;
@@ -20,13 +20,14 @@ get_workforce_data <- function(connection, financial_year) {
     AND Cluster_Group in ('Acute','Community Provider Trust','Mental Health') --exclude commissioning staff
     AND Data_Type = 'FTE' --better representation than headcount
     AND Staff_Group in ('HCHS doctors','Nurses & health visitors','Midwives','Support to clinical staff','Professionally qualified clinical staff') --different components of clinical staff
-    AND [Effective_Snapshot_Date] >= '2012-06-30' --point at which data seems to be consistent volumes across clusters and patient distributions
+    AND [Effective_Snapshot_Date] >= 'start_date' 
     AND effective_snapshot_date < 'fy_date'
     AND datepart(mm, [Effective_Snapshot_Date]) = '06' --end of Q1 as proxy for current financial year
     
     ORDER BY org_code, cluster_group, staff_group, effective_snapshot_date
   " |>
-    stringr::str_replace_all(c("fy_date" = financial_year))
+    stringr::str_replace_all(c("fy_date" = financial_year,
+                               "start_date" = start_date))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
     janitor::clean_names()

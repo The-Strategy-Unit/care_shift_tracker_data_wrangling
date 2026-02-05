@@ -990,7 +990,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-  # NHP
+  # NH
   tar_target(
     ambulatory_care_conditions_acute_nh,
     aggregate_indicator_to_geography_level(
@@ -1120,7 +1120,7 @@ list(
         dplyr::mutate(frequency = "monthly")
     )
   ),
-  # NHP
+  # NH
   tar_target(
     ambulatory_care_conditions_chronic_nh,
     aggregate_indicator_to_geography_level(
@@ -1276,7 +1276,7 @@ list(
     ) |>
       dplyr::mutate(frequency = "monthly")
   ),
-  # NHP
+  # NH
   tar_target(
     frequent_attenders_adult_ambulance_nh,
     get_frequent_attenders_adult_ambulance_geography(
@@ -1687,7 +1687,7 @@ list(
   ## Available beds data, categorised and distributed --------------------------
   tar_target(
     beds_available_data,
-    get_kh03_data(con, current_financial_year_start)
+    get_kh03_data(con, current_financial_year_start, start_date)
     ),
 
   tar_target(
@@ -1766,7 +1766,7 @@ list(
   ## NHS workforce data, categorised and distributed ---------------------------
   tar_target(
     workforce_data,
-    get_workforce_data(con, current_financial_year_start)
+    get_workforce_data(con, current_financial_year_start, start_date)
     ),
 
   # icb
@@ -1948,7 +1948,7 @@ list(
   ## Cost data, community to acute ratio providers re-distributed --------------
   tar_target(
     ncc_cost_data,
-    get_cost_data(con, current_financial_year_start)
+    get_cost_data(con, current_financial_year_start, start_date)
     ),
 
   # icb
