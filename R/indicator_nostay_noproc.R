@@ -93,23 +93,25 @@ get_nostaynoproc_data_prac <- function(connection, start, lag) {
 #' @param lookup The target object with 2011 to 2021 lookups (lsoa only)
 #' @param geog  The target object to assign lsoa to ICB/LAD or practice to PCN
 #' @param pop The target object with the 65+ population data in 
+#' @param latest_population_year The latest year that population data is
+#' available for.
 #' @returns A dataframe with the rate of admissions by icb, lad or pcn.
  
 # icb
-zero_los_no_proc_icb <- function(data,lookup,geog,pop) {
+zero_los_no_proc_icb <- function(data,lookup,geog,pop, latest_population_year) {
   
 #wrangle and calcs
 df <- data |>
   filter(!is.na(lsoa_2011)) |>
-  left_join(lookup |> select (1,2),
+  left_join(lookup |> select(lsoa11cd, lsoa21cd),
             by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
   left_join(geog |>
-              select(lsoa21cd, 7, 8), by = "lsoa21cd") |>
+              select(lsoa21cd, icb24cdh, icb24nm), by = "lsoa21cd") |>
   group_by(icb24cdh, der_financial_year, der_activity_month) |>
   summarise(total = sum(adms)) |>
   ungroup() |>
-  left_join(pop, by = c("icb24cdh" = "icb", "der_financial_year")) |>
-
+  dplyr::rename(date = der_activity_month, icb = icb24cdh) |>
+  join_to_population_data(pop, "icb", latest_population_year) |>
   PHEindicatormethods::phe_rate(x = total,
                                 n = population_size,
                                 multiplier = 100000) |>
@@ -117,9 +119,6 @@ df <- data |>
   dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                               ~janitor::round_half_up(.)),
                 indicator = "zero_los_admissions_with_no_procedures_per_pop") |>
-  dplyr::rename(
-    icb = icb24cdh,
-    date = der_activity_month) |>
   dplyr::select(
     indicator,
     date,
@@ -136,20 +135,22 @@ return(df)
 }
 
 # lad
-zero_los_no_proc_la <- function(data,lookup,geog,pop) {
+zero_los_no_proc_la <- function(data,lookup,geog,pop, latest_population_year) {
   
   #wrangle and calcs
   df <- data |>
     filter(!is.na(lsoa_2011)) |>
-    left_join(lookup |> select (lsoa11cd,lsoa21cd),
+    left_join(lookup |> select(lsoa11cd, lsoa21cd),
               by = c("lsoa_2011" = "lsoa11cd"), relationship = "many-to-many") |>
     left_join(geog |>
                 select(lsoa21cd,lad24cd,lad24nm), by = "lsoa21cd") |>
     group_by(lad24cd, der_financial_year, der_activity_month) |>
     summarise(total = sum(adms)) |>
     ungroup() |>
-    left_join(pop, by = c("lad24cd" = "la", "der_financial_year")) |>
-    
+    dplyr::rename(
+      la = lad24cd,
+      date = der_activity_month) |>
+    join_to_population_data(pop, "la", latest_population_year) |>
     PHEindicatormethods::phe_rate(x = total,
                                   n = population_size,
                                   multiplier = 100000) |>
@@ -157,9 +158,6 @@ zero_los_no_proc_la <- function(data,lookup,geog,pop) {
     dplyr::mutate(dplyr::across(c(value, lowercl, uppercl),
                                 ~janitor::round_half_up(.)),
                   indicator = "zero_los_admissions_with_no_procedures_per_pop") |>
-    dplyr::rename(
-      la = lad24cd,
-      date = der_activity_month) |>
     dplyr::select(
       indicator,
       date,

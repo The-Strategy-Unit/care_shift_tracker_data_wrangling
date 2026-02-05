@@ -2004,13 +2004,25 @@ list(
   #icb
   tar_target(
     zerolos_noproc_icb,
-    zero_los_no_proc_icb(nostaynoproc_data_lsoa,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_icb)
-  ),
+    zero_los_no_proc_icb(
+      nostaynoproc_data_lsoa,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies,
+      population_icb,
+      latest_population_year
+    )
+  ), 
   #lad
   tar_target(
     zerolos_noproc_la,
-    zero_los_no_proc_la(nostaynoproc_data_lsoa,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_la)
-  ),
+    zero_los_no_proc_la(
+      nostaynoproc_data_lsoa,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies,
+      population_la,
+      latest_population_year
+    )
+  ), 
   tar_target(
     zerolos_noproc_nh,
     zero_los_no_proc_nh(nostaynoproc_data_prac,gp_to_pcn,population_nh, pcn_to_nh)
@@ -2025,14 +2037,26 @@ list(
   #icb
   tar_target(
     vir_ward_ari_beddays_icb,
-    vir_ward_ari_icb(vir_ward_ari_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_icb)
-  ),
+    vir_ward_ari_icb(
+      vir_ward_ari_data,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies,
+      population_icb,
+      latest_population_year
+    )
+  ), 
 
   #lad
   tar_target(
     vir_ward_ari_beddays_la,
-    vir_ward_ari_la(vir_ward_ari_data,lsoa11_to_lsoa_21,lsoa_to_higher_geographies,population_la)
-  ),
+    vir_ward_ari_la(
+      vir_ward_ari_data,
+      lsoa11_to_lsoa_21,
+      lsoa_to_higher_geographies,
+      population_la,
+      latest_population_year
+    )
+  ), 
 
   #NH
   tar_target(
