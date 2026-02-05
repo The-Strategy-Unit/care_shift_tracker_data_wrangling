@@ -162,19 +162,16 @@ pin_ref_geography <- function(ref_icb, ref_la, ref_nh, board) {
 #' Pins a lookup between PCN and NH.
 #'
 #' @param pcn_to_nh_lookup A dataframe mapping PCNs to NHs.
-#' @param gp_to_pcn_lookup A dataframe with columns of PCN codes and names.
 #' @param board The pins board.
 #'
 #' @returns The contents of the pin.
-pin_ref_pcn_to_nh <- function(pcn_to_nh_lookup, gp_to_pcn_lookup, board) {
-  
-  pcns <- gp_to_pcn_lookup |> 
-    dplyr::select(pcn_code, pcn_name) |> 
-    unique()
+pin_ref_pcn_to_nh <- function(pcn_to_nh_lookup, board) {
   
   wrangled <- pcn_to_nh_lookup |>
     dplyr::rename(pcn_code = pcn) |>
-    dplyr::left_join(pcns, "pcn_code") |>
+    dplyr::mutate(pcn_name = pcn_name |>
+                    stringr::str_to_title() |>
+                    stringr::str_replace_all(" Pcn", " PCN")) |>
     dplyr::arrange(nnhip_site, pcn_name) |>
     dplyr::select(pcn_code, pcn_name, nnhip_code, nnhip_site)
   
