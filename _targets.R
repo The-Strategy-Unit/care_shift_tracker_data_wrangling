@@ -117,7 +117,7 @@ list(
   ),
   tar_target(
     pcn_to_nh,
-    readxl::read_excel("data/NNHIP Geographies_PCNs_LA_V5.1.xlsx",
+    readxl::read_excel("data/NNHIP Geographies_PCNs_LA_V5.2.xlsx",
                                            sheet = "PCNDetails") |>
       janitor::clean_names() |>
       dplyr::filter(!is.na(nnhip_site)) |>
