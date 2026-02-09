@@ -105,14 +105,16 @@ pin_ref_indicator <- function(data, board) {
             "elderly" = "older people",
             "standardised" = "standardised_rate",
             "nonacute" = "non-acute",
-            "ari" = "(ARI)",
             "_" = " ")
         ) |>
         stringr::str_to_sentence() |>
         stringr::str_replace_all(
           c("via ed" = "via ED",
             " age " = " age range, ",
-            " imd " = " and IMD quintile "
+            " imd " = " and IMD quintile ",
+            " (ari) " = " (ARI) ",
+            " los " = " LoS ",
+            "adult ambulance" = "conveyed by ambulance"
             ))
     ) |>
     dplyr::arrange(frequency, theme, indicator) 
