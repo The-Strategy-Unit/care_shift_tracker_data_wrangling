@@ -7,7 +7,7 @@
 #'
 #' @returns A dataframe with the number of beds (KH03) by provider and year.
 
-get_workforce_data <- function(connection, financial_year, start_date) {
+get_workforce_data <- function(connection, start_date, lag_date) {
   
   query <- "
   SET NOCOUNT ON;
@@ -21,12 +21,12 @@ get_workforce_data <- function(connection, financial_year, start_date) {
     AND Data_Type = 'FTE' --better representation than headcount
     AND Staff_Group in ('HCHS doctors','Nurses & health visitors','Midwives','Support to clinical staff','Professionally qualified clinical staff') --different components of clinical staff
     AND [Effective_Snapshot_Date] >= 'start_date' 
-    AND effective_snapshot_date < 'fy_date'
+    AND effective_snapshot_date < 'lag_date'
     AND datepart(mm, [Effective_Snapshot_Date]) = '06' --end of Q1 as proxy for current financial year
     
     ORDER BY org_code, cluster_group, staff_group, effective_snapshot_date
   " |>
-    stringr::str_replace_all(c("fy_date" = financial_year,
+    stringr::str_replace_all(c("lag_date" = lag_date,
                                "start_date" = start_date))
   
   wrangled <- DBI::dbGetQuery(connection, query) |>
@@ -73,7 +73,7 @@ assign_workforce_icb <- function(data, dist_geog) {
     arrange(icb, date) |>
     dplyr::mutate(
       frequency = "fin_yearly",
-      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-06")
     )
 
   return(wrangled)
@@ -117,7 +117,7 @@ assign_workforce_lad <- function(data, dist_geog) {
     arrange(la, date) |>
     dplyr::mutate(
       frequency = "fin_yearly",
-      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-06")
     )
 }
 
@@ -158,6 +158,6 @@ assign_workforce_nh <- function(data, dist_geog, lookup) {
     arrange(nh, date) |>
     dplyr::mutate(
       frequency = "fin_yearly",
-      date = glue::glue("{stringr::str_sub(date, 1, 4)}-04")
+      date = glue::glue("{stringr::str_sub(date, 1, 4)}-06")
     )
 }

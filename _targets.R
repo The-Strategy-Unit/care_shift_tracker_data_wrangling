@@ -1766,7 +1766,7 @@ list(
   ## NHS workforce data, categorised and distributed ---------------------------
   tar_target(
     workforce_data,
-    get_workforce_data(con, current_financial_year_start, start_date)
+    get_workforce_data(con, start_date, admissions_lag_date)
     ),
 
   # icb
