@@ -1,0 +1,96 @@
+---
+title: "Care shift tracker for Neighbourhoods"
+title-slide-attributes: 
+  data-background-color: "#f9bf07"
+  data-background-image: 'https://raw.githubusercontent.com/The-Strategy-Unit/assets/main/logo_black.svg'
+  data-background-size: 10%
+  data-background-position: 98% 2%
+subtitle: "NNHIP community of practice, 4th March 2026"
+author: "Andy Hood, Analytics Manager"
+format:
+  revealjs:
+    slide-number: c/t
+    preview-links: true
+    width: 1600
+    height: 900
+editor: source
+toc: true
+toc-title: "Table of contents"
+---
+
+```{r setup}
+#| echo: false
+
+setwd("C:/Users/andrewhood/OneDrive - NHS/NHIP/left shift/git_repo/care_shift_tracker/")
+library(targets)
+library(quarto)
+library(tidyverse)
+library(gt)
+
+```
+
+## Introduction
+
+- Me & team\
+- The project in context\
+- Today session (awareness and user feedback)
+
+## TL;DR
+
+- The concept is difficult to describe and measure\
+- The data is often poor\
+- Difficult to derive insights i.e. causal impacts\
+- We've given it a good go\
+- **System dynamics** and **simulation** likely a better analytical play\
+- **Infrastructure** will be critical to facilitating any shifts in care [OPINION]
+
+## Care shift concept
+
+NHP -> TPMA -> Dynamic systems etc...
+
+Trying to measure the shift:
+
+- Generic versus condition/population focus?\
+- Whole system versus components?\
+- Commissioner versus Locality versus Delivery?
+
+## Indicators and themes
+
+```{r indicators}
+readxl::read_excel("C:/Users/andrewhood/OneDrive - NHS/NHIP/left shift/indicators_short_list.xlsx")|>
+  gt()
+```
+
+## The tracker tool
+
+- Shiny interface\
+- Multiple lenses\
+- Multiple levels of interest
+
+## Limitations & Caveats
+
+- Partial coverage of the shift concept\
+- Still a collection of silo'd views\
+- Data quality and consistency away from acute sector\
+- Some data gymnastics to align indicators at the 3 levels
+
+## Walk-through
+
+::: {.fragment fragment-index="1"}
+```{=html}
+<iframe src="https://www.bbc.co.uk/news" title="Care Tracker Tool" width="1600" height="850"></iframe>
+```
+:::
+
+## The what next?
+
+- Developing tool interface and visuals further?\
+  - Is the content right?
+  - Are the visuals alright?
+  - Is there sufficient explanation?\
+- Utilising more system-wide data (social care, primary care?)\
+- Links to evidence of impact/improvement\
+- Concepts applied to different pathways/population sub groups?\
+- Feed into system dynamics model and simulations
+
+
