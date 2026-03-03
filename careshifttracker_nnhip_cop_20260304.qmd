@@ -53,11 +53,11 @@ library(gt)
 ## Care shift concept
 
 :::: {.columns}
-::: {.column width="40%"}
+::: {.column width="30%"}
 ![](careshift_ai_image.png)
 :::
 
-::: {.column width = "60%"}
+::: {.column width = "70%"}
 Shifting care is a dynamic and complex process. Everyone would have a different idea of what it means to them, their services or communities.
 
 The ideas and product journey was seeded through the New Hospitals Programme, steered by Community and Frailty programmes, made tangible by the 10-year plan, resourced and couched within NNHIP.
@@ -78,7 +78,10 @@ Trying to measure the shift:
 ```{r indicators}
 
 readxl::read_excel("C:/Users/andrewhood/OneDrive - NHS/NHIP/left shift/indicators_short_list.xlsx")|>
+  mutate(Polarity = ifelse(Polarity == 1, "▲", "▼")) |>
   gt() |>
+  tab_style(style = list(cell_text(color = "orange")), locations = cells_body(columns = Polarity, rows = Polarity == "▼") ) |>
+  tab_style( style = list(cell_text(color = "darkblue")), locations = cells_body(columns = Polarity, rows = Polarity == "▲") ) |>
   opt_all_caps() |>
   opt_stylize(style = 6, color = 'gray')
 
@@ -105,7 +108,7 @@ There were **many many many** indicators we explored for inclusion in the tracke
 <style>
 .highlight-box {
   position: absolute;
-  top: 460px;      /* adjust to match your image */
+  top: 520px;      /* adjust to match your image */
   left: 160px;     /* adjust to match your image */
   width: 510px;    /* size of the highlight */
   height: 350px;
@@ -118,9 +121,8 @@ There were **many many many** indicators we explored for inclusion in the tracke
 - R Shiny interface\
 - Data through multiple lenses\
 - Multiple levels of interest\
-- Up-to-date (Nov '25, 3-mth lag)
-
-<br>
+- Up-to-date (Dec '25, 2-month lag)
+- Updates semi-automated
 
 <div class="fragment"> <img src="prototype_image.png" style="width: 80%;"> </div>
 
