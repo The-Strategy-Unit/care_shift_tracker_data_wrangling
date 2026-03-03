@@ -9,6 +9,7 @@ subtitle: "NNHIP community of practice, 4th March 2026"
 author: "Andy Hood, Analytics Manager"
 format:
   revealjs:
+    embed-resources: true
     slide-number: c/t
     preview-links: true
     width: 1600
@@ -116,7 +117,8 @@ There were **many many many** indicators we explored for inclusion in the tracke
 - Experimental
 - R Shiny interface\
 - Data through multiple lenses\
-- Multiple levels of interest
+- Multiple levels of interest\
+- Up-to-date (Nov '25, 3-mth lag)
 
 <br>
 
