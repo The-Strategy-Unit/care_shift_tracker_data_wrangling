@@ -32,8 +32,13 @@ library(gt)
 ## Introduction
 
 - Me & team\
-- The project in context\
-- Today session (awareness and user feedback)
+- The project in context:\
+  - Supplier induced demand\
+  - Neighbourhoods IC\
+  - Complementary to e.g. TPMA explorer, Evidence reviews etc...\
+- Objectives for today's session:\
+  - Awareness\
+  - User feedback
 
 ## TL;DR
 
@@ -46,26 +51,78 @@ library(gt)
 
 ## Care shift concept
 
-NHP -> TPMA -> Dynamic systems etc...
+:::: {.columns}
+::: {.column width="40%"}
+![](careshift_ai_image.png)
+:::
+
+::: {.column width = "60%"}
+Shifting care is a dynamic and complex process. Everyone would have a different idea of what it means to them, their services or communities.
+
+The ideas and product journey was seeded through the New Hospitals Programme, steered by Community and Frailty programmes, made tangible by the 10-year plan, resourced and couched within NNHIP.
 
 Trying to measure the shift:
 
-- Generic versus condition/population focus?\
+- Generic versus condition/sub-population focus?\
 - Whole system versus components?\
 - Commissioner versus Locality versus Delivery?
+:::
+::::
 
 ## Indicators and themes
 
+::::{.columns}
+
+::: {.column width = "70%"}
 ```{r indicators}
+
 readxl::read_excel("C:/Users/andrewhood/OneDrive - NHS/NHIP/left shift/indicators_short_list.xlsx")|>
-  gt()
+  gt() |>
+  opt_all_caps() |>
+  opt_stylize(style = 6, color = 'gray')
+
 ```
+:::
+
+::: {.column width = "30%"}
+<div style="font-size: 0.8em">
+There were **many many many** indicators we explored for inclusion in the tracker. As well as trying to keep the number manageable, we excluded measures that had:\
+<br>
+- significant **overlap** with others;\
+- that suffered from **poor data quality**;\
+- that didn't have sufficient **time series**;\
+- too **small numbers**;\
+- that couldn't be wrangled into our 3 **unit levels**;\
+- that didn't have **national coverage** and so on...
+</div>
+:::
+
+::::
 
 ## The tracker tool
 
-- Shiny interface\
-- Multiple lenses\
+<style>
+.highlight-box {
+  position: absolute;
+  top: 460px;      /* adjust to match your image */
+  left: 160px;     /* adjust to match your image */
+  width: 510px;    /* size of the highlight */
+  height: 350px;
+  border: 4px solid red;
+  box-sizing: border-box;
+}
+</style>
+
+- Experimental
+- R Shiny interface\
+- Data through multiple lenses\
 - Multiple levels of interest
+
+<br>
+
+<div class="fragment"> <img src="prototype_image.png" style="width: 80%;"> </div>
+
+<div class="fragment highlight-box"></div>
 
 ## Limitations & Caveats
 
@@ -76,21 +133,26 @@ readxl::read_excel("C:/Users/andrewhood/OneDrive - NHS/NHIP/left shift/indicator
 
 ## Walk-through
 
-::: {.fragment fragment-index="1"}
-```{=html}
-<iframe src="https://www.bbc.co.uk/news" title="Care Tracker Tool" width="1600" height="850"></iframe>
-```
-:::
+<iframe src="https://connect.strategyunitwm.nhs.uk/nhnip_care_shift_tracker_dev/"
+        title="Care Tracker Tool"
+        width="1600"
+        height="800">
+</iframe>
 
 ## The what next?
 
 - Developing tool interface and visuals further?\
-  - Is the content right?
-  - Are the visuals alright?
+  - Is the content right?\
+  - Are the visuals useful?\
   - Is there sufficient explanation?\
+  - What else would add value?\
 - Utilising more system-wide data (social care, primary care?)\
 - Links to evidence of impact/improvement\
 - Concepts applied to different pathways/population sub groups?\
 - Feed into system dynamics model and simulations
+
+## Thank you and questions
+
+![](dont_ask_me.gif)
 
 
