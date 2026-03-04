@@ -11,12 +11,12 @@ format:
   revealjs:
     embed-resources: true
     slide-number: c/t
-    preview-links: true
+    preview-links: false
     width: 1600
     height: 900
 editor: source
 toc: true
-toc-title: "Table of contents"
+toc-title: "Today's set-menu"
 ---
 
 ```{r setup}
@@ -36,7 +36,7 @@ library(gt)
 - The project in context:\
   - Supplier induced demand\
   - Neighbourhoods IC\
-  - Complementary to e.g. TPMA explorer, Evidence reviews etc...\
+  - Complementary to e.g. TPMA explorer, Evidence reviews, Logic models etc...\
 - Objectives for today's session:\
   - Awareness\
   - User feedback
@@ -46,8 +46,12 @@ library(gt)
 - The concept is difficult to describe and measure\
 - The data is often poor\
 - Difficult to derive insights i.e. causal impacts\
-- We've given it a good go\
-- **System dynamics** and **simulation** likely a better analytical play\
+- We've given it a go - hopefully useful for:\
+  - Prioritising outcomes and system pinch-points\
+  - Identifying historic impact points\
+  - Finding peer-learning opportunities\
+  - Developing theories around system change\
+- **System dynamics** and **simulation** possibly a better analytical play\
 - **Infrastructure** will be critical to facilitating any shifts in care [OPINION]
 
 ## Care shift concept
@@ -89,12 +93,14 @@ readxl::read_excel("C:/Users/andrewhood/OneDrive - NHS/NHIP/left shift/indicator
 :::
 
 ::: {.column width = "30%"}
-<div style="font-size: 0.8em">
+<div style="font-size: 0.7em">
 There were **many many many** indicators we explored for inclusion in the tracker. As well as trying to keep the number manageable, we excluded measures that had:\
 <br>
 - significant **overlap** with others;\
+- weren't as **relevant to frailty**;\
 - that suffered from **poor data quality**;\
 - that didn't have sufficient **time series**;\
+- very difficult to **replicate**;\
 - too **small numbers**;\
 - that couldn't be wrangled into our 3 **unit levels**;\
 - that didn't have **national coverage** and so on...
@@ -137,11 +143,12 @@ There were **many many many** indicators we explored for inclusion in the tracke
 
 ## Walk-through
 
-<iframe src="https://connect.strategyunitwm.nhs.uk/nhnip_care_shift_tracker_dev/"
-        title="Care Tracker Tool"
-        width="1600"
-        height="800">
-</iframe>
+![](tracker_pic.png)
+<br>
+<a href="https://connect.strategyunitwm.nhs.uk/nhnip_care_shift_tracker_dev/" target="_blank" 
+   style="display:inline-block; padding:8px 16px; background:#f9bf07; color:black; border-radius:4px; text-decoration:none;">
+   Launch the tracker
+</a>
 
 ## The what next?
 
@@ -150,13 +157,13 @@ There were **many many many** indicators we explored for inclusion in the tracke
   - Are the visuals useful?\
   - Is there sufficient explanation?\
   - What else would add value?\
-- Utilising more system-wide data (social care, primary care?)\
+- Utilising more system-wide data (social care, primary care, screening & diagnosis?)\
 - Links to evidence of impact/improvement\
 - Concepts applied to different pathways/population sub groups?\
 - Feed into system dynamics model and simulations
 
 ## Thank you and questions
 
-![](dont_ask_me.gif)
+![](hands_up.gif)
 
 
