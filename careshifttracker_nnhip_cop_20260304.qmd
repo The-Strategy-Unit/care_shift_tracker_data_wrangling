@@ -11,7 +11,7 @@ format:
   revealjs:
     embed-resources: true
     slide-number: c/t
-    preview-links: true
+    preview-links: false
     width: 1600
     height: 900
 editor: source
@@ -46,7 +46,11 @@ library(gt)
 - The concept is difficult to describe and measure\
 - The data is often poor\
 - Difficult to derive insights i.e. causal impacts\
-- We've given it a go\
+- We've given it a go - hopefully useful for:\
+  - Prioritising outcomes and system pinch-points\
+  - Identifying historic impact points\
+  - Finding peer-learning opportunities\
+  - Developing theories around system change\
 - **System dynamics** and **simulation** possibly a better analytical play\
 - **Infrastructure** will be critical to facilitating any shifts in care [OPINION]
 
@@ -139,11 +143,12 @@ There were **many many many** indicators we explored for inclusion in the tracke
 
 ## Walk-through
 
-<iframe src="https://connect.strategyunitwm.nhs.uk/nhnip_care_shift_tracker_dev/"
-        title="Care Tracker Tool"
-        width="1600"
-        height="800">
-</iframe>
+![](tracker_pic.png)
+<br>
+<a href="https://connect.strategyunitwm.nhs.uk/nhnip_care_shift_tracker_dev/" target="_blank" 
+   style="display:inline-block; padding:8px 16px; background:#f9bf07; color:black; border-radius:4px; text-decoration:none;">
+   Launch the tracker
+</a>
 
 ## The what next?
 
