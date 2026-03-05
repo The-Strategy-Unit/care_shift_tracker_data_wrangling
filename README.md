@@ -1,4 +1,4 @@
-# care_shift_tracker_data_wrangling
+# Care Shift Tracker - data wrangling
 
 This repo supports the development of a tracking tool for exploring the systemic shift (or otherwise) in care away from the hospital.
 
