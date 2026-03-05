@@ -1,5 +1,7 @@
 # care_shift_tracker_data_wrangling
 
-Development of a tracking tool for demonstrating the systemic shift (or otherwise) in care away from the hospital takes place over two GitHub repositories.
+This repo supports the development of a tracking tool for exploring the systemic shift (or otherwise) in care away from the hospital.
 
-This repo is primarily for the wrangling of data. The other repo (https://github.com/The-Strategy-Unit/care_shift_tracker_app) is for the development of the app.
+The full project takes place over two GitHub repositories - this repo is primarily for the wrangling of data and the other repo (https://github.com/The-Strategy-Unit/care_shift_tracker_app) is for the development of the shiny app.
+
+The tracker tool itself is now public (subject to change) and can be accessed [here](https://connect.strategyunitwm.nhs.uk/nhnip_care_shift_tracker_dev/).
