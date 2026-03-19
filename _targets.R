@@ -33,7 +33,7 @@ database <- "UDAL_Warehouse"
 
 con <- DBI::dbConnect(
   odbc::odbc(),
-  Driver = "ODBC Driver 17 for SQL Server",
+  Driver = "ODBC Driver 18 for SQL Server",
   Server = server,
   Database = database,
   Authentication = "ActiveDirectoryInteractive"
